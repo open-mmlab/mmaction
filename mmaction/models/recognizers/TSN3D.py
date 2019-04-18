@@ -77,8 +77,10 @@ class TSN3D(BaseRecognizer):
         assert num_modalities == 1
         img_group = kwargs['img_group_0']
 
-        num_seg = img_group.shape[1]
-        img_group = img_group.reshape((-1,) + img_group.shape[2:])
+        bs = img_group.shape[0]
+        img_group = img_group.reshape((-1, ) + img_group.shape[2:])
+        num_seg = img_group.shape[0] // bs
+
         x = self.extract_feat(img_group)
         if self.with_spatial_temporal_module:
             x = self.spatial_temporal_module(x)
@@ -102,8 +104,10 @@ class TSN3D(BaseRecognizer):
         assert num_modalities == 1
         img_group = kwargs['img_group_0']
 
-        num_seg = img_group.shape[1]
-        img_group = img_group.reshape((-1,) + img_group.shape[2:])
+        bs = img_group.shape[0]
+        img_group = img_group.reshape((-1, ) + img_group.shape[2:])
+        num_seg = img_group.shape[0] // bs
+
         x = self.extract_feat(img_group)
         if self.with_spatial_temporal_module:
             x = self.spatial_temporal_module(x)

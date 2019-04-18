@@ -239,11 +239,15 @@ class RawFramesDataset(Dataset):
             flip=flip)
 
         # [M x C x H x W]
-        # M = 1 * N_seg * L * N_oversample
+        # M = 1 * N_oversample * N_seg * L
         if self.input_format == "NCTHW":
-            img_group = img_group.reshape((self.num_segments, self.new_length, -1) + img_group.shape[1:])
-            img_group = np.transpose(img_group, (0,2,3,1,4,5))
+            img_group = img_group.reshape((-1, self.num_segments, self.new_length) + img_group.shape[1:])
+            # N_over x N_seg x L x C x H x W
+            img_group = np.transpose(img_group, (0,1,3,2,4,5))
+            # N_over x N_seg x C x L x H x W
             img_group = img_group.reshape((-1,) + img_group.shape[2:])
+            # M' x C x L x H x W
+            
         
         data.update(dict(
             img_group_0=DC(to_tensor(img_group), stack=True, pad_dim="HW" if self.input_format == "NCTHW" else "HW"),
