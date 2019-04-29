@@ -45,7 +45,7 @@ class RawFramesDataset(Dataset):
                  resize_keep_ratio=True,
                  resize_ratio=[1, 0.875, 0.75, 0.66],
                  test_mode=False,
-                 oversample=False,
+                 oversample=None,
                  random_crop=False,
                  more_fix_crop=False,
                  multiscale_crop=False,
@@ -57,7 +57,6 @@ class RawFramesDataset(Dataset):
 
         # load annotations
         self.video_infos = self.load_annotations(ann_file)
-
         # normalization config
         self.img_norm_cfg = img_norm_cfg
 
@@ -111,6 +110,7 @@ class RawFramesDataset(Dataset):
             self._set_group_flag()
 
         # transforms
+        assert oversample in [None, 'three_crop', 'ten_crop']
         self.img_group_transform = GroupImageTransform(size_divisor=None, crop_size=self.input_size,
                                                        oversample=oversample, random_crop=random_crop, more_fix_crop=more_fix_crop,
                                                        multiscale_crop=multiscale_crop, scales=scales, max_distort=max_distort,
@@ -237,7 +237,6 @@ class RawFramesDataset(Dataset):
             scale_factor=scale_factor,
             crop_quadruple=crop_quadruple,
             flip=flip)
-
         # [M x C x H x W]
         # M = 1 * N_oversample * N_seg * L
         if self.input_format == "NCTHW":
@@ -273,10 +272,9 @@ class RawFramesDataset(Dataset):
                 img_group = np.transpose(img_group, (0,1,3,2,4,5))
                 img_group = img_group.reshape((-1,) + img_group.shape[2:])
             
-            else:
-                data.update({
-                    'img_group_{}'.format(i+1): DC(to_tensor(img_group), stack=True, pad_dim="HW" if self.input_format == "NCTHW" else "HW"),
-                    })
+            data.update({
+                'img_group_{}'.format(i+1): DC(to_tensor(img_group), stack=True, pad_dim="HW" if self.input_format == "NCTHW" else "HW"),
+                })
 
         return data
     

@@ -29,6 +29,43 @@ class GroupCenterCrop(object):
         return [mmcv.imcrop(img, box) for img in img_group], np.array([x1, y1, tw, th], dtype=np.float32)
 
 
+class Group3CropSample(object):
+    def __init__(self, crop_size):
+        self.crop_size = crop_size if not isinstance(crop_size, int) else (crop_size, crop_size)
+
+    def __call__(self, img_group, is_flow=False):
+
+        image_h = img_group[0].shape[0]
+        image_w = img_group[0].shape[1]
+        crop_w, crop_h = self.crop_size
+        assert crop_h == image_h
+
+        w_step = (image_w - crop_w) // 4
+        offsets = list()
+        offsets.append((0, 0))  # left
+        offsets.append((4 * w_step, 0))  # right
+        offsets.append((2 * w_step, 0))  # middle
+
+        oversample_group = list()
+        for o_w, o_h in offsets:
+            normal_group = list()
+            flip_group = list()
+            for i, img in enumerate(img_group):
+                crop = mmcv.imcrop(img, np.array([o_w, o_h, o_w + crop_w-1, o_h + crop_h-1]))
+                normal_group.append(crop)
+                flip_crop = mmcv.imflip(crop)
+
+                if is_flow and i % 2 == 0:
+                    flip_group.append(mmcv.iminvert(flip_crop))
+                else:
+                    flip_group.append(flip_crop)
+
+            oversample_group.extend(normal_group)
+            # oversample_group.extend(flip_group)
+        return oversample_group, None
+
+
+
 class GroupOverSample(object):
     def __init__(self, crop_size):
         self.crop_size = crop_size if not isinstance(crop_size, int) else (crop_size, crop_size)
@@ -56,7 +93,7 @@ class GroupOverSample(object):
 
             oversample_group.extend(normal_group)
             oversample_group.extend(flip_group)
-        return oversample_group, np.array([o_w, o_h, crop_w, crop_h], dtype=np.float32)
+        return oversample_group, None
 
 
 class GroupMultiScaleCrop(object):
@@ -154,7 +191,7 @@ class GroupImageTransform(object):
                  to_rgb=True,
                  size_divisor=None,
                  crop_size=None,
-                 oversample=False,
+                 oversample=None,
                  random_crop=False,
                  more_fix_crop=False,
                  multiscale_crop=False,
@@ -167,7 +204,9 @@ class GroupImageTransform(object):
 
         # croping parameters
         if crop_size is not None:
-            if oversample:
+            if oversample == 'three_crop':
+                self.op_crop = Group3CropSample(crop_size)
+            elif oversample == 'ten_crop':
                 # oversample crop (test)
                 self.op_crop = GroupOverSample(crop_size)
             elif multiscale_crop:
@@ -192,12 +231,14 @@ class GroupImageTransform(object):
             scale_factor = np.array([w_scale[0], h_scale[0], w_scale[0], h_scale[0]],
                                     dtype=np.float32)
 
-        ## 2. crop
+        ## 2. crop (if necessary)
         if crop_history is not None:
             self.op_crop = GroupCrop(crop_size, crop_history)
-        elif self.op_crop is not None:
+        if self.op_crop is not None:
             img_group, crop_quadruple = self.op_crop(img_group, is_flow=is_flow)
-        
+        else:
+            crop_quadruple = None
+
         img_shape = img_group[0].shape
         ## 3. flip
         if flip:
