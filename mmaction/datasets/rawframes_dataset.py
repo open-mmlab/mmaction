@@ -195,7 +195,10 @@ class RawFramesDataset(Dataset):
             offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)])
         else:
             offsets = np.zeros((self.num_segments,))
-        skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        if self.random_shift:
+            skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        else:
+            skip_offsets = np.zeros(self.old_length // self.new_step, dtype=int)
         return offsets + 1, skip_offsets
 
     def _get_frames(self, record, image_tmpl, modality, indices, skip_offsets):
@@ -203,7 +206,10 @@ class RawFramesDataset(Dataset):
         for seg_ind in indices:
             p = int(seg_ind)
             for i, ind in enumerate(range(0, self.old_length, self.new_step)):
-                seg_imgs = self._load_image(osp.join(self.img_prefix, record.path), image_tmpl, modality, p + skip_offsets[i]) 
+                if p + skip_offsets[i] <= record.num_frames:
+                    seg_imgs = self._load_image(osp.join(self.img_prefix, record.path), image_tmpl, modality, p + skip_offsets[i]) 
+                else:
+                    seg_imgs = self._load_image(osp.join(self.img_prefix, record.path), image_tmpl, modality, p) 
                 images.extend(seg_imgs)
                 if p + self.new_step < record.num_frames:
                     p += self.new_step

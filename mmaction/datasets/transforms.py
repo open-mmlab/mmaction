@@ -38,13 +38,20 @@ class Group3CropSample(object):
         image_h = img_group[0].shape[0]
         image_w = img_group[0].shape[1]
         crop_w, crop_h = self.crop_size
-        assert crop_h == image_h
+        assert crop_h == image_h or crop_w == crop_w
 
-        w_step = (image_w - crop_w) // 4
-        offsets = list()
-        offsets.append((0, 0))  # left
-        offsets.append((4 * w_step, 0))  # right
-        offsets.append((2 * w_step, 0))  # middle
+        if crop_h == image_h:
+            w_step = (image_w - crop_w) // 2
+            offsets = list()
+            offsets.append((0, 0))  # left
+            offsets.append((2 * w_step, 0))  # right
+            offsets.append((w_step, 0))  # middle
+        elif crop_w == image_w:
+            h_step = (image_h - crop_h) // 2
+            offsets = list()
+            offsets.append((0, 0))  # top
+            offsets.append((0, 2 * h_step))  # down
+            offsets.append((0, h_step))  # middle
 
         oversample_group = list()
         for o_w, o_h in offsets:

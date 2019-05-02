@@ -306,7 +306,7 @@ class ResNet_I3D(nn.Module):
                  pool1_stride_t=2,
                  style='pytorch',
                  frozen_stages=-1,
-                 inflate_freq=2,    # For C2D baseline, this is set to -1.
+                 inflate_freq=(2, 2, 2, 2),    # For C2D baseline, this is set to -1.
                  inflate_style='3x1x1',
                  bn_eval=True,
                  bn_frozen=False,
@@ -327,7 +327,7 @@ class ResNet_I3D(nn.Module):
         assert max(out_indices) < num_stages
         self.style = style
         self.frozen_stages = frozen_stages
-        self.inflate_freq = inflate_freq
+        self.inflate_freqs = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, )
         self.inflate_style = inflate_style
         self.bn_eval = bn_eval
         self.bn_frozen = bn_frozen
@@ -338,7 +338,7 @@ class ResNet_I3D(nn.Module):
         self.stage_blocks = stage_blocks[:num_stages]
         self.inplanes = 64
 
-        if inflate_freq > 0:
+        if inflate_freq[0] > 0:
             self.conv1 = nn.Conv3d(
                 3, 64, kernel_size=(conv1_kernel_t,7,7), stride=(conv1_stride_t,2,2), padding=(conv1_kernel_t//2,3,3), bias=False)
         else:
@@ -364,7 +364,7 @@ class ResNet_I3D(nn.Module):
                 temporal_stride=temporal_stride,
                 dilation=dilation,
                 style=self.style,
-                inflate_freq=self.inflate_freq,
+                inflate_freq=self.inflate_freqs[i],
                 inflate_style=self.inflate_style,
                 with_cp=with_cp)
             self.inplanes = planes * self.block.expansion
@@ -384,11 +384,14 @@ class ResNet_I3D(nn.Module):
                 if isinstance(module, nn.Conv3d):
                     new_weight = rgetattr(resnet2d, name).weight.data.unsqueeze(2).expand_as(module.weight) / module.weight.data.shape[2]
                     module.weight.data.copy_(new_weight)
+                    logging.info("{}.weight loaded from weights file into {}".format(name, new_weight.shape))
                     if hasattr(module, 'bias') and module.bias is not None:
                         new_bias = rgetattr(resnet2d, name).bias.data
                         module.bias.data.copy_(new_bias)
+                        logging.info("{}.bias loaded from weights file into {}".format(name, new_bias.shape))
                 elif isinstance(module, nn.BatchNorm3d):
                       for attr in ['weight', 'bias', 'running_mean', 'running_var']:
+                          logging.info("{}.{} loaded from weights file into {}".format(name, attr, getattr(rgetattr(resnet2d, name), attr).shape))
                           setattr(module, attr, getattr(rgetattr(resnet2d, name), attr))
         elif self.pretrained is None:
             for m in self.modules():
