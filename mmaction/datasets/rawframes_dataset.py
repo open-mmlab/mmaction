@@ -33,6 +33,7 @@ class RawFramesDataset(Dataset):
                  new_length=1,
                  new_step=1,
                  random_shift=True,
+                 temporal_jitter=True,
                  modality='RGB',
                  image_tmpl='img_{}.jpg',
                  img_scale=256,
@@ -70,6 +71,8 @@ class RawFramesDataset(Dataset):
         self.new_step = new_step
         # whether to temporally random shift when training
         self.random_shift = random_shift
+        # whether to temporally jitter if new_step > 1
+        self.temporal_jitter = temporal_jitter
 
         ### parameters for modalities
         if isinstance(modality, (list, tuple)):
@@ -177,7 +180,10 @@ class RawFramesDataset(Dataset):
             offsets = np.sort(np.random.randint(record.num_frames - self.old_length + 1, size=self.num_segments))
         else:
             offsets = np.zeros((self.num_segments,))
-        skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        if self.temporal_jitter:
+            skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        else:
+            skip_offsets = np.zeros(self.old_length // self.new_step, dtype=int)
         return offsets + 1, skip_offsets # frame index starts from 1
 
     def _get_val_indices(self, record):
@@ -186,7 +192,10 @@ class RawFramesDataset(Dataset):
             offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)])
         else:
             offsets = np.zeros((self.num_segments,))
-        skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        if self.temporal_jitter:
+            skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        else:
+            skip_offsets = np.zeros(self.old_length // self.new_step, dtype=int)
         return offsets + 1, skip_offsets
 
     def _get_test_indices(self, record):
@@ -195,7 +204,7 @@ class RawFramesDataset(Dataset):
             offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)])
         else:
             offsets = np.zeros((self.num_segments,))
-        if self.random_shift:
+        if self.temporal_jitter:
             skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
         else:
             skip_offsets = np.zeros(self.old_length // self.new_step, dtype=int)

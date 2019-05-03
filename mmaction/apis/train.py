@@ -102,7 +102,7 @@ def _non_dist_train(model, dataset, cfg, validate=False):
     data_loaders = [
         build_dataloader(
             dataset,
-            cfg.data.imgs_per_gpu,
+            cfg.data.videos_per_gpu,
             cfg.data.workers_per_gpu,
             cfg.gpus,
             dist=False)

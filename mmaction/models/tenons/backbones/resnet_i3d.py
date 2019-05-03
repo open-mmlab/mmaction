@@ -3,10 +3,13 @@ import logging
 import torch.nn as nn
 import torch.utils.checkpoint as cp
 
-from ....utils.misc import rgetattr
+from ....utils.misc import rgetattr, rhasattr
 from .resnet import ResNet 
 from mmcv.cnn import constant_init, kaiming_init
 from mmcv.runner import load_checkpoint
+
+from ..utils.nonlocal_block import build_nonlocal_block
+from ..spatial_temporal_modules.non_local import NonLocalModule
 
 from ...registry import BACKBONES
 
@@ -98,6 +101,7 @@ class Bottleneck(nn.Module):
                  style='pytorch',
                  if_inflate=True,
                  inflate_style='3x1x1',
+                 nonlocal_cfg=None,
                  with_cp=False):
         """Bottleneck block for ResNet.
         If style is "pytorch", the stride-two layer is the 3x3 conv layer,
@@ -178,6 +182,13 @@ class Bottleneck(nn.Module):
         self.dilation = dilation
         self.with_cp = with_cp
 
+        if nonlocal_cfg is not None:
+            nonlocal_cfg_ = nonlocal_cfg.copy()
+            nonlocal_cfg_['in_channels'] = planes * self.expansion
+            self.nonlocal_block = build_nonlocal_block(nonlocal_cfg_)
+        else:
+            self.nonlocal_block = None
+
     def forward(self, x):
 
         def _inner_forward(x):
@@ -208,6 +219,9 @@ class Bottleneck(nn.Module):
 
         out = self.relu(out)
 
+        if self.nonlocal_block is not None:
+            out = self.nonlocal_block(out)
+
         return out
 
 
@@ -221,6 +235,7 @@ def make_res_layer(block,
                    style='pytorch',
                    inflate_freq=2,
                    inflate_style='3x1x1',
+                   nonlocal_cfg=None,
                    with_cp=False):
     downsample = None
     if spatial_stride != 1 or inplanes != planes * block.expansion:
@@ -246,6 +261,7 @@ def make_res_layer(block,
             style=style,
             if_inflate=True if inflate_freq>0 else False,
             inflate_style=inflate_style,
+            nonlocal_cfg=nonlocal_cfg,
             with_cp=with_cp))
     inplanes = planes * block.expansion
     for i in range(1, blocks):
@@ -257,6 +273,7 @@ def make_res_layer(block,
                 style=style,
                 if_inflate= (i % inflate_freq == 0) if inflate_freq>0 else False,
                 inflate_style=inflate_style,
+                nonlocal_cfg=nonlocal_cfg,
                 with_cp=with_cp))
 
     return nn.Sequential(*layers)
@@ -308,6 +325,8 @@ class ResNet_I3D(nn.Module):
                  frozen_stages=-1,
                  inflate_freq=(2, 2, 2, 2),    # For C2D baseline, this is set to -1.
                  inflate_style='3x1x1',
+                 nonlocal_stages=(-1, ),
+                 nonlocal_cfg=None,
                  bn_eval=True,
                  bn_frozen=False,
                  partial_bn=False,
@@ -329,6 +348,8 @@ class ResNet_I3D(nn.Module):
         self.frozen_stages = frozen_stages
         self.inflate_freqs = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, )
         self.inflate_style = inflate_style
+        self.nonlocal_stages = nonlocal_stages
+        self.nonlocal_cfg = nonlocal_cfg
         self.bn_eval = bn_eval
         self.bn_frozen = bn_frozen
         self.partial_bn = partial_bn
@@ -366,6 +387,7 @@ class ResNet_I3D(nn.Module):
                 style=self.style,
                 inflate_freq=self.inflate_freqs[i],
                 inflate_style=self.inflate_style,
+                nonlocal_cfg=self.nonlocal_cfg if i in self.nonlocal_stages else None,
                 with_cp=with_cp)
             self.inplanes = planes * self.block.expansion
             layer_name = 'layer{}'.format(i + 1)
@@ -381,7 +403,10 @@ class ResNet_I3D(nn.Module):
             resnet2d = ResNet(self.depth)
             load_checkpoint(resnet2d, self.pretrained, strict=False, logger=logger)
             for name, module in self.named_modules():
-                if isinstance(module, nn.Conv3d):
+                print(">>>", name)
+                if isinstance(module, NonLocalModule):
+                    module.init_weights()
+                elif isinstance(module, nn.Conv3d) and rhasattr(resnet2d, name):
                     new_weight = rgetattr(resnet2d, name).weight.data.unsqueeze(2).expand_as(module.weight) / module.weight.data.shape[2]
                     module.weight.data.copy_(new_weight)
                     logging.info("{}.weight loaded from weights file into {}".format(name, new_weight.shape))
@@ -389,7 +414,7 @@ class ResNet_I3D(nn.Module):
                         new_bias = rgetattr(resnet2d, name).bias.data
                         module.bias.data.copy_(new_bias)
                         logging.info("{}.bias loaded from weights file into {}".format(name, new_bias.shape))
-                elif isinstance(module, nn.BatchNorm3d):
+                elif isinstance(module, nn.BatchNorm3d) and rhasattr(resnet2d, name):
                       for attr in ['weight', 'bias', 'running_mean', 'running_var']:
                           logging.info("{}.{} loaded from weights file into {}".format(name, attr, getattr(rgetattr(resnet2d, name), attr).shape))
                           setattr(module, attr, getattr(rgetattr(resnet2d, name), attr))
