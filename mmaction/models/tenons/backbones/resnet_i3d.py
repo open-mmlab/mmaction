@@ -364,7 +364,7 @@ class ResNet_I3D(nn.Module):
                 3, 64, kernel_size=(conv1_kernel_t,7,7), stride=(conv1_stride_t,2,2), padding=(conv1_kernel_t//2,3,3), bias=False)
         else:
             self.conv1 = nn.Conv3d(
-                3, 64, kernel_size=(1,7,7), stride=(2,2,2), padding=(0,3,3), bias=False)
+                3, 64, kernel_size=(1,7,7), stride=(conv1_stride_t,2,2), padding=(0,3,3), bias=False)
         self.bn1 = nn.BatchNorm3d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool3d(kernel_size=(pool1_kernel_t,3,3), stride=(pool1_stride_t,2,2), padding=(pool1_kernel_t//2,1,1))

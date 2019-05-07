@@ -33,7 +33,7 @@ class RawFramesDataset(Dataset):
                  new_length=1,
                  new_step=1,
                  random_shift=True,
-                 temporal_jitter=True,
+                 temporal_jitter=False,
                  modality='RGB',
                  image_tmpl='img_{}.jpg',
                  img_scale=256,

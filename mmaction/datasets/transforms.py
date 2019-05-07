@@ -235,7 +235,7 @@ class GroupImageTransform(object):
             tuple_list = [mmcv.imresize(
                 img, scale, return_scale=True) for img in img_group]
             img_group, w_scales, h_scales = list(zip(*tuple_list))
-            scale_factor = np.array([w_scale[0], h_scale[0], w_scale[0], h_scale[0]],
+            scale_factor = np.array([w_scales[0], h_scales[0], w_scales[0], h_scales[0]],
                                     dtype=np.float32)
 
         ## 2. crop (if necessary)
