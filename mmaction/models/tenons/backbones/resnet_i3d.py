@@ -233,10 +233,12 @@ def make_res_layer(block,
                    temporal_stride=1,
                    dilation=1,
                    style='pytorch',
-                   inflate_freq=2,
+                   inflate_freq=1,
                    inflate_style='3x1x1',
                    nonlocal_cfg=None,
                    with_cp=False):
+    inflate_freq = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, ) * blocks
+    assert len(inflate_freq) == blocks
     downsample = None
     if spatial_stride != 1 or inplanes != planes * block.expansion:
         downsample = nn.Sequential(
@@ -259,7 +261,7 @@ def make_res_layer(block,
             dilation,
             downsample,
             style=style,
-            if_inflate=True if inflate_freq>0 else False,
+            if_inflate= (inflate_freq[0] == 1),
             inflate_style=inflate_style,
             nonlocal_cfg=nonlocal_cfg,
             with_cp=with_cp))
@@ -271,7 +273,7 @@ def make_res_layer(block,
                 1, 1,
                 dilation,
                 style=style,
-                if_inflate= (i % inflate_freq == 0) if inflate_freq>0 else False,
+                if_inflate= (inflate_freq[i] == 1),
                 inflate_style=inflate_style,
                 nonlocal_cfg=nonlocal_cfg,
                 with_cp=with_cp))
@@ -319,11 +321,12 @@ class ResNet_I3D(nn.Module):
                  out_indices=(0, 1, 2, 3),
                  conv1_kernel_t=5,
                  conv1_stride_t=2,
-                 pool1_kernel_t=3,
+                 pool1_kernel_t=1,
                  pool1_stride_t=2,
                  style='pytorch',
                  frozen_stages=-1,
-                 inflate_freq=(2, 2, 2, 2),    # For C2D baseline, this is set to -1.
+                 inflate_freq=(1, 1, 1, 1),    # For C2D baseline, this is set to -1.
+                 inflate_stride=(1, 1, 1, 1),
                  inflate_style='3x1x1',
                  nonlocal_stages=(-1, ),
                  nonlocal_cfg=None,
@@ -346,7 +349,7 @@ class ResNet_I3D(nn.Module):
         assert max(out_indices) < num_stages
         self.style = style
         self.frozen_stages = frozen_stages
-        self.inflate_freqs = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, )
+        self.inflate_freqs = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, ) * num_stages
         self.inflate_style = inflate_style
         self.nonlocal_stages = nonlocal_stages
         self.nonlocal_cfg = nonlocal_cfg
@@ -359,16 +362,14 @@ class ResNet_I3D(nn.Module):
         self.stage_blocks = stage_blocks[:num_stages]
         self.inplanes = 64
 
-        if inflate_freq[0] > 0:
-            self.conv1 = nn.Conv3d(
-                3, 64, kernel_size=(conv1_kernel_t,7,7), stride=(conv1_stride_t,2,2), padding=(conv1_kernel_t//2,3,3), bias=False)
-        else:
-            self.conv1 = nn.Conv3d(
-                3, 64, kernel_size=(1,7,7), stride=(conv1_stride_t,2,2), padding=(0,3,3), bias=False)
+
+        self.conv1 = nn.Conv3d(
+            3, 64, kernel_size=(conv1_kernel_t,7,7), stride=(conv1_stride_t,2,2), padding=((conv1_kernel_t-1)//2,3,3), bias=False)
         self.bn1 = nn.BatchNorm3d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool3d(kernel_size=(pool1_kernel_t,3,3), stride=(pool1_stride_t,2,2), padding=(pool1_kernel_t//2,1,1))
-        self.pool2 = nn.MaxPool3d(kernel_size=(3,1,1), stride=(2,1,1), padding=(1,0,0))
+	 #TODO: Check whether pad=0 differs a lot
+        self.pool2 = nn.MaxPool3d(kernel_size=(2,1,1), stride=(2,1,1), padding=(0,0,0))
 
         self.res_layers = []
         for i, num_blocks in enumerate(self.stage_blocks):
