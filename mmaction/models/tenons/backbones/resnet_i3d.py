@@ -404,7 +404,6 @@ class ResNet_I3D(nn.Module):
             resnet2d = ResNet(self.depth)
             load_checkpoint(resnet2d, self.pretrained, strict=False, logger=logger)
             for name, module in self.named_modules():
-                print(">>>", name)
                 if isinstance(module, NonLocalModule):
                     module.init_weights()
                 elif isinstance(module, nn.Conv3d) and rhasattr(resnet2d, name):

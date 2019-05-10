@@ -37,6 +37,7 @@ class RawFramesDataset(Dataset):
                  modality='RGB',
                  image_tmpl='img_{}.jpg',
                  img_scale=256,
+                 img_scale_file=None,
                  input_size=224,
                  div_255=False,
                  size_divisor=None,
@@ -92,6 +93,8 @@ class RawFramesDataset(Dataset):
         if isinstance(img_scale, int):
             img_scale = (np.Inf, img_scale)
         self.img_scale = img_scale
+        if img_scale_file is not None:
+            self.img_scale_dict = {line.split(' ')[0]: (int(line.split(' ')[1]), int(line.split(' ')[2])) for line in open(img_scale_file)}
         # network input size
         if isinstance(input_size, int):
             input_size = (input_size, input_size)
@@ -240,7 +243,11 @@ class RawFramesDataset(Dataset):
         img_group = self._get_frames(record, image_tmpl, modality, segment_indices, skip_offsets)
 
         flip = True if np.random.rand() < self.flip_ratio else False
-        img_group, img_shape, pad_shape, scale_factor,crop_quadruple = self.img_group_transform(img_group, self.img_scale,
+        if self.img_scale_dict is not None and record.path in self.img_scale_dict:
+            img_scale = self.img_scale_dict[record.path]
+        else:
+            img_scale = self.img_scale
+        img_group, img_shape, pad_shape, scale_factor,crop_quadruple = self.img_group_transform(img_group, img_scale,
             crop_history=None,
             flip=flip, keep_ratio=self.resize_keep_ratio,
             div_255=self.div_255, is_flow=True if modality=='Flow' else False)
@@ -274,7 +281,7 @@ class RawFramesDataset(Dataset):
 
             # apply transforms
             flip = True if np.random.rand() < self.flip_ratio else False
-            img_group, img_shape, pad_shape, scale_factor, crop_quadruple = self.img_group_transform(img_group, self.img_scale,
+            img_group, img_shape, pad_shape, scale_factor, crop_quadruple = self.img_group_transform(img_group, img_scale,
                 crop_history=data['img_meta']['crop_quadruple'],
                 flip=data['img_meta']['flip'], keep_ratio=self.resize_keep_ratio,
                 div_255=self.div_255, is_flow=True if modality=='Flow' else False)
