@@ -78,7 +78,7 @@ def _dist_train(model, dataset, cfg, validate=False):
     runner.register_hook(DistSamplerSeedHook())
     # register eval hooks
     if validate:
-            if cfg.data.val.type == 'RawFramesDataset':
+            if cfg.data.val.type in ['RawFramesDataset', 'VideoDataset']:
                 runner.register_hook(DistEvalTopKAccuracyHook(cfg.data.val, k=(1, 5)))
     # if validate:
     #     if isinstance(model.module, RPN):
