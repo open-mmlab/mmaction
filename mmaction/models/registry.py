@@ -36,6 +36,7 @@ class Registry(object):
 
 
 BACKBONES = Registry('backbone')
+FLOWNETS = Registry('flownet')
 SPATIAL_TEMPORAL_MODULES = Registry('spatial_temporal_module')
 SEGMENTAL_CONSENSUSES = Registry('segmental_consensus')
 HEADS = Registry('head')

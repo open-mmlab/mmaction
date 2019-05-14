@@ -95,6 +95,8 @@ class RawFramesDataset(Dataset):
         self.img_scale = img_scale
         if img_scale_file is not None:
             self.img_scale_dict = {line.split(' ')[0]: (int(line.split(' ')[1]), int(line.split(' ')[2])) for line in open(img_scale_file)}
+        else:
+            self.img_scale_dict = None
         # network input size
         if isinstance(input_size, int):
             input_size = (input_size, input_size)

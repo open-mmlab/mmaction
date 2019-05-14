@@ -1,7 +1,7 @@
 import mmcv
 from torch import nn
 
-from .registry import BACKBONES, SPATIAL_TEMPORAL_MODULES, SEGMENTAL_CONSENSUSES, HEADS, RECOGNIZERS, DETECTORS, ARCHITECTURES
+from .registry import BACKBONES, FLOWNETS, SPATIAL_TEMPORAL_MODULES, SEGMENTAL_CONSENSUSES, HEADS, RECOGNIZERS, DETECTORS, ARCHITECTURES
 
 
 def _build_module(cfg, registry, default_args):
@@ -35,12 +35,17 @@ def build_backbone(cfg):
     return build(cfg, BACKBONES)
 
 
+def build_flownet(cfg):
+    return build(cfg, FLOWNETS)
+
+
 def build_spatial_temporal_module(cfg):
     return build(cfg, SPATIAL_TEMPORAL_MODULES)
 
 
 def build_segmental_consensus(cfg):
     return build(cfg, SEGMENTAL_CONSENSUSES)
+
 
 def build_head(cfg):
     return build(cfg, HEADS)
