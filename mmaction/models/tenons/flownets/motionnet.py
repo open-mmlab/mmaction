@@ -169,9 +169,9 @@ class MotionNet(nn.Module):
         predict_flow6 = self.conv_pr6(conv6_1_relu)
 
         predictions_outs = []
-        self.photometric_loss_outs = []
-        self.ssim_loss_outs = []
-        self.smoothness_loss_outs = []
+        photometric_loss_outs = []
+        ssim_loss_outs = []
+        smoothness_loss_outs = []
         FlowScale6 = predict_flow6 * 0.625
          
         #### for loss 6 ####
@@ -206,10 +206,10 @@ class MotionNet(nn.Module):
             predictions_outs.append(FlowScale6)
         else:
             predictions_outs.append(predict_flow6)
-        self.photometric_loss_outs.append((PhotoDifference6, BorderMask6))
-        self.ssim_loss_outs.append((warped6_concat, downsampled6_input_concat))
+        photometric_loss_outs.append((PhotoDifference6, BorderMask6))
+        ssim_loss_outs.append((warped6_concat, downsampled6_input_concat))
         BorderMask6 = make_border_mask(U6.size(0), 2*U6.size(1), U6.size(2), U6.size(3), U6.type(), border_ratio=0.1)
-        self.smoothness_loss_outs.append((FlowDeltasUClean6, FlowDeltasVClean6, BorderMask6))
+        smoothness_loss_outs.append((FlowDeltasUClean6, FlowDeltasVClean6, BorderMask6))
         #### loss 6 ends here ####
 
         deconv5 = self.deconv5(conv6_1_relu)
@@ -251,10 +251,10 @@ class MotionNet(nn.Module):
             predictions_outs.append(FlowScale5)
         else:
             predictions_outs.append(predict_flow5)
-        self.photometric_loss_outs.append((PhotoDifference5, BorderMask5))
-        self.ssim_loss_outs.append((warped5_concat, downsampled5_input_concat))
+        photometric_loss_outs.append((PhotoDifference5, BorderMask5))
+        ssim_loss_outs.append((warped5_concat, downsampled5_input_concat))
         BorderMask5 = make_border_mask(U5.size(0), 2*U5.size(1), U5.size(2), U5.size(3), U5.type(), border_ratio=0.1)
-        self.smoothness_loss_outs.append((FlowDeltasUClean5, FlowDeltasVClean5, BorderMask5))
+        smoothness_loss_outs.append((FlowDeltasUClean5, FlowDeltasVClean5, BorderMask5))
         #### loss 5 ends here ####
 
         deconv4 = self.deconv4(smooth_conv5)
@@ -297,10 +297,10 @@ class MotionNet(nn.Module):
             predictions_outs.append(FlowScale4)
         else:
             predictions_outs.append(predict_flow4)
-        self.photometric_loss_outs.append((PhotoDifference4, BorderMask4))
-        self.ssim_loss_outs.append((warped4_concat, downsampled4_input_concat))
+        photometric_loss_outs.append((PhotoDifference4, BorderMask4))
+        ssim_loss_outs.append((warped4_concat, downsampled4_input_concat))
         BorderMask4 = make_border_mask(U4.size(0), 2*U4.size(1), U4.size(2), U4.size(3), U4.type(), border_ratio=0.1)
-        self.smoothness_loss_outs.append((FlowDeltasUClean4, FlowDeltasVClean4, BorderMask4))
+        smoothness_loss_outs.append((FlowDeltasUClean4, FlowDeltasVClean4, BorderMask4))
         #### loss 4 ends here ####
 
         deconv3 = self.deconv3(smooth_conv4)
@@ -343,10 +343,10 @@ class MotionNet(nn.Module):
             predictions_outs.append(FlowScale3)
         else:
             predictions_outs.append(predict_flow3)
-        self.photometric_loss_outs.append((PhotoDifference3, BorderMask3))
-        self.ssim_loss_outs.append((warped3_concat, downsampled3_input_concat))
+        photometric_loss_outs.append((PhotoDifference3, BorderMask3))
+        ssim_loss_outs.append((warped3_concat, downsampled3_input_concat))
         BorderMask3 = make_border_mask(U3.size(0), 2*U3.size(1), U3.size(2), U3.size(3), U3.type(), border_ratio=0.1)
-        self.smoothness_loss_outs.append((FlowDeltasUClean3, FlowDeltasVClean3, BorderMask3))
+        smoothness_loss_outs.append((FlowDeltasUClean3, FlowDeltasVClean3, BorderMask3))
         #### loss 3 ends here ####
 
         deconv2 = self.deconv2(smooth_conv3)
@@ -389,15 +389,15 @@ class MotionNet(nn.Module):
             predictions_outs.append(FlowScale2)
         else:
             predictions_outs.append(predict_flow2)
-        self.photometric_loss_outs.append((PhotoDifference2, BorderMask2))
-        self.ssim_loss_outs.append((warped2_concat, downsampled2_input_concat))
+        photometric_loss_outs.append((PhotoDifference2, BorderMask2))
+        ssim_loss_outs.append((warped2_concat, downsampled2_input_concat))
         BorderMask2 = make_border_mask(U2.size(0), 2*U2.size(1), U2.size(2), U2.size(3), U2.type(), border_ratio=0.1)
-        self.smoothness_loss_outs.append((FlowDeltasUClean2, FlowDeltasVClean2, BorderMask2))
+        smoothness_loss_outs.append((FlowDeltasUClean2, FlowDeltasVClean2, BorderMask2))
         #### loss 2 ends here ####
 
 
         outs_predictions = [predictions_outs[i] for i in self.out_prediction_indices]
-        return tuple(outs_predictions)
+        return tuple(outs_predictions), photometric_loss_outs, ssim_loss_outs, smoothness_loss_outs
 
     def init_weights(self):
         if isinstance(self.pretrained, str):
@@ -413,19 +413,24 @@ class MotionNet(nn.Module):
         else:
             raise TypeError('pretrained must be a str or None')
 
-    def loss(self):
+    def loss(self,
+             photometric_loss_outs,
+             ssim_loss_outs,
+             smoothness_loss_outs,
+             direction='forward'):
+        assert direction in ['forward', 'backward']
         losses = dict()
         # outs_photometric = dict()
         # outs_ssim = dict()
         # outs_smoothness = dict()
         if self.use_photometric_loss:
             for i, ind in enumerate(self.out_loss_indices):
-                losses['photometric_loss_{}'.format(ind)] = self.photometric_loss_weights[i] * charbonnier_loss(self.photometric_loss_outs[i][0], self.photometric_loss_outs[i][1], alpha=0.4, beta=255)
+                losses['photometric_loss_{}_{}'.format(ind, direction)] = self.photometric_loss_weights[i] * charbonnier_loss(photometric_loss_outs[i][0], photometric_loss_outs[i][1], alpha=0.4, beta=255)
         if self.use_ssim_loss:
             for i, ind in enumerate(self.out_loss_indices):
-                losses['ssim_loss_{}'.format(ind)] = self.ssim_loss_weights[i] * SSIM_loss(self.ssim_loss_outs[i][0], self.ssim_loss_outs[i][1], kernel_size=8, stride=8, c1=0.0001, c2=0.001)
+                losses['ssim_loss_{}_{}'.format(ind, direction)] = self.ssim_loss_weights[i] * SSIM_loss(ssim_loss_outs[i][0], ssim_loss_outs[i][1], kernel_size=8, stride=8, c1=0.0001, c2=0.001)
         if self.use_smoothness_loss:
             for i, ind in enumerate(self.out_loss_indices):
-                losses['smoothness_loss_{}'.format(ind)] = self.smoothness_loss_weights[i] * charbonnier_loss(self.smoothness_loss_outs[i][0], self.smoothness_loss_outs[i][2], alpha=0.3, beta=5) + \
-                                                                  self.smoothness_loss_weights[i] * charbonnier_loss(self.smoothness_loss_outs[i][1], self.smoothness_loss_outs[i][2], alpha=0.3, beta=5)
+                losses['smoothness_loss_{}_{}'.format(ind, direction)] = self.smoothness_loss_weights[i] * charbonnier_loss(smoothness_loss_outs[i][0], smoothness_loss_outs[i][2], alpha=0.3, beta=5) + \
+                                                           self.smoothness_loss_weights[i] * charbonnier_loss(smoothness_loss_outs[i][1], smoothness_loss_outs[i][2], alpha=0.3, beta=5)
         return losses 

@@ -101,11 +101,11 @@ class TSN3D(BaseRecognizer):
                 img_forward = img_group[:, :, 1:, :, :]
                 img_forward = img_forward.transpose(1, 2).contiguous().view(
                     (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
-                trajectory_forward = self.flownet(img_forward)
+                trajectory_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
                 img_backward = img_group.flip(2)[:, :, 1:, :, :]
                 img_backward = img_backward.transpose(1, 2).contiguous().view(
                     (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
-                trajectory_backward = self.flownet(img_backward)
+                trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
             else:
                 raise NotImplementedError
             x = self.extract_feat(img_group[:, :, 1:-1, :, :],
@@ -121,7 +121,8 @@ class TSN3D(BaseRecognizer):
              x = x.squeeze(1)
         losses = dict()
         if self.with_flownet:
-            losses.update(self.flownet.loss())
+            losses.update(self.flownet.loss(photometric_forward, ssim_forward, smooth_forward, direction='forward'))
+            losses.update(self.flownet.loss(photometric_backward, ssim_backward, smooth_backward, direction='backward'))
         if self.with_cls_head:
             cls_score = self.cls_head(x)
             gt_label = gt_label.squeeze()
