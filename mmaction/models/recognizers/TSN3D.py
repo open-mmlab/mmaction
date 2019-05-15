@@ -76,14 +76,19 @@ class TSN3D(BaseRecognizer):
             self.cls_head.init_weights()
 
     
-    def extract_feat(self, img_group,
-                     trajectory_forward=None,
-                     trajectory_backward=None):
+    def extract_feat_with_flow(self, img_group,
+                               trajectory_forward=None,
+                               trajectory_backward=None):
         x = self.backbone(img_group,
                           trajectory_forward=trajectory_forward,
                           trajectory_backward=trajectory_backward)
         return x
     
+    def extract_feat(self, img_group):
+        x = self.backbone(img_group)
+        return x
+   
+ 
     def forward_train(self,
                       num_modalities,
                       img_meta,
@@ -108,9 +113,9 @@ class TSN3D(BaseRecognizer):
                 trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
             else:
                 raise NotImplementedError
-            x = self.extract_feat(img_group[:, :, 1:-1, :, :],
-                                  trajectory_forward=trajectory_forward,
-                                  trajectory_backward=trajectory_backward)
+            x = self.extract_feat_with_flow(img_group[:, :, 1:-1, :, :],
+                                            trajectory_forward=trajectory_forward,
+                                            trajectory_backward=trajectory_backward)
         else:
             x = self.extract_feat(img_group)
         if self.with_spatial_temporal_module:
