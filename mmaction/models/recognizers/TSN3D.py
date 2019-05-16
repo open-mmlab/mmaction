@@ -152,16 +152,16 @@ class TSN3D(BaseRecognizer):
                 img_forward = img_group[:, :, 1:, :, :]
                 img_forward = img_forward.transpose(1, 2).contiguous().view(
                     (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
-                trajectory_forward = self.flownet(img_forward)
+                trajectory_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
                 img_backward = img_group.flip(2)[:, :, 1:, :, :]
                 img_backward = img_backward.transpose(1, 2).contiguous().view(
                     (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
-                trajectory_backward = self.flownet(img_backward)
+                trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
             else:
                 raise NotImplementedError
-            x = self.extract_feat(img_group[:, :, 1:-1, :, :],
-                                  trajectory_forward=trajectory_forward,
-                                  trajectory_backward=trajectory_backward)
+            x = self.extract_feat_with_flow(img_group[:, :, 1:-1, :, :],
+                                            trajectory_forward=trajectory_forward,
+                                            trajectory_backward=trajectory_backward)
         else:
             x = self.extract_feat(img_group)
         if self.with_spatial_temporal_module:

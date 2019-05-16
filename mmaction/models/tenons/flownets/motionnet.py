@@ -36,6 +36,7 @@ class MotionNet(nn.Module):
                  out_loss_indices=(0, 1, 2, 3, 4),
                  out_prediction_indices=(0, 1, 2, 3, 4),
                  out_prediction_rescale=True,
+                 frozen=False,
                  use_photometric_loss=True,
                  use_ssim_loss=True,
                  use_smoothness_loss=True,
@@ -52,6 +53,11 @@ class MotionNet(nn.Module):
         self.use_photometric_loss = use_photometric_loss
         self.use_ssim_loss = use_ssim_loss
         self.use_smoothness_loss = use_smoothness_loss
+        if frozen:
+            self.use_photometric_loss = False
+            self.use_ssim_loss = False
+            self.use_smoothness_loss = False
+        self.frozen = frozen
         self.photometric_loss_weights = photometric_loss_weights
         self.ssim_loss_weights = ssim_loss_weights
         self.smoothness_loss_weights = smoothness_loss_weights
@@ -434,3 +440,12 @@ class MotionNet(nn.Module):
                 losses['smoothness_loss_{}_{}'.format(ind, direction)] = self.smoothness_loss_weights[i] * charbonnier_loss(smoothness_loss_outs[i][0], smoothness_loss_outs[i][2], alpha=0.3, beta=5) + \
                                                            self.smoothness_loss_weights[i] * charbonnier_loss(smoothness_loss_outs[i][1], smoothness_loss_outs[i][2], alpha=0.3, beta=5)
         return losses 
+
+
+    def train(self, mode=True):
+         super(MotionNet, self).train(mode)
+         if self.frozen:
+             for m in self.modules():
+                 if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+                     for param in m.parameters():
+                         param.requires_grad = False
