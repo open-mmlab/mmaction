@@ -8,7 +8,7 @@ from mmcv.parallel import scatter, collate, MMDataParallel
 from mmaction import datasets
 from mmaction.datasets import build_dataloader
 from mmaction.models import build_recognizer, recognizers
-from mmaction.core.evaluation.accuracy import top_k_accuracy, mean_class_accuracy
+from mmaction.core.evaluation.accuracy import softmax, top_k_accuracy, mean_class_accuracy
 
 
 
@@ -45,6 +45,7 @@ def parse_args():
         type=int,
         help='Number of processes per GPU')
     parser.add_argument('--out', help='output result file')
+    parser.add_argument('--use_softmax', action='store_true', help='whether to use softmax score')
     args = parser.parse_args()
     return args
 
@@ -61,11 +62,13 @@ def main():
         torch.backends.cudnn.benchmark = True
     cfg.data.test.test_mode = True
 
+    cfg.model.spatial_temporal_module.spatial_size = 8
+
     dataset = obj_from_dict(cfg.data.test, datasets, dict(test_mode=True))
     if args.gpus == 1:
         model = build_recognizer(
             cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
-        load_checkpoint(model, args.checkpoint)
+        load_checkpoint(model, args.checkpoint, strict=True)
         model = MMDataParallel(model, device_ids=[0])
 
         data_loader = build_dataloader(
@@ -98,7 +101,12 @@ def main():
         ann = dataset.get_ann_info(i)
         gt_labels.append(ann['label'])
 
-    results = [res.squeeze() for res in outputs]
+    if args.use_softmax:
+        print("Averaging score over {} clips with softmax".format(outputs[0].shape[0]))
+        results = [softmax(res, dim=1).mean(axis=0) for res in outputs]
+    else:
+        print("Averaging score over {} clips without softmax (ie, raw)".format(outputs[0].shape[0]))
+        results = [res.mean(axis=0) for res in outputs]
     top1, top5 = top_k_accuracy(results, gt_labels, k=(1,5))
     mean_acc = mean_class_accuracy(results, gt_labels)
     print("Mean Class Accuracy = {:.02f}".format(mean_acc * 100))

@@ -1,6 +1,12 @@
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
+def softmax(x, dim=1):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x, axis=1, keepdims=True))
+    return e_x / e_x.sum(axis=1, keepdims=True)
+
+
 def mean_class_accuracy(scores, labels):
     pred = np.argmax(scores, axis=1)
     cf = confusion_matrix(labels, pred).astype(float)
