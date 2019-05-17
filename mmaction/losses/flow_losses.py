@@ -16,7 +16,7 @@ def charbonnier_loss(difference, mask, alpha=1, beta=1., epsilon=0.001):
         batch_pixels = torch.sum(mask)
         return torch.sum(res * mask) / batch_pixels
     else:
-        batch_pixels = torch.numel(mask)
+        batch_pixels = torch.numel(res)
         return torch.sum(res) / batch_pixels
 
 def SSIM_loss(img1, img2, kernel_size=8, stride=8, c1=0.00001, c2=0.00001):
@@ -43,8 +43,10 @@ def SSIM_loss(img1, img2, kernel_size=8, stride=8, c1=0.00001, c2=0.00001):
     sy2 = gauss_filter(img2 ** 2)
     sxy = gauss_filter(img1 * img2)
     
-    ux2 = sx2 - ux ** 2
-    uy2 = sy2 - uy ** 2
+    ux2 = ux ** 2
+    uy2 = uy ** 2
+    sx2 = sx2 - ux2
+    sy2 = sy2 - uy2
     sxy = sxy - ux * uy
 
     lp = (2 * ux * uy + c1) / (ux2 + uy2 + c1)
