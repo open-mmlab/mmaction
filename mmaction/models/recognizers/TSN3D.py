@@ -2,6 +2,8 @@ from .base import BaseRecognizer
 from .. import builder
 from ..registry import RECOGNIZERS
 
+import torch
+
 
 @RECOGNIZERS.register_module
 class TSN3D(BaseRecognizer):
@@ -112,7 +114,67 @@ class TSN3D(BaseRecognizer):
                     (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
                 trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
             else:
-                raise NotImplementedError
+                # TODO: Wrap it into a function, e.g. ImFlows2ImFlowStack
+                num_frames = img_group.size(2)
+                traj_forwards, traj_backwards = [], []
+                photometric_forwards, photometric_backwards = [], []
+                ssim_forwards, ssim_backwards = [], []
+                smooth_forwards, smooth_backwards = [], []
+                for i in range(1, num_frames - 1):
+                    img_forward = img_group[:, :, i:i+2, :, :]
+                    img_forward = img_forward.transpose(1, 2).contiguous().view(
+                        (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
+                    traj_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
+                    traj_forwards.append(traj_forward)
+                    photometric_forwards.append(photometric_forward)
+                    ssim_forwards.append(ssim_forward)
+                    smooth_forwards.append(smooth_forward)
+                    img_backward = img_group[:, :, num_frames - i - 1: num_frames - i + 1, :, :].flip(2)
+                    img_backward = img_backward.transpose(1, 2).contiguous().view(
+                        (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
+                    traj_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
+                    traj_backwards.append(traj_backward)
+                    photometric_backwards.append(photometric_backward)
+                    ssim_backwards.append(ssim_backward)
+                    smooth_backwards.append(smooth_backward)
+
+                def _organize_trajectories(trajectory_lvls_pairs):
+                    res = [[]] * len(trajectory_lvls_pairs[0])
+                    for trajectory_lvls in trajectory_lvls_pairs:
+                        for i, trajectory in enumerate(trajectory_lvls):
+                            res[i].append(trajectory)
+                    for i in range(len(trajectory_lvls_pairs[0])):
+                        res[i] = torch.cat(res[i], 1)
+                    return tuple(res)
+
+                def _organize_loss_outs(loss_outs_lvls_pairs):
+                    L = len(loss_outs_lvls_pairs)
+                    num_level = len(loss_outs_lvls_pairs[0])
+                    num_item = len(loss_outs_lvls_pairs[0][0])
+                    res = []
+                    for i in range(num_level):
+                        res_level = []
+                        for j in range(num_item):
+                            outs = []
+                            for k in range(L):
+                                outs.append(loss_outs_lvls_pairs[k][i][j])
+                            res_level.append(outs)
+                        res.append(res_level)
+                    for i in range(num_level):
+                        for j in range(num_item):
+                            res[i][j] = torch.cat(res[i][j], 1)
+                        res[i] = tuple(res[i])
+                    return tuple(res)
+
+                trajectory_forward = _organize_trajectories(traj_forwards)
+                trajectory_backward = _organize_trajectories(traj_backwards)
+                photometric_forward = _organize_loss_outs(photometric_forwards)
+                photometric_backward = _organize_loss_outs(photometric_backwards)
+                ssim_forward = _organize_loss_outs(ssim_forwards)
+                ssim_backward = _organize_loss_outs(ssim_backwards)
+                smooth_forward = _organize_loss_outs(smooth_forwards)
+                smooth_backward = _organize_loss_outs(smooth_backwards)
+
             x = self.extract_feat_with_flow(img_group[:, :, 1:-1, :, :],
                                             trajectory_forward=trajectory_forward,
                                             trajectory_backward=trajectory_backward)
@@ -158,7 +220,67 @@ class TSN3D(BaseRecognizer):
                     (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
                 trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
             else:
-                raise NotImplementedError
+                # TODO: Wrap it into a function, e.g. ImFlows2ImFlowStack
+                num_frames = img_group.size(2)
+                traj_forwards, traj_backwards = [], []
+                photometric_forwards, photometric_backwards = [], []
+                ssim_forwards, ssim_backwards = [], []
+                smooth_forwards, smooth_backwards = [], []
+                for i in range(1, num_frames - 1):
+                    img_forward = img_group[:, :, i:i+2, :, :]
+                    img_forward = img_forward.transpose(1, 2).contiguous().view(
+                        (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
+                    traj_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
+                    traj_forwards.append(traj_forward)
+                    photometric_forwards.append(photometric_forward)
+                    ssim_forwards.append(ssim_forward)
+                    smooth_forwards.append(smooth_forward)
+                    img_backward = img_group[:, :, num_frames - i - 1: num_frames - i + 1, :, :].flip(2)
+                    img_backward = img_backward.transpose(1, 2).contiguous().view(
+                        (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
+                    traj_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
+                    traj_backwards.append(traj_backward)
+                    photometric_backwards.append(photometric_backward)
+                    ssim_backwards.append(ssim_backward)
+                    smooth_backwards.append(smooth_backward)
+
+                def _organize_trajectories(trajectory_lvls_pairs):
+                    res = [[]] * len(trajectory_lvls_pairs[0])
+                    for trajectory_lvls in trajectory_lvls_pairs:
+                        for i, trajectory in enumerate(trajectory_lvls):
+                            res[i].append(trajectory)
+                    for i in range(len(trajectory_lvls_pairs[0])):
+                        res[i] = torch.cat(res[i], 1)
+                    return tuple(res)
+
+                def _organize_loss_outs(loss_outs_lvls_pairs):
+                    L = len(loss_outs_lvls_pairs)
+                    num_level = len(loss_outs_lvls_pairs[0])
+                    num_item = len(loss_outs_lvls_pairs[0][0])
+                    res = []
+                    for i in range(num_level):
+                        res_level = []
+                        for j in range(num_item):
+                            outs = []
+                            for k in range(L):
+                                outs.append(loss_outs_lvls_pairs[k][i][j])
+                            res_level.append(outs)
+                        res.append(res_level)
+                    for i in range(num_level):
+                        for j in range(num_item):
+                            res[i][j] = torch.cat(res[i][j], 1)
+                        res[i] = tuple(res[i])
+                    return tuple(res)
+
+                trajectory_forward = _organize_trajectories(traj_forwards)
+                trajectory_backward = _organize_trajectories(traj_backwards)
+                photometric_forward = _organize_loss_outs(photometric_forwards)
+                photometric_backward = _organize_loss_outs(photometric_backwards)
+                ssim_forward = _organize_loss_outs(ssim_forwards)
+                ssim_backward = _organize_loss_outs(ssim_backwards)
+                smooth_forward = _organize_loss_outs(smooth_forwards)
+                smooth_backward = _organize_loss_outs(smooth_backwards)
+
             x = self.extract_feat_with_flow(img_group[:, :, 1:-1, :, :],
                                             trajectory_forward=trajectory_forward,
                                             trajectory_backward=trajectory_backward)
