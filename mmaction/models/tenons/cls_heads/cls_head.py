@@ -13,7 +13,8 @@ class ClsHead(nn.Module):
                  spatial_feature_size=7,
                  dropout_ratio=0.8,
                  in_channels=2048,
-                 num_classes=101):
+                 num_classes=101,
+		 init_std=0.01):
     
         super(ClsHead, self).__init__()
 
@@ -23,6 +24,7 @@ class ClsHead(nn.Module):
         self.dropout_ratio = dropout_ratio
         self.temporal_feature_size = temporal_feature_size
         self.spatial_feature_size = spatial_feature_size
+        self.init_std = init_std
 
         if self.dropout_ratio != 0:
             self.dropout = nn.Dropout(p=self.dropout_ratio)
@@ -33,7 +35,7 @@ class ClsHead(nn.Module):
         self.fc_cls = nn.Linear(in_channels, num_classes)
 
     def init_weights(self):
-        nn.init.normal_(self.fc_cls.weight, 0, 0.001)
+        nn.init.normal_(self.fc_cls.weight, 0, self.init_std)
         nn.init.constant_(self.fc_cls.bias, 0)
 
     def forward(self, x):

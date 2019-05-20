@@ -58,8 +58,8 @@ def trajconv3x1x1(in_planes, out_planes, spatial_stride=1, temporal_stride=1, di
         kernel_size=(3,1,1),
         stride=(temporal_stride, spatial_stride, spatial_stride),
         padding=(dilation,0,0),
-        dilation=dilation)
-        # bias=bias)
+        dilation=dilation,
+        bias=bias)
 
 
 class BasicBlock(nn.Module):
@@ -75,7 +75,8 @@ class BasicBlock(nn.Module):
                  style='pytorch',
                  if_inflate=True,
                  with_cp=False,
-                 with_trajectory=False):
+                 with_trajectory=False,
+                 conv_bias=0.2):
         super(BasicBlock, self).__init__()
         self.conv1 = conv1x3x3(inplanes, planes, spatial_stride, 1, dilation)
         self.bn1 = nn.BatchNorm3d(planes)
@@ -90,7 +91,7 @@ class BasicBlock(nn.Module):
             self.conv1_t = conv3x1x1(planes, planes, 1, temporal_stride, dilation, bias=True)
             self.bn1_t = nn.BatchNorm3d(planes)
             if with_trajectory:
-                self.conv2_t = trajconv3x1x1(planes, planes, bias=False)
+                self.conv2_t = trajconv3x1x1(planes, planes, bias=True)
             else:
                 self.conv2_t = conv3x1x1(planes, planes, bias=True)
             self.bn2_t = nn.BatchNorm3d(planes)
@@ -102,6 +103,8 @@ class BasicBlock(nn.Module):
         assert not with_cp
 
         self.with_trajectory = with_trajectory
+
+        self.conv_bias = conv_bias
 
     def forward(self, input):
         x, traj_src = input
@@ -454,7 +457,7 @@ class ResNet_S3D(nn.Module):
                             new_bias = rgetattr(resnet2d, name).bias.data
                             module.bias.data.copy_(new_bias)
                     else:
-                        kaiming_init(module)
+                        kaiming_init(module, bias=self.conv_bias)
                 elif isinstance(module, nn.BatchNorm3d):
                     if rhasattr(resnet2d, name):
                         for attr in ['weight', 'bias', 'running_mean', 'running_var']:
@@ -464,7 +467,7 @@ class ResNet_S3D(nn.Module):
         elif self.pretrained is None:
             for m in self.modules():
                 if isinstance(m, nn.Conv3d):
-                    kaiming_init(m)
+                    kaiming_init(m, bias=self.conv_bias)
                 elif isinstance(m, nn.BatchNorm3d):
                     constant_init(m, 1)
         else:
