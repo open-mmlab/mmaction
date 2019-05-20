@@ -75,8 +75,7 @@ class BasicBlock(nn.Module):
                  style='pytorch',
                  if_inflate=True,
                  with_cp=False,
-                 with_trajectory=False,
-                 conv_bias=0.2):
+                 with_trajectory=False):
         super(BasicBlock, self).__init__()
         self.conv1 = conv1x3x3(inplanes, planes, spatial_stride, 1, dilation)
         self.bn1 = nn.BatchNorm3d(planes)
@@ -103,8 +102,6 @@ class BasicBlock(nn.Module):
         assert not with_cp
 
         self.with_trajectory = with_trajectory
-
-        self.conv_bias = conv_bias
 
     def forward(self, input):
         x, traj_src = input
@@ -364,7 +361,8 @@ class ResNet_S3D(nn.Module):
                  with_cp=False,
                  with_trajectory=False,
                  trajectory_source_indices=-1,
-                 trajectory_downsample_method='ave'):
+                 trajectory_downsample_method='ave',
+                 conv_bias=0.2):
         super(ResNet_S3D, self).__init__()
         if depth not in self.arch_settings:
             raise KeyError('invalid depth {} for resnet'.format(depth))
@@ -390,6 +388,8 @@ class ResNet_S3D(nn.Module):
         self.trajectory_source_indices = trajectory_source_indices \
             if not isinstance(trajectory_source_indices, int) else [trajectory_source_indices, ] * num_stages
         self.trajectory_downsample_method = trajectory_downsample_method
+
+        self.conv_bias = conv_bias
 
         self.block, stage_blocks = self.arch_settings[depth]
         self.stage_blocks = stage_blocks[:num_stages]
