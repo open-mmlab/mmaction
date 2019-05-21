@@ -1,7 +1,9 @@
 import mmcv
 from torch import nn
 
-from .registry import BACKBONES, FLOWNETS, SPATIAL_TEMPORAL_MODULES, SEGMENTAL_CONSENSUSES, HEADS, RECOGNIZERS, DETECTORS, ARCHITECTURES
+from .registry import (BACKBONES, FLOWNETS, SPATIAL_TEMPORAL_MODULES, SEGMENTAL_CONSENSUSES, HEADS,
+                       RECOGNIZERS, DETECTORS, ARCHITECTURES,
+                       NECKS, ROI_EXTRACTORS)
 
 
 def _build_module(cfg, registry, default_args):
@@ -61,3 +63,10 @@ def build_detector(cfg, train_cfg=None, test_cfg=None):
 
 def build_architecture(cfg, train_cfg=None, test_cfg=None):
     return build(cfg, ARCHITECTURES, dict(train_cfg=train_cfg, test_cfg=test_cfg))
+
+
+def build_neck(cfg):
+    return build(cfg, NECKS)
+
+def build_roi_extractor(cfg):
+    return build(cfg, ROI_EXTRACTORS)

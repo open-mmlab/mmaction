@@ -6,7 +6,8 @@ import torch
 from mmcv.runner import Runner, DistSamplerSeedHook
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 
-from mmaction.core import (DistOptimizerHook, DistEvalTopKAccuracyHook)
+from mmaction.core import (DistOptimizerHook, DistEvalTopKAccuracyHook,
+                           AVADistEvalmAPHook)
 from mmaction.datasets import build_dataloader
 from .env import get_root_logger
 
@@ -80,6 +81,8 @@ def _dist_train(model, dataset, cfg, validate=False):
     if validate:
             if cfg.data.val.type in ['RawFramesDataset', 'VideoDataset']:
                 runner.register_hook(DistEvalTopKAccuracyHook(cfg.data.val, k=(1, 5)))
+            if cfg.data.val.type == 'AVADataset':
+                runner.register_hook(AVADistEvalmAPHook(cfg.data.val))
     # if validate:
     #     if isinstance(model.module, RPN):
     #         # TODO: implement recall hooks for other datasets
