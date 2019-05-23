@@ -3,7 +3,15 @@ import logging
 import time
 from collections import defaultdict
 import heapq
+import numpy as np
 
+from .recall import eval_recalls
+
+import sys
+import os.path as osp
+sys.path.append(osp.abspath(osp.join(__file__, '../../../', 'third_party/ActivityNet/Evaluation/ava')))
+from mmaction.third_party.ActivityNet.Evaluation.ava import object_detection_evaluation
+import standard_fields
 
 def det2csv(dataset, results):
     csv_results = []
@@ -36,7 +44,7 @@ def results2csv(dataset, results, out_file):
 
 
 def print_time(message, start):
-    logging.info("==> %g seconds to %s", time.time() - start, message)
+    print("==> %g seconds to %s" % (time.time() - start, message))
 
 
 def make_image_key(video_id, timestamp):
@@ -141,3 +149,91 @@ def read_labelmap(labelmap_file):
             labelmap.append({"id": class_id, "name": name})
             class_ids.add(class_id)
     return labelmap, class_ids
+
+
+def ava_eval(result_file, result_type,
+             label_file, ann_file,
+             exclude_file, max_dets=(100, 300, 1000),
+             verbose=True):
+    assert result_type in ['proposal', 'bbox']
+
+    start = time.time()
+    categories, class_whitelist = read_labelmap(open(label_file))
+    gt_boxes, gt_labels, _ = read_csv(open(ann_file), class_whitelist, 0)
+    if verbose:
+        print_time("Reading detection results", start)
+
+    if exclude_file is not None:
+        excluded_keys = read_exclusions(open(exclude_file))
+    else:
+        excluded_keys = list()
+
+    start = time.time()
+    boxes, labels, scores = read_csv(open(result_file), class_whitelist, 0)
+    if verbose:
+        print_time("Reading detection results", start)
+
+    if result_type == 'proposal':
+        gts = [np.array(gt_boxes[image_key], dtype=float) for image_key in gt_boxes]
+        proposals = []
+        for image_key in gt_boxes:
+            if image_key in boxes:
+                proposals.append(np.concatenate((np.array(boxes[image_key], dtype=float), np.array(scores[image_key], dtype=float)[:, None]), axis=1))
+            else:
+                proposals.append(np.zeros((1,5)))
+
+        recalls = eval_recalls(gts, proposals, np.array(max_dets), np.arange(0.5, 0.96, 0.05), print_summary=False)
+        ar = recalls.mean(axis=1)
+        for i, num in enumerate(max_dets):
+            print('Recall@0.5@{}\t={:.4f}'.format(num, recalls[i,0]))
+            print('AR@{}\t={:.4f}'.format(num, ar[i]))
+
+    if result_type == 'bbox':
+        pascal_evaluator = object_detection_evaluation.PascalDetectionEvaluator(
+            categories)
+
+        start = time.time()
+        for image_key in gt_boxes:
+            if verbose and image_key in excluded_keys:
+                logging.info("Found excluded timestamp in detections: %s."
+                      "It will be ignored.", image_key)
+                continue
+            pascal_evaluator.add_single_ground_truth_image_info(
+                image_key, {
+                    standard_fields.InputDataFields.groundtruth_boxes:
+                        np.array(gt_boxes[image_key], dtype=float),
+                    standard_fields.InputDataFields.groundtruth_classes:
+                        np.array(gt_labels[image_key], dtype=int),
+                    standard_fields.InputDataFields.groundtruth_difficult:
+                        np.zeros(len(gt_boxes[image_key]), dtype=bool)
+                })
+        if verbose:
+            print_time("Convert groundtruth", start)
+
+        start = time.time()
+        for image_key in boxes:
+            if verbose and image_key in excluded_keys:
+                logging.info("Found excluded timestamp in detections: %s."
+                    "It will be ignored.", image_key)
+                continue
+            pascal_evaluator.add_single_detected_image_info(
+                image_key, {
+                    standard_fields.DetectionResultFields.detection_boxes:
+                        np.array(boxes[image_key], dtype=float),
+                    standard_fields.DetectionResultFields.detection_classes:
+                        np.array(labels[image_key], dtype=int),
+                    standard_fields.DetectionResultFields.detection_scores:
+                        np.array(scores[image_key], dtype=float)
+                })
+        if verbose:
+            print_time("convert detections", start)
+
+        start = time.time()
+        metrics = pascal_evaluator.evaluate()
+        if verbose:
+            print_time("run_evaluator", start)
+        for display_name in metrics:
+            print('{}=\t{}'.format(display_name, metrics[display_name]))
+
+
+

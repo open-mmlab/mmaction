@@ -34,7 +34,7 @@ class BaseDetector(nn.Module):
         pass
 
     def extract_feats(self, img_groups):
-        assert isinstance(imgs, list)
+        assert isinstance(img_groups, list)
         for img_group in img_groups:
             yield self.extract_feat(img_group)
 

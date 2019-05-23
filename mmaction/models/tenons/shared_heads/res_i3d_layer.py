@@ -19,7 +19,7 @@ class ResI3DLayer(nn.Module):
                  temporal_stride=1,
                  dilation=1,
                  style='pytorch',
-                 inflate_freq=2,
+                 inflate_freq=1,
                  inflate_style='3x1x1',
                  bn_eval=True,
                  bn_frozen=True,
@@ -35,6 +35,8 @@ class ResI3DLayer(nn.Module):
         planes = 64 * 2**stage
         inplanes = 64 * 2**(stage - 1) * block.expansion
 
+        self.inflate_freq = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, ) * stage
+
         res_layer = make_res_layer(
             block,
             inplanes,
@@ -44,7 +46,7 @@ class ResI3DLayer(nn.Module):
             temporal_stride=temporal_stride,
             dilation=dilation,
             style=style,
-            inflate_freq=2,
+            inflate_freq=self.inflate_freq,
             inflate_style='3x1x1',
             with_cp=with_cp)
         self.add_module('layer{}'.format(stage + 1), res_layer)

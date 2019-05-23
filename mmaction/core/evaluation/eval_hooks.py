@@ -16,8 +16,8 @@ from .ava_utils import results2csv
 
 from .ava_utils import (print_time, read_csv, read_labelmap, read_exclusions)
 import sys
-sys.path.append('/home/yzhao/mmaction-v2/mmaction/third_party/ActivityNet/Evaluation/ava')
-from ...third_party.ActivityNet.Evaluation.ava import object_detection_evaluation
+sys.path.append(osp.abspath(osp.join(__file__, '../../../', 'third_party/ActivityNet/Evaluation/ava')))
+from mmaction.third_party.ActivityNet.Evaluation.ava import object_detection_evaluation
 import standard_fields
 
 class DistEvalHook(Hook):

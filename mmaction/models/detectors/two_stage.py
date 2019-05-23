@@ -149,6 +149,7 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
         img_group = kwargs['img_group_0']
         x = self.extract_feat(img_group)
 
+
         proposal_list = self.simple_test_rpn(
             x, img_meta, self.test_cfg.rpn) if proposals is None else proposals
 
@@ -160,7 +161,7 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
 
         return bbox_results
 
-    def aug_test(self, num_modalities, img_metas, rescale=False,
+    def aug_test(self, num_modalities, img_metas, proposals=None, rescale=False,
                  **kwargs):
         """Test with augmentations.
         
@@ -169,8 +170,13 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
         """
         assert num_modalities == 1
         img_groups = kwargs['img_group_0']
-        proposal_list = self.aug_test_rpn(
-            self.extract_feats(img_groups), img_metas, self.test_cfg.rpn)
+        if proposals is None:
+            proposal_list = self.aug_test_rpn(
+                self.extract_feats(img_groups), img_metas, self.test_cfg.rpn)
+        else:
+            proposal_list = []
+            for proposal in proposals:
+                proposal_list.append([p[0, ...] for p in proposal])
         det_bboxes, det_labels = self.aug_test_bboxes(
             self.extract_feats(img_groups), img_metas, proposal_list,
             self.test_cfg.rcnn)

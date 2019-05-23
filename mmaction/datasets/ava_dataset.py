@@ -92,8 +92,6 @@ class AVADataset(Dataset):
             valid_inds = self._filter_records(exclude_file=exclude_file)
             print("{} out of {} frames are valid.".format(len(valid_inds), len(self.video_infos)))
             self.video_infos = [self.video_infos[i] for i in valid_inds]
-            if self.proposals is not None:
-                self.proposals = [self.proposals[i] for i in valid_inds]
 
         # normalization config
         self.img_norm_cfg = img_norm_cfg
@@ -335,13 +333,21 @@ class AVADataset(Dataset):
 
         # load proposals if necessary
         if self.proposals is not None:
-            proposals = self.proposals[idx][: self.num_max_proposals]
+            image_key = "{},{:04d}".format(video_info['video_id'], video_info['timestamp'])
+            proposals = self.proposals[image_key][: self.num_max_proposals]
             if len(proposals) == 0:
                 return None
             if not (proposals.shape[1] == 4 or proposals.shape[1] == 5):
                 raise AssertionError(
                     'proposals should have shapes (n, 4) or (n,5), '
                     'but found {}'.format(proposals.shape))
+            if proposals.shape[1] == 4:
+                proposals = proposals * np.array([video_info['width'], video_info['height'],
+                                                  video_info['width'], video_info['height']])
+            else:
+                proposals = proposals * np.array([video_info['width'], video_info['height'],
+                                                  video_info['width'], video_info['height'], 1.0])
+            proposals = proposals.astype(np.float32)
             if proposals.shape[1] == 5:
                 scores = proposals[: , 4, None]
                 proposals = proposals[:, :4]
@@ -438,16 +444,18 @@ class AVADataset(Dataset):
 
         # load proposals if necessary
         if self.proposals is not None:
-            proposals = self.proposals[idx][: self.num_max_proposals]
-            if not (proposals.shape[1] == 4 or proposals.shape[1] == 5):
+            image_key = "{},{:04d}".format(video_info['video_id'], video_info['timestamp'])
+            proposal = self.proposals[image_key][: self.num_max_proposals]
+            proposal = proposal.astype(np.float32)
+            if not (proposal.shape[1] == 4 or proposal.shape[1] == 5):
                 raise AssertionError(
                     'proposals should have shapes (n, 4) or (n,5), '
-                    'but found {}'.format(proposals.shape))
-            else:
-                proposals = None
+                    'but found {}'.format(proposal.shape))
+        else:
+            proposal = None
 
         def prepare_single(img_group, scale, crop_quadruple, flip, proposal=None):
-            _img_group, img_shape, pad_shape, scale_factor = self.img_group_transform(
+            _img_group, img_shape, pad_shape, scale_factor, crop_quadruple = self.img_group_transform(
                 img_group, scale, crop_history=crop_quadruple, flip=flip, keep_ratio=self.resize_keep_ratio)
             _img_group = to_tensor(_img_group)
             _img_meta = dict(
@@ -484,11 +492,17 @@ class AVADataset(Dataset):
             proposals = []
             for scale in self.img_scales:
                 _img_group, _img_meta, _proposal = prepare_single(img_group, scale, None, False, proposal)
+                if self.input_format == "NCTHW":
+                    # Convert [L x C x H x W] to [C x L x H x W]
+                    _img_group = np.transpose(_img_group, (1,0,2,3))
                 img_groups.append(_img_group)
                 img_metas.append(DC(_img_meta, cpu_only=True))
                 proposals.append(_proposal)
                 if self.flip_ratio > 0:
                     _img_group, _img_meta, _proposal = prepare_single(img_group, scale, None, True, proposal)
+                    if self.input_format == "NCTHW":
+                        # Convert [L x C x H x W] to [C x L x H x W]
+                        _img_group = np.transpose(_img_group, (1,0,2,3))
                     img_groups.append(_img_group)
                     img_metas.append(DC(_img_meta, cpu_only=True))
                     proposals.append(_proposal)

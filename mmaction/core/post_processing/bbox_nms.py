@@ -76,7 +76,7 @@ def singleclass_nms(multi_bboxes, multi_scores, score_thr, nms_cfg, max_num=-1):
     nms_type = nms_cfg_.pop('type', 'nms')
     nms_op = getattr(nms_wrapper, nms_type)
 
-    cls_inds = multi_scores[:, 0] > score_thr
+    cls_inds = multi_scores[:, 0] < score_thr
     if not cls_inds.any():
         bboxes = multi_bboxes.new_zeros((0, 5))
         scores = multi_bboxes.new_zeros((0, multi_scores.size(1)))
