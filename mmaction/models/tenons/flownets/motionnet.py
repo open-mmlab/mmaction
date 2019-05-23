@@ -139,7 +139,7 @@ class MotionNet(nn.Module):
     def multiframe(self):
         return self.num_frames > 1
 
-    def forward(self, x):
+    def forward(self, x, train=True):
         assert(x.ndimension() == 4)
         scaling = torch.tensor(self.scale * (self.num_frames + 1)).type(x.type()).unsqueeze(0).unsqueeze(2).unsqueeze(3)
         x = x * scaling
@@ -179,44 +179,45 @@ class MotionNet(nn.Module):
         ssim_loss_outs = []
         smoothness_loss_outs = []
         FlowScale6 = predict_flow6 * 0.625
-         
-        #### for loss 6 ####
-        predict_flow6_xs = torch.split(predict_flow6, 2, 1)
-        FlowScale6_xs = torch.split(FlowScale6, 2, 1)
-        downsampled_imgs_6 = [F.interpolate(img_norm, size=predict_flow6_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
-        #### warp img1 to back img0 ####
-        #### for photometric loss ####
-        #### for SSIM loss ####
-        Warped6_xs = [self.warp6(downsampled_imgs_6[i+1].contiguous(), FlowScale6_xs[i].contiguous()) for i in range(self.num_frames)]
-        downsampled6_input_concat = torch.cat(downsampled_imgs_6[: self.num_frames], 1)
-        warped6_concat = torch.cat(Warped6_xs, 1)
-        PhotoDifference6 = downsampled6_input_concat - warped6_concat
-        #### flow gradients ####
-        #### for smoothness loss ####
-        U6 = predict_flow6[:, ::2, ...]
-        V6 = predict_flow6[:, 1::2, ...]
-        FlowDeltasU6 = self.conv_FlowDelta(U6.view(-1, 1, U6.size(2), U6.size(3))).view(-1, self.num_frames, 2, U6.size(2), U6.size(3))
-        FlowDeltasU6_xs = torch.split(FlowDeltasU6, 1, 1)
-        FlowDeltasV6 = self.conv_FlowDelta(V6.view(-1, 1, V6.size(2), V6.size(3))).view(-1, self.num_frames, 2, V6.size(2), V6.size(3))
-        FlowDeltasV6_xs = torch.split(FlowDeltasV6, 1, 1)
+        
+        if train:
+            #### for loss 6 ####
+            predict_flow6_xs = torch.split(predict_flow6, 2, 1)
+            FlowScale6_xs = torch.split(FlowScale6, 2, 1)
+            downsampled_imgs_6 = [F.interpolate(img_norm, size=predict_flow6_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
+            #### warp img1 to back img0 ####
+            #### for photometric loss ####
+            #### for SSIM loss ####
+            Warped6_xs = [self.warp6(downsampled_imgs_6[i+1].contiguous(), FlowScale6_xs[i].contiguous()) for i in range(self.num_frames)]
+            downsampled6_input_concat = torch.cat(downsampled_imgs_6[: self.num_frames], 1)
+            warped6_concat = torch.cat(Warped6_xs, 1)
+            PhotoDifference6 = downsampled6_input_concat - warped6_concat
+            #### flow gradients ####
+            #### for smoothness loss ####
+            U6 = predict_flow6[:, ::2, ...]
+            V6 = predict_flow6[:, 1::2, ...]
+            FlowDeltasU6 = self.conv_FlowDelta(U6.view(-1, 1, U6.size(2), U6.size(3))).view(-1, self.num_frames, 2, U6.size(2), U6.size(3))
+            FlowDeltasU6_xs = torch.split(FlowDeltasU6, 1, 1)
+            FlowDeltasV6 = self.conv_FlowDelta(V6.view(-1, 1, V6.size(2), V6.size(3))).view(-1, self.num_frames, 2, V6.size(2), V6.size(3))
+            FlowDeltasV6_xs = torch.split(FlowDeltasV6, 1, 1)
 
-        SmoothnessMask6 = make_smoothness_mask(U6.size(0), U6.size(2), U6.size(3), U6.type())
-        FlowDeltasUClean6_xs = [FlowDeltasU6_x.squeeze() * SmoothnessMask6 for FlowDeltasU6_x in FlowDeltasU6_xs]
-        FlowDeltasVClean6_xs = [FlowDeltasV6_x.squeeze() * SmoothnessMask6 for FlowDeltasV6_x in FlowDeltasV6_xs]
-        FlowDeltasUClean6 = torch.cat(FlowDeltasUClean6_xs, 1)
-        FlowDeltasVClean6 = torch.cat(FlowDeltasVClean6_xs, 1)
+            SmoothnessMask6 = make_smoothness_mask(U6.size(0), U6.size(2), U6.size(3), U6.type())
+            FlowDeltasUClean6_xs = [FlowDeltasU6_x.squeeze() * SmoothnessMask6 for FlowDeltasU6_x in FlowDeltasU6_xs]
+            FlowDeltasVClean6_xs = [FlowDeltasV6_x.squeeze() * SmoothnessMask6 for FlowDeltasV6_x in FlowDeltasV6_xs]
+            FlowDeltasUClean6 = torch.cat(FlowDeltasUClean6_xs, 1)
+            FlowDeltasVClean6 = torch.cat(FlowDeltasVClean6_xs, 1)
 
-        BorderMask6 = make_border_mask(U6.size(0), 3*U6.size(1), U6.size(2), U6.size(3), U6.type(), border_ratio=0.1)
+            BorderMask6 = make_border_mask(U6.size(0), 3*U6.size(1), U6.size(2), U6.size(3), U6.type(), border_ratio=0.1)
 
+            photometric_loss_outs.append((PhotoDifference6, BorderMask6))
+            ssim_loss_outs.append((warped6_concat, downsampled6_input_concat))
+            BorderMask6 = make_border_mask(U6.size(0), 2*U6.size(1), U6.size(2), U6.size(3), U6.type(), border_ratio=0.1)
+            smoothness_loss_outs.append((FlowDeltasUClean6, FlowDeltasVClean6, BorderMask6))
+            #### loss 6 ends here ####
         if self.out_prediction_rescale:
             predictions_outs.append(FlowScale6)
         else:
             predictions_outs.append(predict_flow6)
-        photometric_loss_outs.append((PhotoDifference6, BorderMask6))
-        ssim_loss_outs.append((warped6_concat, downsampled6_input_concat))
-        BorderMask6 = make_border_mask(U6.size(0), 2*U6.size(1), U6.size(2), U6.size(3), U6.type(), border_ratio=0.1)
-        smoothness_loss_outs.append((FlowDeltasUClean6, FlowDeltasVClean6, BorderMask6))
-        #### loss 6 ends here ####
 
         deconv5 = self.deconv5(conv6_1_relu)
         deconv5_relu = self.relu_up5(deconv5)
@@ -225,43 +226,45 @@ class MotionNet(nn.Module):
         smooth_conv5 = self.smooth_conv5(concat5)
         predict_flow5 = self.conv_pr5(smooth_conv5)
         FlowScale5 = predict_flow5 * 1.25
-        #### for loss 5 ####
-        predict_flow5_xs = torch.split(predict_flow5, 2, 1)
-        FlowScale5_xs = torch.split(FlowScale5, 2, 1) 
-        downsampled_imgs_5 = [F.interpolate(img_norm, size=predict_flow5_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
-        #### warp img1 to back img0 ####
-        #### for photometric loss ####
-        #### for SSIM loss ####
-        Warped5_xs = [self.warp5(downsampled_imgs_5[i+1].contiguous(), FlowScale5_xs[i].contiguous()) for i in range(self.num_frames)]
-        downsampled5_input_concat = torch.cat(downsampled_imgs_5[: self.num_frames], 1)
-        warped5_concat = torch.cat(Warped5_xs, 1)
-        PhotoDifference5 = downsampled5_input_concat - warped5_concat
-        #### flow gradients ####
-        #### for smoothness loss ####
-        U5 = predict_flow5[:, ::2, ...]
-        V5 = predict_flow5[:, 1::2, ...]
-        FlowDeltasU5 = self.conv_FlowDelta(U5.view(-1, 1, U5.size(2), U5.size(3))).view(-1, self.num_frames, 2, U5.size(2), U5.size(3))
-        FlowDeltasU5_xs = torch.split(FlowDeltasU5, 1, 1)
-        FlowDeltasV5 = self.conv_FlowDelta(V5.view(-1, 1, V5.size(2), V5.size(3))).view(-1, self.num_frames, 2, V5.size(2), V5.size(3))
-        FlowDeltasV5_xs = torch.split(FlowDeltasV5, 1, 1)
+        
+        if train:
+            #### for loss 5 ####
+            predict_flow5_xs = torch.split(predict_flow5, 2, 1)
+            FlowScale5_xs = torch.split(FlowScale5, 2, 1) 
+            downsampled_imgs_5 = [F.interpolate(img_norm, size=predict_flow5_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
+            #### warp img1 to back img0 ####
+            #### for photometric loss ####
+            #### for SSIM loss ####
+            Warped5_xs = [self.warp5(downsampled_imgs_5[i+1].contiguous(), FlowScale5_xs[i].contiguous()) for i in range(self.num_frames)]
+            downsampled5_input_concat = torch.cat(downsampled_imgs_5[: self.num_frames], 1)
+            warped5_concat = torch.cat(Warped5_xs, 1)
+            PhotoDifference5 = downsampled5_input_concat - warped5_concat
+            #### flow gradients ####
+            #### for smoothness loss ####
+            U5 = predict_flow5[:, ::2, ...]
+            V5 = predict_flow5[:, 1::2, ...]
+            FlowDeltasU5 = self.conv_FlowDelta(U5.view(-1, 1, U5.size(2), U5.size(3))).view(-1, self.num_frames, 2, U5.size(2), U5.size(3))
+            FlowDeltasU5_xs = torch.split(FlowDeltasU5, 1, 1)
+            FlowDeltasV5 = self.conv_FlowDelta(V5.view(-1, 1, V5.size(2), V5.size(3))).view(-1, self.num_frames, 2, V5.size(2), V5.size(3))
+            FlowDeltasV5_xs = torch.split(FlowDeltasV5, 1, 1)
 
-        SmoothnessMask5 = make_smoothness_mask(U5.size(0), U5.size(2), U5.size(3), U5.type())
-        FlowDeltasUClean5_xs = [FlowDeltasU5_x.squeeze() * SmoothnessMask5 for FlowDeltasU5_x in FlowDeltasU5_xs]
-        FlowDeltasVClean5_xs = [FlowDeltasV5_x.squeeze() * SmoothnessMask5 for FlowDeltasV5_x in FlowDeltasV5_xs]
-        FlowDeltasUClean5 = torch.cat(FlowDeltasUClean5_xs, 1)
-        FlowDeltasVClean5 = torch.cat(FlowDeltasVClean5_xs, 1)
+            SmoothnessMask5 = make_smoothness_mask(U5.size(0), U5.size(2), U5.size(3), U5.type())
+            FlowDeltasUClean5_xs = [FlowDeltasU5_x.squeeze() * SmoothnessMask5 for FlowDeltasU5_x in FlowDeltasU5_xs]
+            FlowDeltasVClean5_xs = [FlowDeltasV5_x.squeeze() * SmoothnessMask5 for FlowDeltasV5_x in FlowDeltasV5_xs]
+            FlowDeltasUClean5 = torch.cat(FlowDeltasUClean5_xs, 1)
+            FlowDeltasVClean5 = torch.cat(FlowDeltasVClean5_xs, 1)
 
-        BorderMask5 = make_border_mask(U5.size(0), 3*U5.size(1), U5.size(2), U5.size(3), U5.type(), border_ratio=0.1)
+            BorderMask5 = make_border_mask(U5.size(0), 3*U5.size(1), U5.size(2), U5.size(3), U5.type(), border_ratio=0.1)
 
+            photometric_loss_outs.append((PhotoDifference5, BorderMask5))
+            ssim_loss_outs.append((warped5_concat, downsampled5_input_concat))
+            BorderMask5 = make_border_mask(U5.size(0), 2*U5.size(1), U5.size(2), U5.size(3), U5.type(), border_ratio=0.1)
+            smoothness_loss_outs.append((FlowDeltasUClean5, FlowDeltasVClean5, BorderMask5))
+            #### loss 5 ends here ####
         if self.out_prediction_rescale:
             predictions_outs.append(FlowScale5)
         else:
             predictions_outs.append(predict_flow5)
-        photometric_loss_outs.append((PhotoDifference5, BorderMask5))
-        ssim_loss_outs.append((warped5_concat, downsampled5_input_concat))
-        BorderMask5 = make_border_mask(U5.size(0), 2*U5.size(1), U5.size(2), U5.size(3), U5.type(), border_ratio=0.1)
-        smoothness_loss_outs.append((FlowDeltasUClean5, FlowDeltasVClean5, BorderMask5))
-        #### loss 5 ends here ####
 
         deconv4 = self.deconv4(smooth_conv5)
         deconv4_relu = self.relu_up4(deconv4)
@@ -271,43 +274,44 @@ class MotionNet(nn.Module):
         predict_flow4 = self.conv_pr4(smooth_conv4)
         FlowScale4 = predict_flow4 * 2.5
 
-        #### for loss 4 ####
-        predict_flow4_xs = torch.split(predict_flow4, 2, 1)
-        FlowScale4_xs = torch.split(FlowScale4, 2, 1)
-        downsampled_imgs_4 = [F.interpolate(img_norm, size=predict_flow4_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
-        #### warp img1 to back img0 ####
-        #### for photometric loss ####
-        #### for SSIM loss ####
-        Warped4_xs = [self.warp4(downsampled_imgs_4[i+1].contiguous(), FlowScale4_xs[i].contiguous()) for i in range(self.num_frames)]
-        downsampled4_input_concat = torch.cat(downsampled_imgs_4[: self.num_frames], 1)
-        warped4_concat = torch.cat(Warped4_xs, 1)
-        PhotoDifference4 = downsampled4_input_concat - warped4_concat
-        #### flow gradients ####
-        #### for smoothness loss ####
-        U4 = predict_flow4[:, ::2, ...]
-        V4 = predict_flow4[:, 1::2, ...]
-        FlowDeltasU4 = self.conv_FlowDelta(U4.view(-1, 1, U4.size(2), U4.size(3))).view(-1, self.num_frames, 2, U4.size(2), U4.size(3))
-        FlowDeltasU4_xs = torch.split(FlowDeltasU4, 1, 1)
-        FlowDeltasV4 = self.conv_FlowDelta(V4.view(-1, 1, V4.size(2), V4.size(3))).view(-1, self.num_frames, 2, V4.size(2), V4.size(3))
-        FlowDeltasV4_xs = torch.split(FlowDeltasV4, 1, 1)
+        if train:
+            #### for loss 4 ####
+            predict_flow4_xs = torch.split(predict_flow4, 2, 1)
+            FlowScale4_xs = torch.split(FlowScale4, 2, 1)
+            downsampled_imgs_4 = [F.interpolate(img_norm, size=predict_flow4_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
+            #### warp img1 to back img0 ####
+            #### for photometric loss ####
+            #### for SSIM loss ####
+            Warped4_xs = [self.warp4(downsampled_imgs_4[i+1].contiguous(), FlowScale4_xs[i].contiguous()) for i in range(self.num_frames)]
+            downsampled4_input_concat = torch.cat(downsampled_imgs_4[: self.num_frames], 1)
+            warped4_concat = torch.cat(Warped4_xs, 1)
+            PhotoDifference4 = downsampled4_input_concat - warped4_concat
+            #### flow gradients ####
+            #### for smoothness loss ####
+            U4 = predict_flow4[:, ::2, ...]
+            V4 = predict_flow4[:, 1::2, ...]
+            FlowDeltasU4 = self.conv_FlowDelta(U4.view(-1, 1, U4.size(2), U4.size(3))).view(-1, self.num_frames, 2, U4.size(2), U4.size(3))
+            FlowDeltasU4_xs = torch.split(FlowDeltasU4, 1, 1)
+            FlowDeltasV4 = self.conv_FlowDelta(V4.view(-1, 1, V4.size(2), V4.size(3))).view(-1, self.num_frames, 2, V4.size(2), V4.size(3))
+            FlowDeltasV4_xs = torch.split(FlowDeltasV4, 1, 1)
 
-        SmoothnessMask4 = make_smoothness_mask(U4.size(0), U4.size(2), U4.size(3), U4.type())
-        FlowDeltasUClean4_xs = [FlowDeltasU4_x.squeeze() * SmoothnessMask4 for FlowDeltasU4_x in FlowDeltasU4_xs]
-        FlowDeltasVClean4_xs = [FlowDeltasV4_x.squeeze() * SmoothnessMask4 for FlowDeltasV4_x in FlowDeltasV4_xs]
-        FlowDeltasUClean4 = torch.cat(FlowDeltasUClean4_xs, 1)
-        FlowDeltasVClean4 = torch.cat(FlowDeltasVClean4_xs, 1)
+            SmoothnessMask4 = make_smoothness_mask(U4.size(0), U4.size(2), U4.size(3), U4.type())
+            FlowDeltasUClean4_xs = [FlowDeltasU4_x.squeeze() * SmoothnessMask4 for FlowDeltasU4_x in FlowDeltasU4_xs]
+            FlowDeltasVClean4_xs = [FlowDeltasV4_x.squeeze() * SmoothnessMask4 for FlowDeltasV4_x in FlowDeltasV4_xs]
+            FlowDeltasUClean4 = torch.cat(FlowDeltasUClean4_xs, 1)
+            FlowDeltasVClean4 = torch.cat(FlowDeltasVClean4_xs, 1)
 
-        BorderMask4 = make_border_mask(U4.size(0), 3*U4.size(1), U4.size(2), U4.size(3), U4.type(), border_ratio=0.1)
+            BorderMask4 = make_border_mask(U4.size(0), 3*U4.size(1), U4.size(2), U4.size(3), U4.type(), border_ratio=0.1)
 
+            photometric_loss_outs.append((PhotoDifference4, BorderMask4))
+            ssim_loss_outs.append((warped4_concat, downsampled4_input_concat))
+            BorderMask4 = make_border_mask(U4.size(0), 2*U4.size(1), U4.size(2), U4.size(3), U4.type(), border_ratio=0.1)
+            smoothness_loss_outs.append((FlowDeltasUClean4, FlowDeltasVClean4, BorderMask4))
+            #### loss 4 ends here ####
         if self.out_prediction_rescale:
             predictions_outs.append(FlowScale4)
         else:
             predictions_outs.append(predict_flow4)
-        photometric_loss_outs.append((PhotoDifference4, BorderMask4))
-        ssim_loss_outs.append((warped4_concat, downsampled4_input_concat))
-        BorderMask4 = make_border_mask(U4.size(0), 2*U4.size(1), U4.size(2), U4.size(3), U4.type(), border_ratio=0.1)
-        smoothness_loss_outs.append((FlowDeltasUClean4, FlowDeltasVClean4, BorderMask4))
-        #### loss 4 ends here ####
 
         deconv3 = self.deconv3(smooth_conv4)
         deconv3_relu = self.relu_up3(deconv3)
@@ -317,43 +321,44 @@ class MotionNet(nn.Module):
         predict_flow3 = self.conv_pr3(smooth_conv3)
         FlowScale3 = predict_flow3 * 5.0
 
-        #### for loss 3 ####
-        predict_flow3_xs = torch.split(predict_flow3, 2, 1)
-        FlowScale3_xs = torch.split(FlowScale3, 2, 1) 
-        downsampled_imgs_3 = [F.interpolate(img_norm, size=predict_flow3_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
-        #### warp img1 to back img0 ####
-        #### for photometric loss ####
-        #### for SSIM loss ####
-        Warped3_xs = [self.warp3(downsampled_imgs_3[i+1].contiguous(), FlowScale3_xs[i].contiguous()) for i in range(self.num_frames)]
-        downsampled3_input_concat = torch.cat(downsampled_imgs_3[: self.num_frames], 1)
-        warped3_concat = torch.cat(Warped3_xs, 1)
-        PhotoDifference3 = downsampled3_input_concat - warped3_concat
-        #### flow gradients ####
-        #### for smoothness loss ####
-        U3 = predict_flow3[:, ::2, ...]
-        V3 = predict_flow3[:, 1::2, ...]
-        FlowDeltasU3 = self.conv_FlowDelta(U3.view(-1, 1, U3.size(2), U3.size(3))).view(-1, self.num_frames, 2, U3.size(2), U3.size(3))
-        FlowDeltasU3_xs = torch.split(FlowDeltasU3, 1, 1)
-        FlowDeltasV3 = self.conv_FlowDelta(V3.view(-1, 1, V3.size(2), V3.size(3))).view(-1, self.num_frames, 2, V3.size(2), V3.size(3))
-        FlowDeltasV3_xs = torch.split(FlowDeltasV3, 1, 1)
+        if train:
+            #### for loss 3 ####
+            predict_flow3_xs = torch.split(predict_flow3, 2, 1)
+            FlowScale3_xs = torch.split(FlowScale3, 2, 1) 
+            downsampled_imgs_3 = [F.interpolate(img_norm, size=predict_flow3_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
+            #### warp img1 to back img0 ####
+            #### for photometric loss ####
+            #### for SSIM loss ####
+            Warped3_xs = [self.warp3(downsampled_imgs_3[i+1].contiguous(), FlowScale3_xs[i].contiguous()) for i in range(self.num_frames)]
+            downsampled3_input_concat = torch.cat(downsampled_imgs_3[: self.num_frames], 1)
+            warped3_concat = torch.cat(Warped3_xs, 1)
+            PhotoDifference3 = downsampled3_input_concat - warped3_concat
+            #### flow gradients ####
+            #### for smoothness loss ####
+            U3 = predict_flow3[:, ::2, ...]
+            V3 = predict_flow3[:, 1::2, ...]
+            FlowDeltasU3 = self.conv_FlowDelta(U3.view(-1, 1, U3.size(2), U3.size(3))).view(-1, self.num_frames, 2, U3.size(2), U3.size(3))
+            FlowDeltasU3_xs = torch.split(FlowDeltasU3, 1, 1)
+            FlowDeltasV3 = self.conv_FlowDelta(V3.view(-1, 1, V3.size(2), V3.size(3))).view(-1, self.num_frames, 2, V3.size(2), V3.size(3))
+            FlowDeltasV3_xs = torch.split(FlowDeltasV3, 1, 1)
 
-        SmoothnessMask3 = make_smoothness_mask(U3.size(0), U3.size(2), U3.size(3), U3.type())
-        FlowDeltasUClean3_xs = [FlowDeltasU3_x.squeeze() * SmoothnessMask3 for FlowDeltasU3_x in FlowDeltasU3_xs]
-        FlowDeltasVClean3_xs = [FlowDeltasV3_x.squeeze() * SmoothnessMask3 for FlowDeltasV3_x in FlowDeltasV3_xs]
-        FlowDeltasUClean3 = torch.cat(FlowDeltasUClean3_xs, 1)
-        FlowDeltasVClean3 = torch.cat(FlowDeltasVClean3_xs, 1)
+            SmoothnessMask3 = make_smoothness_mask(U3.size(0), U3.size(2), U3.size(3), U3.type())
+            FlowDeltasUClean3_xs = [FlowDeltasU3_x.squeeze() * SmoothnessMask3 for FlowDeltasU3_x in FlowDeltasU3_xs]
+            FlowDeltasVClean3_xs = [FlowDeltasV3_x.squeeze() * SmoothnessMask3 for FlowDeltasV3_x in FlowDeltasV3_xs]
+            FlowDeltasUClean3 = torch.cat(FlowDeltasUClean3_xs, 1)
+            FlowDeltasVClean3 = torch.cat(FlowDeltasVClean3_xs, 1)
 
-        BorderMask3 = make_border_mask(U3.size(0), 3*U3.size(1), U3.size(2), U3.size(3), U3.type(), border_ratio=0.1)
+            BorderMask3 = make_border_mask(U3.size(0), 3*U3.size(1), U3.size(2), U3.size(3), U3.type(), border_ratio=0.1)
 
+            photometric_loss_outs.append((PhotoDifference3, BorderMask3))
+            ssim_loss_outs.append((warped3_concat, downsampled3_input_concat))
+            BorderMask3 = make_border_mask(U3.size(0), 2*U3.size(1), U3.size(2), U3.size(3), U3.type(), border_ratio=0.1)
+            smoothness_loss_outs.append((FlowDeltasUClean3, FlowDeltasVClean3, BorderMask3))
+            #### loss 3 ends here ####
         if self.out_prediction_rescale:
             predictions_outs.append(FlowScale3)
         else:
             predictions_outs.append(predict_flow3)
-        photometric_loss_outs.append((PhotoDifference3, BorderMask3))
-        ssim_loss_outs.append((warped3_concat, downsampled3_input_concat))
-        BorderMask3 = make_border_mask(U3.size(0), 2*U3.size(1), U3.size(2), U3.size(3), U3.type(), border_ratio=0.1)
-        smoothness_loss_outs.append((FlowDeltasUClean3, FlowDeltasVClean3, BorderMask3))
-        #### loss 3 ends here ####
 
         deconv2 = self.deconv2(smooth_conv3)
         deconv2_relu = self.relu_up2(deconv2)
@@ -363,47 +368,52 @@ class MotionNet(nn.Module):
         predict_flow2 = self.conv_pr2(smooth_conv2)
         FlowScale2 = predict_flow2 * 10.0
 
-        #### for loss 2 ####
-        predict_flow2_xs = torch.split(predict_flow2, 2, 1)
-        FlowScale2_xs = torch.split(FlowScale2, 2, 1) 
-        downsampled_imgs_2 = [F.interpolate(img_norm, size=predict_flow2_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
-        #### warp img1 to back img0 ####
-        #### for photometric loss ####
-        #### for SSIM loss ####
-        Warped2_xs = [self.warp2(downsampled_imgs_2[i+1].contiguous(), FlowScale2_xs[i].contiguous()) for i in range(self.num_frames)]
-        downsampled2_input_concat = torch.cat(downsampled_imgs_2[: self.num_frames], 1)
-        warped2_concat = torch.cat(Warped2_xs, 1)
-        PhotoDifference2 = downsampled2_input_concat - warped2_concat
-        #### flow gradients ####
-        #### for smoothness loss ####
-        U2 = predict_flow2[:, ::2, ...]
-        V2 = predict_flow2[:, 1::2, ...]
-        FlowDeltasU2 = self.conv_FlowDelta(U2.view(-1, 1, U2.size(2), U2.size(3))).view(-1, self.num_frames, 2, U2.size(2), U2.size(3))
-        FlowDeltasU2_xs = torch.split(FlowDeltasU2, 1, 1)
-        FlowDeltasV2 = self.conv_FlowDelta(V2.view(-1, 1, V2.size(2), V2.size(3))).view(-1, self.num_frames, 2, V2.size(2), V2.size(3))
-        FlowDeltasV2_xs = torch.split(FlowDeltasV2, 1, 1)
+        if train:
+            #### for loss 2 ####
+            predict_flow2_xs = torch.split(predict_flow2, 2, 1)
+            FlowScale2_xs = torch.split(FlowScale2, 2, 1) 
+            downsampled_imgs_2 = [F.interpolate(img_norm, size=predict_flow2_xs[0].size()[-2:], mode='bilinear') for img_norm in imgs_norm]
+            #### warp img1 to back img0 ####
+            #### for photometric loss ####
+            #### for SSIM loss ####
+            Warped2_xs = [self.warp2(downsampled_imgs_2[i+1].contiguous(), FlowScale2_xs[i].contiguous()) for i in range(self.num_frames)]
+            downsampled2_input_concat = torch.cat(downsampled_imgs_2[: self.num_frames], 1)
+            warped2_concat = torch.cat(Warped2_xs, 1)
+            PhotoDifference2 = downsampled2_input_concat - warped2_concat
+            #### flow gradients ####
+            #### for smoothness loss ####
+            U2 = predict_flow2[:, ::2, ...]
+            V2 = predict_flow2[:, 1::2, ...]
+            FlowDeltasU2 = self.conv_FlowDelta(U2.view(-1, 1, U2.size(2), U2.size(3))).view(-1, self.num_frames, 2, U2.size(2), U2.size(3))
+            FlowDeltasU2_xs = torch.split(FlowDeltasU2, 1, 1)
+            FlowDeltasV2 = self.conv_FlowDelta(V2.view(-1, 1, V2.size(2), V2.size(3))).view(-1, self.num_frames, 2, V2.size(2), V2.size(3))
+            FlowDeltasV2_xs = torch.split(FlowDeltasV2, 1, 1)
 
-        SmoothnessMask2 = make_smoothness_mask(U2.size(0), U2.size(2), U2.size(3), U2.type())
-        FlowDeltasUClean2_xs = [FlowDeltasU2_x.squeeze() * SmoothnessMask2 for FlowDeltasU2_x in FlowDeltasU2_xs]
-        FlowDeltasVClean2_xs = [FlowDeltasV2_x.squeeze() * SmoothnessMask2 for FlowDeltasV2_x in FlowDeltasV2_xs]
-        FlowDeltasUClean2 = torch.cat(FlowDeltasUClean2_xs, 1)
-        FlowDeltasVClean2 = torch.cat(FlowDeltasVClean2_xs, 1)
+            SmoothnessMask2 = make_smoothness_mask(U2.size(0), U2.size(2), U2.size(3), U2.type())
+            FlowDeltasUClean2_xs = [FlowDeltasU2_x.squeeze() * SmoothnessMask2 for FlowDeltasU2_x in FlowDeltasU2_xs]
+            FlowDeltasVClean2_xs = [FlowDeltasV2_x.squeeze() * SmoothnessMask2 for FlowDeltasV2_x in FlowDeltasV2_xs]
+            FlowDeltasUClean2 = torch.cat(FlowDeltasUClean2_xs, 1)
+            FlowDeltasVClean2 = torch.cat(FlowDeltasVClean2_xs, 1)
 
-        BorderMask2 = make_border_mask(U2.size(0), 3*U2.size(1), U2.size(2), U2.size(3), U2.type(), border_ratio=0.1)
+            BorderMask2 = make_border_mask(U2.size(0), 3*U2.size(1), U2.size(2), U2.size(3), U2.type(), border_ratio=0.1)
 
-        if self.out_prediction_rescale:
-            predictions_outs.append(FlowScale2)
-        else:
-            predictions_outs.append(predict_flow2)
-        photometric_loss_outs.append((PhotoDifference2, BorderMask2))
-        ssim_loss_outs.append((warped2_concat, downsampled2_input_concat))
-        BorderMask2 = make_border_mask(U2.size(0), 2*U2.size(1), U2.size(2), U2.size(3), U2.type(), border_ratio=0.1)
-        smoothness_loss_outs.append((FlowDeltasUClean2, FlowDeltasVClean2, BorderMask2))
-        #### loss 2 ends here ####
+            if self.out_prediction_rescale:
+                predictions_outs.append(FlowScale2)
+            else:
+                predictions_outs.append(predict_flow2)
+            photometric_loss_outs.append((PhotoDifference2, BorderMask2))
+            ssim_loss_outs.append((warped2_concat, downsampled2_input_concat))
+            BorderMask2 = make_border_mask(U2.size(0), 2*U2.size(1), U2.size(2), U2.size(3), U2.type(), border_ratio=0.1)
+            smoothness_loss_outs.append((FlowDeltasUClean2, FlowDeltasVClean2, BorderMask2))
+            #### loss 2 ends here ####
 
 
         outs_predictions = [predictions_outs[i] for i in self.out_prediction_indices]
-        return tuple(outs_predictions), photometric_loss_outs, ssim_loss_outs, smoothness_loss_outs
+        
+        if train:
+            return tuple(outs_predictions), photometric_loss_outs, ssim_loss_outs, smoothness_loss_outs
+        else:
+            return tuple(outs_predictions), None, None, None
 
     def init_weights(self):
         if isinstance(self.pretrained, str):
@@ -443,9 +453,9 @@ class MotionNet(nn.Module):
 
 
     def train(self, mode=True):
-         super(MotionNet, self).train(mode)
-         if self.frozen:
-             for m in self.modules():
-                 if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-                     for param in m.parameters():
-                         param.requires_grad = False
+        super(MotionNet, self).train(mode)
+        if self.frozen:
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+                    for param in m.parameters():
+                        param.requires_grad = False
