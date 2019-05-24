@@ -7,6 +7,7 @@ from mmcv.runner import load_checkpoint
 from ..backbones import ResNet
 from ..backbones.resnet import make_res_layer
 from ...registry import HEADS
+from ..spatial_temporal_modules.non_local import NonLocalModule
 
 
 @HEADS.register_module
@@ -14,6 +15,7 @@ class ResLayer(nn.Module):
 
     def __init__(self,
                  depth,
+                 pretrained=None,
                  stage=3,
                  stride=2,
                  dilation=1,
@@ -28,6 +30,7 @@ class ResLayer(nn.Module):
         self.all_frozen = all_frozen
         self.stage = stage
         block, stage_blocks = ResNet.arch_settings[depth]
+        self.pretrained = pretrained
         stage_block = stage_blocks[stage]
         planes = 64 * 2**stage
         inplanes = 64 * 2**(stage - 1) * block.expansion
@@ -43,11 +46,11 @@ class ResLayer(nn.Module):
             with_cp=with_cp)
         self.add_module('layer{}'.format(stage + 1), res_layer)
 
-    def init_weights(self, pretrained=None):
-        if isinstance(pretrained, str):
+    def init_weights(self):
+        if isinstance(self.pretrained, str):
             logger = logging.getLogger()
-            load_checkpoint(self, pretrained, strict=False, logger=logger)
-        elif pretrained is None:
+            load_checkpoint(self, self.pretrained, strict=False, logger=logger)
+        elif self.pretrained is None:
             for m in self.modules():
                 if isinstance(m, nn.Conv2d):
                     kaiming_init(m)

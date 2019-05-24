@@ -146,12 +146,16 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
         assert self.with_bbox, "Bbox head must be implemented."
 
         assert num_modalities == 1
-        img_group = kwargs['img_group_0']
+        img_group = kwargs['img_group_0'][0]
         x = self.extract_feat(img_group)
 
 
-        proposal_list = self.simple_test_rpn(
-            x, img_meta, self.test_cfg.rpn) if proposals is None else proposals
+        if proposals is None:
+            proposal_list = self.simple_test_rpn(
+                x, img_meta, self.test_cfg.rpn)
+        else:
+            proposal_list = [p[0,...] for p in proposals]
+        img_meta = img_meta[0]
 
         det_bboxes, det_labels = self.simple_test_bboxes(
             x, img_meta, proposal_list, self.test_cfg.rcnn, rescale=rescale)

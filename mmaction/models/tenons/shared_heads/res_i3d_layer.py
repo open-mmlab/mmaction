@@ -14,6 +14,8 @@ class ResI3DLayer(nn.Module):
 
     def __init__(self,
                  depth,
+                 pretrained=None,
+                 pretrained2d=True,
                  stage=3,
                  spatial_stride=2,
                  temporal_stride=1,
@@ -31,6 +33,8 @@ class ResI3DLayer(nn.Module):
         self.all_frozen = all_frozen
         self.stage = stage
         block, stage_blocks = ResNet_I3D.arch_settings[depth]
+        self.pretrained = pretrained
+        self.pretrained2d = pretrained2d
         stage_block = stage_blocks[stage]
         planes = 64 * 2**stage
         inplanes = 64 * 2**(stage - 1) * block.expansion
@@ -51,11 +55,30 @@ class ResI3DLayer(nn.Module):
             with_cp=with_cp)
         self.add_module('layer{}'.format(stage + 1), res_layer)
 
-    def init_weights(self, pretrained=None):
-        if isinstance(pretrained, str):
+    def init_weights(self):
+        if isinstance(self.pretrained, str):
             logger = logging.getLogger()
-            load_checkpoint(self, pretrained, strict=False, logger=logger)
-        elif pretrained is None:
+            if self.pretrained2d:
+                resnet2d = ResNet(self.depth)
+                load_checkpoint(resnet2d, self.pretrained, strict=False, logger=logger)
+                for name, module in self.named_modules():
+                    if isinstance(module, NonLocalModule):
+                        module.init_weights()
+                    elif isinstance(module, nn.Conv3d) and rhasattr(resnet2d, name):
+                        new_weight = rgetattr(resnet2d, name).weight.data.unsqueeze(2).expand_as(module.weight) / module.weight.data.shape[2]
+                        module.weight.data.copy_(new_weight)
+                        logging.info("{}.weight loaded from weights file into {}".format(name, new_weight.shape))
+                        if hasattr(module, 'bias') and module.bias is not None:
+                            new_bias = rgetattr(resnet2d, name).bias.data
+                            module.bias.data.copy_(new_bias)
+                            logging.info("{}.bias loaded from weights file into {}".format(name, new_bias.shape))
+                    elif isinstance(module, nn.BatchNorm3d) and rhasattr(resnet2d, name):
+                        for attr in ['weight', 'bias', 'running_mean', 'running_var']:
+                            logging.info("{}.{} loaded from weights file into {}".format(name, attr, getattr(rgetattr(resnet2d, name), attr).shape))
+                            setattr(module, attr, getattr(rgetattr(resnet2d, name), attr))
+            else:
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger)
+        elif self.pretrained is None:
             for m in self.modules():
                 if isinstance(m, nn.Conv2d):
                     kaiming_init(m)

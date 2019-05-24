@@ -446,11 +446,17 @@ class AVADataset(Dataset):
         if self.proposals is not None:
             image_key = "{},{:04d}".format(video_info['video_id'], video_info['timestamp'])
             proposal = self.proposals[image_key][: self.num_max_proposals]
-            proposal = proposal.astype(np.float32)
             if not (proposal.shape[1] == 4 or proposal.shape[1] == 5):
                 raise AssertionError(
                     'proposals should have shapes (n, 4) or (n,5), '
                     'but found {}'.format(proposal.shape))
+            if proposal.shape[1] == 4:
+                proposal = proposal * np.array([video_info['width'], video_info['height'],
+                                                video_info['width'], video_info['height']])
+            else:
+                proposal = proposal * np.array([video_info['width'], video_info['height'],
+                                                video_info['width'], video_info['height'], 1.0])
+            proposal = proposal.astype(np.float32)
         else:
             proposal = None
 

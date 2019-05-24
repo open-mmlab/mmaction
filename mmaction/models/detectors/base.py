@@ -66,7 +66,7 @@ class BaseDetector(nn.Module):
                 'num of augmentations ({}) != num of image meta ({})'.format(
                     num_augs, len(img_metas)))
         # TODO: remove the restriction of videos_per_gpu == 1 when prepared
-        videos_per_gpu = kwargs['img_group_0'].size(0)
+        videos_per_gpu = kwargs['img_group_0'][0].size(0)
         assert videos_per_gpu == 1
 
         if num_augs == 1:

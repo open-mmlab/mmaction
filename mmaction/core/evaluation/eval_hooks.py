@@ -101,7 +101,10 @@ class DistEvalTopKAccuracyHook(DistEvalHook):
 
 
 class AVADistEvalmAPHook(DistEvalHook):
-    
+   
+    def __init__(self, dataset):
+        super(AVADistEvalmAPHook, self).__init__(dataset)
+
     def evaluate(self, runner, results, verbose=False):
 
         categories, class_whitelist = read_labelmap(open(self.dataset.label_file))
