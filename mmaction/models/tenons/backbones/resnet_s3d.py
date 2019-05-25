@@ -486,12 +486,18 @@ class ResNet_S3D(nn.Module):
                 if j > -1:
                     flow_forward = trajectory_forward[j]  ## N, 2*T, H, W (..x3y3x4y4..)
                     flow_backward = trajectory_backward[j]
-                    flow_forward = flow_forward.view((flow_forward.size(0), 2, -1, flow_forward.size(2), flow_forward.size(3)))
-                    flow_backward = flow_backward.view((flow_backward.size(0), 2, -1, flow_backward.size(2), flow_backward.size(3)))
-                    flow_forward_x, flow_forward_y = torch.split(flow_forward, 1, 1)
-                    flow_backward_x, flow_backward_y = torch.split(flow_backward, 1, 1)
-                    flow_backward_x = flow_backward_x.flip(2)  # N,1,T,H,W
-                    flow_backward_y = flow_backward_y.flip(2)
+                    flow_forward = flow_forward.view((flow_forward.size(0), -1, 2, flow_forward.size(2), flow_forward.size(3)))
+                    flow_backward = flow_backward.view((flow_backward.size(0), -1, 2, flow_backward.size(2), flow_backward.size(3)))
+                    flow_forward_x, flow_forward_y = torch.split(flow_forward, 1, 2)
+                    flow_backward_x, flow_backward_y = torch.split(flow_backward, 1, 2)
+                    flow_backward_x = flow_backward_x.flip(1).view((flow_backward_x.size(0), 1, flow_backward_x.size(1),
+                                                                    flow_backward_x.size(3), flow_backward_x.size(4)))  # N,T,1,H,W => N,1,T,H,W
+                    flow_backward_y = flow_backward_y.flip(1).view((flow_backward_y.size(0), 1, flow_backward_y.size(1),
+                                                                    flow_backward_y.size(3), flow_backward_y.size(4)))
+                    flow_forward_x = flow_forward_x.view((flow_forward_x.size(0), 1, flow_forward_x.size(1),
+                                                          flow_forward_x.size(3), flow_forward_x.size(4)))
+                    flow_forward_y = flow_forward_y.view((flow_forward_y.size(0), 1, flow_forward_y.size(1),
+                                                          flow_forward_y.size(3), flow_forward_y.size(4)))
                     flow_zero = torch.zeros_like(flow_forward_x)
                     y.append(torch.cat((flow_backward_y, flow_backward_x, flow_zero, flow_zero, flow_forward_y, flow_forward_x), 1))
                 else:

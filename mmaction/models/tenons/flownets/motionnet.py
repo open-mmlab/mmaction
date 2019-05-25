@@ -32,6 +32,7 @@ class MotionNet(nn.Module):
 
     def __init__(self,
                  num_frames=1,
+                 rgb_disorder=False,
                  scale=0.0039216,
                  out_loss_indices=(0, 1, 2, 3, 4),
                  out_prediction_indices=(0, 1, 2, 3, 4),
@@ -46,6 +47,7 @@ class MotionNet(nn.Module):
                  pretrained=None):
         super(MotionNet, self).__init__()
         self.num_frames = num_frames
+        self.rgb_disorder = rgb_disorder
         self.scale = scale
         self.out_loss_indices = out_loss_indices
         self.out_prediction_indices = out_prediction_indices
@@ -134,6 +136,10 @@ class MotionNet(nn.Module):
         self.conv_pr2 = nn.Conv2d(64, 2*num_frames, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=True)
 
         self.init_weights()
+
+    @property
+    def flip_rgb(self):
+        return self.rgb_disorder
 
     @property
     def multiframe(self):

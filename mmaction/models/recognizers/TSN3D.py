@@ -106,10 +106,14 @@ class TSN3D(BaseRecognizer):
         if self.with_flownet:
             if self.flownet.multiframe:
                 img_forward = img_group[:, :, 1:, :, :]
+                if self.flownet.flip_rgb:
+                    img_forward = img_forward.flip(1)
                 img_forward = img_forward.transpose(1, 2).contiguous().view(
                     (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
                 trajectory_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
                 img_backward = img_group.flip(2)[:, :, 1:, :, :]
+                if self.flownet.rgb_disorder:
+                    img_backward = img_backward.flip(1)
                 img_backward = img_backward.transpose(1, 2).contiguous().view(
                     (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
                 trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
@@ -122,6 +126,8 @@ class TSN3D(BaseRecognizer):
                 smooth_forwards, smooth_backwards = [], []
                 for i in range(1, num_frames - 1):
                     img_forward = img_group[:, :, i:i+2, :, :]
+                    if self.flownet.flip_rgb:
+                        img_forward = img_forward.flip(1)
                     img_forward = img_forward.transpose(1, 2).contiguous().view(
                         (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
                     traj_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
@@ -130,6 +136,8 @@ class TSN3D(BaseRecognizer):
                     ssim_forwards.append(ssim_forward)
                     smooth_forwards.append(smooth_forward)
                     img_backward = img_group[:, :, num_frames - i - 1: num_frames - i + 1, :, :].flip(2)
+                    if self.flownet.flip_rgb:
+                        img_backward = img_backward.flip(1)
                     img_backward = img_backward.transpose(1, 2).contiguous().view(
                         (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
                     traj_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
@@ -212,10 +220,14 @@ class TSN3D(BaseRecognizer):
         if self.with_flownet:
             if self.flownet.multiframe:
                 img_forward = img_group[:, :, 1:, :, :]
+                if self.flownet.flip_rgb:
+                    img_forward = img_forward.flip(1)
                 img_forward = img_forward.transpose(1, 2).contiguous().view(
                     (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
                 trajectory_forward, _, _, _ = self.flownet(img_forward, train=False)
                 img_backward = img_group.flip(2)[:, :, 1:, :, :]
+                if self.flownet.flip_rgb:
+                    img_backward = img_backward.flip(1)
                 img_backward = img_backward.transpose(1, 2).contiguous().view(
                     (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
                 trajectory_backward, _, _, _ = self.flownet(img_backward, train=False)
@@ -225,11 +237,15 @@ class TSN3D(BaseRecognizer):
                 traj_forwards, traj_backwards = [], []
                 for i in range(1, num_frames - 1):
                     img_forward = img_group[:, :, i:i+2, :, :]
+                    if self.flownet.rgb_disorder:
+                        img_forward = img_forward.flip(1)
                     img_forward = img_forward.transpose(1, 2).contiguous().view(
                         (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
                     traj_forward, _, _, _ = self.flownet(img_forward, train=False)
                     traj_forwards.append(traj_forward)
                     img_backward = img_group[:, :, num_frames - i - 1: num_frames - i + 1, :, :].flip(2)
+                    if self.flownet.rgb_disorder:
+                        img_backward = img_backward.flip(1)
                     img_backward = img_backward.transpose(1, 2).contiguous().view(
                         (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
                     traj_backward, _, _, _ = self.flownet(img_backward, train=False)
