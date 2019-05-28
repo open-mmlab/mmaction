@@ -16,6 +16,7 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
                  shared_head=None,
                  rpn_head=None,
                  bbox_roi_extractor=None,
+                 dropout_ratio=0,
                  bbox_head=None,
                  train_cfg=None,
                  test_cfg=None,
@@ -37,6 +38,11 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
             self.bbox_roi_extractor = builder.build_roi_extractor(
                 bbox_roi_extractor)
             self.bbox_head = builder.build_head(bbox_head)
+
+        if dropout_ratio > 0:
+            self.dropout = nn.Dropout(p=dropout_ratio)
+        else:
+            self.dropout = None
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -137,6 +143,10 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
                 x[:self.bbox_roi_extractor.num_inputs], rois)
             if self.with_shared_head:
                 bbox_feats = self.shared_head(bbox_feats)
+
+            if self.dropout is not None:
+                bbox_feats = self.dropout(bbox_feats)
+            
             cls_score, bbox_pred = self.bbox_head(bbox_feats)
 
             bbox_targets = self.bbox_head.get_target(
