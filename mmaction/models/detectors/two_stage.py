@@ -100,6 +100,13 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
             proposal_list = self.rpn_head.get_bboxes(*proposal_inputs)
         else:
             proposal_list = proposals
+        
+        if not self.train_cfg.train_detector:
+            proposal_list = []
+            for proposal in proposals:
+                select_inds = proposal[:, 4] >= min(self.train_cfg.person_det_score_thr,
+                                                    max(proposal[:, 4]))
+                proposal_list.append(proposal[select_inds])
 
         # assign gts and sample proposals
         if self.with_bbox:
@@ -136,6 +143,9 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
                 sampling_results, gt_bboxes, gt_labels, self.train_cfg.rcnn)
             loss_bbox = self.bbox_head.loss(cls_score, bbox_pred,
                                             *bbox_targets)
+            if not self.train_cfg.train_detector:
+                loss_bbox.pop('loss_person_cls')
+                loss_bbox.pop('loss_reg')
             losses.update(loss_bbox)
 
         return losses
@@ -154,7 +164,15 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
             proposal_list = self.simple_test_rpn(
                 x, img_meta, self.test_cfg.rpn)
         else:
-            proposal_list = [p[0,...] for p in proposals]
+            proposal_list = []
+            for proposal in proposals:
+                proposal = proposal[0, ...]
+                if not self.test_cfg.train_detector:
+                    select_inds = proposal[:, 4] >= min(self.test_cfg.person_det_score_thr,
+                                                        max(proposal[:, 4]))
+                    proposal = proposal[select_inds]
+                proposal_list.append(proposal)
+
         img_meta = img_meta[0]
 
         det_bboxes, det_labels = self.simple_test_bboxes(
@@ -178,9 +196,16 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
             proposal_list = self.aug_test_rpn(
                 self.extract_feats(img_groups), img_metas, self.test_cfg.rpn)
         else:
+            # TODO: need check
             proposal_list = []
             for proposal in proposals:
-                proposal_list.append([p[0, ...] for p in proposal])
+                proposal = proposal[0, ...]
+                if not self.test_cfg.train_detector:
+                    select_inds = proposal[:, 4] >= min(self.test_cfg.person_det_score_thr,
+                                                       max(proposal[:, 4]))
+                    proposal = proposal[select_inds]
+                proposal_list.append(proposal)
+
         det_bboxes, det_labels = self.aug_test_bboxes(
             self.extract_feats(img_groups), img_metas, proposal_list,
             self.test_cfg.rcnn)
