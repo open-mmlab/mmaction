@@ -23,12 +23,14 @@ class SingleRoIStraight3DExtractor(nn.Module):
                  roi_layer,
                  out_channels,
                  featmap_strides,
-                 finest_scale=56):
+                 finest_scale=56,
+                 with_temporal_pool=False):
         super(SingleRoIStraight3DExtractor, self).__init__()
         self.roi_layers = self.build_roi_layers(roi_layer, featmap_strides)
         self.out_channels = out_channels
         self.featmap_strides = featmap_strides
         self.finest_scale = finest_scale
+        self.with_temporal_pool = with_temporal_pool
 
     @property
     def num_inputs(self):
@@ -69,12 +71,19 @@ class SingleRoIStraight3DExtractor(nn.Module):
         return target_lvls
 
     def forward(self, feats, rois):
+        feats = list(feats)
         if len(feats) == 1:
+            if self.with_temporal_pool:
+                feats[0] = torch.mean(feats[0], 2, keepdim=True)
             roi_feats = []
             for t in range(feats[0].size(2)):
                 feat = feats[0][:, :, t, :, :].contiguous()
                 roi_feats.append(self.roi_layers[0](feat, rois))
             return torch.stack(roi_feats, dim=2)
+
+        if self.with_temporal_pool:
+            for i in range(len(feats)):
+                feats[i] = torch.mean(feats[i], 2, keepdim=True)
 
         t_size = feats[0].size(2)
         out_size = self.roi_layers[0].out_size

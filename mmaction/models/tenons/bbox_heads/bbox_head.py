@@ -17,7 +17,10 @@ class BBoxHead(nn.Module):
     regression respectively"""
 
     def __init__(self,
-                 with_avg_pool=False,
+                 with_temporal_pool=False,
+                 with_spatial_pool=False,
+                 temporal_pool_type='avg',
+                 spatial_pool_type='max',
                  with_cls=True,
                  with_reg=True,
                  roi_feat_size=7,
@@ -30,7 +33,12 @@ class BBoxHead(nn.Module):
                  nms_class_agnostic=True):
         super(BBoxHead, self).__init__()
         assert with_cls or with_reg
-        self.with_avg_pool = with_avg_pool
+        self.with_temporal_pool = with_temporal_pool
+        self.with_spatial_pool = with_spatial_pool
+        assert temporal_pool_type in ['max', 'avg']
+        assert spatial_pool_type in ['max', 'avg']
+        self.temporal_pool_type = temporal_pool_type
+        self.spatial_pool_type = spatial_pool_type
         self.with_cls = with_cls
         self.with_reg = with_reg
         self.roi_feat_size = roi_feat_size
@@ -43,12 +51,17 @@ class BBoxHead(nn.Module):
         self.nms_class_agnostic = nms_class_agnostic
 
         in_channels = self.in_channels
-        if self.with_avg_pool:
-            if len(roi_feat_size) == 3:
-                self.avg_pool = nn.AvgPool3d(roi_feat_size)
+        if self.with_temporal_pool:
+            if self.temporal_pool_type == 'avg':
+                self.temporal_pool = nn.AvgPool3d((roi_feat_size[0], 1, 1))
             else:
-                self.avg_pool = nn.AvgPool2d(roi_feat_size)
-        else:
+                self.temporal_pool = nn.MaxPool3d((roi_feat_size[0], 1, 1))
+        if self.with_spatial_pool:
+            if self.spatial_pool_type == 'avg':
+                self.spatial_pool = nn.AvgPool3d((1, roi_feat_size[1], roi_feat_size[2]))
+            else:
+                self.spatial_pool = nn.MaxPool3d((1, roi_feat_size[1], roi_feat_size[2]))
+        if not self.with_temporal_pool and not self.with_spatial_pool:
             in_channels *= (self.roi_feat_size * self.roi_feat_size)
         if self.with_cls:
             self.fc_cls = nn.Linear(in_channels, num_classes)
@@ -66,8 +79,10 @@ class BBoxHead(nn.Module):
             nn.init.constant_(self.fc_reg.bias, 0)
 
     def forward(self, x):
-        if self.with_avg_pool:
-            x = self.avg_pool(x)
+        if self.with_temporal_pool:
+            x = self.temporal_pool(x)
+        if self.with_spatial_pool:
+            x = self.spatial_pool(x)
         x = x.view(x.size(0), -1)
         cls_score = self.fc_cls(x) if self.with_cls else None
         bbox_pred = self.fc_reg(x) if self.with_reg else None
