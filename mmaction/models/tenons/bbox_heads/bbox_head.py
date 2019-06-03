@@ -161,7 +161,8 @@ class BBoxHead(nn.Module):
                        img_shape,
                        scale_factor,
                        rescale=False,
-                       cfg=None):
+                       cfg=None,
+                       crop_quadruple=None):
         if isinstance(cls_score, list):
             cls_score = sum(cls_score) / float(len(cls_score))
         if not self.multilabel_classification:
@@ -175,6 +176,18 @@ class BBoxHead(nn.Module):
         else:
             bboxes = rois[:, 1:]
             # TODO: add clip here
+
+        def _bbox_crop_undo(bboxes, crop_quadruple):
+            assert bboxes.shape[-1] % 4 == 0
+            assert crop_quadruple is not None
+            decropped = bboxes.clone()
+            x1, y1, tw, th = crop_quadruple
+            decropped[..., 0::2] = bboxes[..., 0::2] + x1
+            decropped[..., 1::2] = bboxes[..., 1::2] + y1
+            return decropped
+
+        if crop_quadruple is not None:
+            bboxes = _bbox_crop_undo(bboxes, crop_quadruple)
 
         if rescale:
             bboxes /= scale_factor

@@ -155,7 +155,6 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
                                             *bbox_targets)
             if not self.train_cfg.train_detector:
                 loss_bbox.pop('loss_person_cls')
-                loss_bbox.pop('loss_reg')
             losses.update(loss_bbox)
 
         return losses

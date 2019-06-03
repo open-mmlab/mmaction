@@ -300,7 +300,7 @@ class AVADataset(Dataset):
     def _get_frames(self, record, image_tmpl, modality, indice, skip_offsets):
         images = list()
         # 
-        p = indice
+        p = indice - self.new_step
         for i, ind in enumerate(range(-2, -(self.old_length+1) // 2, -self.new_step)):
             seg_imgs = self._load_image(osp.join(self.img_prefix, record['video_id']), image_tmpl, modality, p + skip_offsets[i]) 
             images = seg_imgs + images
@@ -428,12 +428,12 @@ class AVADataset(Dataset):
                     })
 
         if self.proposals is not None:
-            proposals = self.bbox_transform(proposals, img_shape, scale_factor, flip)
+            proposals = self.bbox_transform(proposals, img_shape, scale_factor, flip, crop=crop_quadruple)
             proposals = np.hstack(
                 [proposals, scores]) if scores is not None else proposals
             data['proposals'] = DC(to_tensor(proposals))
 
-        gt_bboxes = self.bbox_transform(gt_bboxes, img_shape, scale_factor, flip)
+        gt_bboxes = self.bbox_transform(gt_bboxes, img_shape, scale_factor, flip, crop=crop_quadruple)
         data['gt_bboxes'] = DC(to_tensor(gt_bboxes))
 
         if self.with_label:
@@ -482,7 +482,7 @@ class AVADataset(Dataset):
                     proposal = proposal[:, :4]
                 else:
                     score = None
-                _proposal = self.bbox_transform(proposal, img_shape, scale_factor, flip)
+                _proposal = self.bbox_transform(proposal, img_shape, scale_factor, flip, crop=crop_quadruple)
                 _proposal = np.hstack(
                     [_proposal, score] if score is not None else _proposal)
                 _proposal = to_tensor(_proposal)

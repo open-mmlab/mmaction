@@ -50,7 +50,8 @@ class BBoxTestMixin(object):
             img_shape,
             scale_factor,
             rescale=rescale,
-            cfg=rcnn_test_cfg)
+            cfg=rcnn_test_cfg,
+            crop_quadruple=img_meta[0]['crop_quadruple'])
         return det_bboxes, det_labels
 
     def aug_test_bboxes(self, feats, img_metas, proposal_list, rcnn_test_cfg):
