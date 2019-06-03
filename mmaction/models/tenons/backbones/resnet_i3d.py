@@ -101,6 +101,7 @@ class Bottleneck(nn.Module):
                  style='pytorch',
                  if_inflate=True,
                  inflate_style='3x1x1',
+                 if_nonlocal=True,
                  nonlocal_cfg=None,
                  with_cp=False):
         """Bottleneck block for ResNet.
@@ -182,7 +183,7 @@ class Bottleneck(nn.Module):
         self.dilation = dilation
         self.with_cp = with_cp
 
-        if nonlocal_cfg is not None:
+        if if_nonlocal and nonlocal_cfg is not None:
             nonlocal_cfg_ = nonlocal_cfg.copy()
             nonlocal_cfg_['in_channels'] = planes * self.expansion
             self.nonlocal_block = build_nonlocal_block(nonlocal_cfg_)
@@ -235,10 +236,13 @@ def make_res_layer(block,
                    style='pytorch',
                    inflate_freq=1,
                    inflate_style='3x1x1',
+                   nonlocal_freq=1,
                    nonlocal_cfg=None,
                    with_cp=False):
     inflate_freq = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, ) * blocks
+    nonlocal_freq = nonlocal_freq if not isinstance(nonlocal_freq, int) else (nonlocal_freq, ) * blocks
     assert len(inflate_freq) == blocks
+    assert len(nonlocal_freq) == blocks
     downsample = None
     if spatial_stride != 1 or inplanes != planes * block.expansion:
         downsample = nn.Sequential(
@@ -263,6 +267,7 @@ def make_res_layer(block,
             style=style,
             if_inflate= (inflate_freq[0] == 1),
             inflate_style=inflate_style,
+            if_nonlocal= (nonlocal_freq[0] == 1),
             nonlocal_cfg=nonlocal_cfg,
             with_cp=with_cp))
     inplanes = planes * block.expansion
@@ -275,6 +280,7 @@ def make_res_layer(block,
                 style=style,
                 if_inflate= (inflate_freq[i] == 1),
                 inflate_style=inflate_style,
+                if_nonlocal= (nonlocal_freq[i] == 1),
                 nonlocal_cfg=nonlocal_cfg,
                 with_cp=with_cp))
 
@@ -330,6 +336,7 @@ class ResNet_I3D(nn.Module):
                  inflate_stride=(1, 1, 1, 1),
                  inflate_style='3x1x1',
                  nonlocal_stages=(-1, ),
+                 nonlocal_freq=(0, 1, 1, 0),
                  nonlocal_cfg=None,
                  bn_eval=True,
                  bn_frozen=False,
@@ -354,6 +361,7 @@ class ResNet_I3D(nn.Module):
         self.inflate_freqs = inflate_freq if not isinstance(inflate_freq, int) else (inflate_freq, ) * num_stages
         self.inflate_style = inflate_style
         self.nonlocal_stages = nonlocal_stages
+        self.nonlocal_freqs = nonlocal_freq if not isinstance(nonlocal_freq, int) else (nonlocal_freq, ) * num_stages
         self.nonlocal_cfg = nonlocal_cfg
         self.bn_eval = bn_eval
         self.bn_frozen = bn_frozen
@@ -390,6 +398,7 @@ class ResNet_I3D(nn.Module):
                 style=self.style,
                 inflate_freq=self.inflate_freqs[i],
                 inflate_style=self.inflate_style,
+                nonlocal_freq=self.nonlocal_freqs[i],
                 nonlocal_cfg=self.nonlocal_cfg if i in self.nonlocal_stages else None,
                 with_cp=with_cp)
             self.inplanes = planes * self.block.expansion
