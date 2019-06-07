@@ -126,7 +126,7 @@ class BBoxHead(nn.Module):
                 # cls_score = cls_score.sigmoid()
                 losses['loss_person_cls'] = weighted_binary_cross_entropy(
                     cls_score[:, 0], labels[:, 0] >= 1, label_weights)
-                pos_inds = torch.nonzero(labels[:, 0] > 0).squeeze()
+                pos_inds = torch.nonzero(labels[:, 0] > 0).squeeze(1)
                 losses['loss_action_cls'] = weighted_multilabel_binary_cross_entropy(
                     cls_score[pos_inds, 1:], labels[pos_inds, :], class_weights[pos_inds, 1:])
                 acc, recall_thr, prec_thr, recall_k, prec_k = multilabel_accuracy(
