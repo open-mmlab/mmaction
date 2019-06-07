@@ -329,6 +329,21 @@ def bbox_flip(bboxes, img_shape):
     return flipped
 
 
+def bbox_crop(bboxes, crop_quadruple):
+    """Flip bboxes horizontally.
+    Args:
+        bboxes(ndarray): shape (..., 4*k)
+        crop_quadruple(tuple): (x1, y1, tw, th)
+    """
+    assert bboxes.shape[-1] % 4 == 0
+    assert crop_quadruple is not None
+    cropped = bboxes.copy()
+    x1, y1, tw, th = crop_quadruple
+    cropped[..., 0::2] = bboxes[..., 0::2] - x1
+    cropped[..., 1::2] = bboxes[..., 1::2] - y1
+    return cropped
+
+
 class BboxTransform(object):
     """Preprocess gt bboxes.
     1. rescale bboxes according to image size
@@ -339,8 +354,10 @@ class BboxTransform(object):
     def __init__(self, max_num_gts=None):
         self.max_num_gts = max_num_gts
 
-    def __call__(self, bboxes, img_shape, scale_factor, flip=False):
+    def __call__(self, bboxes, img_shape, scale_factor, flip=False, crop=None):
         gt_bboxes = bboxes * scale_factor
+        if crop is not None:
+            gt_bboxes = bbox_crop(gt_bboxes, crop)
         if flip:
             gt_bboxes = bbox_flip(gt_bboxes, img_shape)
         gt_bboxes[:, 0::2] = np.clip(gt_bboxes[:, 0::2], 0, img_shape[1] - 1)

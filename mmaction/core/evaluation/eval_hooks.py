@@ -1,14 +1,24 @@
 import os
 import os.path as osp
+import logging
 import mmcv
+import time
 import torch
+import numpy as np
 import torch.distributed as dist
 from mmcv.runner import Hook, obj_from_dict
 from mmcv.parallel import scatter, collate
 from torch.utils.data import Dataset
 
-from .accuracy import top_k_accuracy
 from mmaction import datasets
+from .accuracy import top_k_accuracy
+from .ava_utils import results2csv
+
+from .ava_utils import (print_time, read_csv, read_labelmap, read_exclusions)
+import sys
+sys.path.append(osp.abspath(osp.join(__file__, '../../../', 'third_party/ActivityNet/Evaluation/ava')))
+from mmaction.third_party.ActivityNet.Evaluation.ava import object_detection_evaluation
+import standard_fields
 
 class DistEvalHook(Hook):
     def __init__(self, dataset, interval=1):
@@ -88,3 +98,75 @@ class DistEvalTopKAccuracyHook(DistEvalHook):
         runner.log_buffer.output['top1 acc'] = top1
         runner.log_buffer.output['top5 acc'] = top5
         runner.log_buffer.ready = True
+
+
+class AVADistEvalmAPHook(DistEvalHook):
+   
+    def __init__(self, dataset):
+        super(AVADistEvalmAPHook, self).__init__(dataset)
+
+    def evaluate(self, runner, results, verbose=False):
+
+        categories, class_whitelist = read_labelmap(open(self.dataset.label_file))
+        if verbose:
+            logging.info("CATEGORIES ({}):\n".format(len(categories)))
+
+        excluded_keys = read_exclusions(open(self.dataset.exclude_file))
+        pascal_evaluator = object_detection_evaluation.PascalDetectionEvaluator(
+            categories)
+
+        def print_time(message, start):
+            logging.info("==> %g seconds to %s", time.time() - start, message)
+
+
+        # Reads the ground truth data.
+        boxes, labels, _ = read_csv(open(self.dataset.ann_file), class_whitelist, 0)
+        start = time.time()
+        for image_key in boxes:
+            if verbose and image_key in excluded_keys:
+                logging.info("Found excluded timestamp in detections: %s."
+                      "It will be ignored.", image_key)
+                continue
+            pascal_evaluator.add_single_ground_truth_image_info(
+                image_key, {
+                    standard_fields.InputDataFields.groundtruth_boxes:
+                        np.array(boxes[image_key], dtype=float),
+                    standard_fields.InputDataFields.groundtruth_classes:
+                        np.array(labels[image_key], dtype=int),
+                    standard_fields.InputDataFields.groundtruth_difficult:
+                        np.zeros(len(boxes[image_key]), dtype=bool)
+                })
+        if verbose:
+            print_time("Convert groundtruth", start)
+        
+        # Read detections datas.
+        tmp_file = osp.join(runner.work_dir, 'temp_0.csv')
+        results2csv(self.dataset, results, tmp_file)
+
+        boxes, labels, scores = read_csv(open(tmp_file), class_whitelist, 50)
+        start = time.time()
+        for image_key in boxes:
+            if verbose and image_key in excluded_keys:
+                logging.info("Found excluded timestamp in detections: %s."
+                    "It will be ignored.", image_key)
+                continue
+            pascal_evaluator.add_single_detected_image_info(
+                image_key, {
+                    standard_fields.DetectionResultFields.detection_boxes:
+                        np.array(boxes[image_key], dtype=float),
+                    standard_fields.DetectionResultFields.detection_classes:
+                        np.array(labels[image_key], dtype=int),
+                    standard_fields.DetectionResultFields.detection_scores:
+                        np.array(scores[image_key], dtype=float)
+                })
+        if verbose:
+            print_time("convert detections", start)
+
+        start = time.time()
+        metrics = pascal_evaluator.evaluate()
+        if verbose:
+            print_time("run_evaluator", start)
+        for display_name in metrics:
+            runner.log_buffer.output[display_name] = metrics[display_name]
+        runner.log_buffer.ready = True
+
