@@ -295,6 +295,7 @@ class SSNDataset(Dataset):
 
         # transforms
         assert oversample in [None, 'three_crop', 'ten_crop']
+        self.oversample = oversample
         self.img_group_transform = GroupImageTransform(size_divisor=None, crop_size=self.input_size,
                                                        oversample=oversample, random_crop=random_crop, more_fix_crop=more_fix_crop,
                                                        multiscale_crop=multiscale_crop, scales=scales, max_distort=max_distort,
@@ -580,19 +581,19 @@ class SSNDataset(Dataset):
             out_frames[i] = np.array(out_frames[i])
         
         data.update({
-            'img_group_0': DC(to_tensor(out_frames[0]), stack=True, pad_dim="HW"),
+            'img_group_0': DC(to_tensor(out_frames[0]), stack=True, pad_dims=2),
             'img_meta': DC(out_img_meta, cpu_only=True)
             })
 
         for i, (modality, image_tmpl) in enumerate(zip(self.modalities[1:], self.image_tmpls[1:])):
             data.update({
-                'img_group_{}'.format(i+1): DC(to_tensor(out_frames[i+1]), stack=True, pad_dim="HW")
+                'img_group_{}'.format(i+1): DC(to_tensor(out_frames[i+1]), stack=True, pad_dims=2)
                 })
 
-        data['reg_targets'] = DC(to_tensor(np.array(out_prop_reg_targets, dtype=np.float32)), stack=True, pad_dim=None)
-        data['prop_scaling'] = DC(to_tensor(np.array(out_prop_scaling, dtype=np.float32)), stack=True, pad_dim=None)
-        data['prop_labels'] = DC(to_tensor(np.array(out_prop_labels)), stack=True, pad_dim=None)
-        data['prop_type'] = DC(to_tensor(np.array(out_prop_type)), stack=True, pad_dim=None)
+        data['reg_targets'] = DC(to_tensor(np.array(out_prop_reg_targets, dtype=np.float32)), stack=True, pad_dims=None)
+        data['prop_scaling'] = DC(to_tensor(np.array(out_prop_scaling, dtype=np.float32)), stack=True, pad_dims=None)
+        data['prop_labels'] = DC(to_tensor(np.array(out_prop_labels)), stack=True, pad_dims=None)
+        data['prop_type'] = DC(to_tensor(np.array(out_prop_type)), stack=True, pad_dims=None)
 
         return data
 
@@ -687,7 +688,14 @@ class SSNDataset(Dataset):
             out_frames[i + 1].append(img_group)
 
         for i in range(len(out_frames)):
+            if self.oversample == 'ten_crop':
+                num_crop = 10
+            elif self.oversample == 'three_crop':
+                num_crop = 3
+            else:
+                num_crop = 1
             out_frames[i] = np.array(out_frames[i])
+            out_frames[i] = out_frames[i].reshape((num_crop, -1) + out_frames[i].shape[2:])
 
         data.update({
             'img_group_0': DC(to_tensor(out_frames[0]), cpu_only=True),
@@ -699,10 +707,10 @@ class SSNDataset(Dataset):
                 'img_group_{}'.format(i+1): DC(to_tensor(out_frames[i+1]), cpu_only=True)
                 })
 
-        data['rel_prop_list'] = DC(to_tensor(np.array(rel_prop_list, dtype=np.float32)), stack=True, pad_dim=None)
-        data['scaling_list'] = DC(to_tensor(np.array(scaling_list, dtype=np.float32)), stack=True, pad_dim=None)
-        data['prop_tick_list'] = DC(to_tensor(np.array(proposal_tick_list)), stack=True, pad_dim=None)
-        data['reg_stats'] = DC(to_tensor(self.reg_stats), stack=True, pad_dim=None)
+        data['rel_prop_list'] = DC(to_tensor(np.array(rel_prop_list, dtype=np.float32)), stack=True, pad_dims=None)
+        data['scaling_list'] = DC(to_tensor(np.array(scaling_list, dtype=np.float32)), stack=True, pad_dims=None)
+        data['prop_tick_list'] = DC(to_tensor(np.array(proposal_tick_list)), stack=True, pad_dims=None)
+        data['reg_stats'] = DC(to_tensor(self.reg_stats), stack=True, pad_dims=None)
 
         return data
 

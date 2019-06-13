@@ -399,7 +399,7 @@ class AVADataset(Dataset):
             # img_group = img_group[None, :]
         
         data.update(dict(
-            img_group_0=DC(to_tensor(img_group), stack=True, pad_dim="HW" if self.input_format == "NCTHW" else "HW"),
+            img_group_0=DC(to_tensor(img_group), stack=True, pad_dims=2),
             img_meta=DC(img_meta, cpu_only=True)
             ))
 
@@ -424,7 +424,7 @@ class AVADataset(Dataset):
             
             else:
                 data.update({
-                    'img_group_{}'.format(i+1): DC(to_tensor(img_group), stack=True, pad_dim="HW" if self.input_format == "NCTHW" else "HW"),
+                    'img_group_{}'.format(i+1): DC(to_tensor(img_group), stack=True, pad_dims=2),
                     })
 
         if self.proposals is not None:

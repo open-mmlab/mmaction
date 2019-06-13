@@ -234,7 +234,7 @@ class LMDBFramesDataset(Dataset):
             segment_indices, skip_offsets = self._sample_indices(record) if self.random_shift else self._get_val_indices(record)
         
         data = dict(num_modalities=DC(to_tensor(len(self.modalities))),
-            gt_label=DC(to_tensor(record.label), stack=True, pad_dim=None))
+            gt_label=DC(to_tensor(record.label), stack=True, pad_dims=None))
 
         # handle the first modality
         modality = self.modalities[0]
@@ -267,7 +267,7 @@ class LMDBFramesDataset(Dataset):
             
         
         data.update(dict(
-            img_group_0=DC(to_tensor(img_group), stack=True, pad_dim="HW" if self.input_format == "NCTHW" else "HW"),
+            img_group_0=DC(to_tensor(img_group), stack=True, pad_dims=2),
             img_meta=DC(img_meta, cpu_only=True)
             ))
 
@@ -292,7 +292,7 @@ class LMDBFramesDataset(Dataset):
             
             else:
                 data.update({
-                    'img_group_{}'.format(i+1): DC(to_tensor(img_group), stack=True, pad_dim="HW" if self.input_format == "NCTHW" else "HW"),
+                    'img_group_{}'.format(i+1): DC(to_tensor(img_group), stack=True, pad_dims=2),
                     })
 
         return data
