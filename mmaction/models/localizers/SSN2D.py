@@ -149,9 +149,9 @@ class SSN2D(BaseLocalizer):
         img_group = kwargs['img_group_0']
         
         img_group = img_group[0]
-        num_crop = img_group.size(0)
-        num_ticks = img_group.size(1)
-        assert img_group.size(2) == self.in_channels
+        num_crop = img_group.shape[0]
+        img_group = img_group.reshape((num_crop, -1, self.in_channels) + img_group.shape[3:])
+        num_ticks = img_group.shape[1]
 
         output = []
         minibatch_size = self.test_cfg.ssn.sampler.batch_size
