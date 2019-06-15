@@ -12,13 +12,21 @@ from torch.utils.data import Dataset
 
 from mmaction import datasets
 from .accuracy import top_k_accuracy
-from .ava_utils import results2csv
-
-from .ava_utils import (print_time, read_csv, read_labelmap, read_exclusions)
-import sys
-sys.path.append(osp.abspath(osp.join(__file__, '../../../', 'third_party/ActivityNet/Evaluation/ava')))
-from mmaction.third_party.ActivityNet.Evaluation.ava import object_detection_evaluation
+from .ava_utils import (results2csv, read_csv, read_labelmap,
+                        read_exclusions)
 import standard_fields
+
+try:
+    import sys
+    sys.path.append(
+        osp.abspath(osp.join(__file__, '../../../',
+                             'third_party/ActivityNet/Evaluation/ava')))
+    from mmaction.third_party.ActivityNet.Evaluation.ava import (
+        object_detection_evaluation as det_eval)
+except ImportError:
+    print('Failed to import ActivityNet evaluation toolbox. Did you clone with'
+          '"--recursive"?')
+
 
 class DistEvalHook(Hook):
     def __init__(self, dataset, interval=1):
@@ -94,38 +102,39 @@ class DistEvalTopKAccuracyHook(DistEvalHook):
 
         results = [res.squeeze() for res in results]
         top1, top5 = top_k_accuracy(results, gt_labels, k=self.k)
-        runner.mode='val'
+        runner.mode = 'val'
         runner.log_buffer.output['top1 acc'] = top1
         runner.log_buffer.output['top5 acc'] = top5
         runner.log_buffer.ready = True
 
 
 class AVADistEvalmAPHook(DistEvalHook):
-   
+
     def __init__(self, dataset):
         super(AVADistEvalmAPHook, self).__init__(dataset)
 
     def evaluate(self, runner, results, verbose=False):
 
-        categories, class_whitelist = read_labelmap(open(self.dataset.label_file))
+        categories, class_whitelist = read_labelmap(
+            open(self.dataset.label_file))
         if verbose:
             logging.info("CATEGORIES ({}):\n".format(len(categories)))
 
         excluded_keys = read_exclusions(open(self.dataset.exclude_file))
-        pascal_evaluator = object_detection_evaluation.PascalDetectionEvaluator(
+        pascal_evaluator = det_eval.PascalDetectionEvaluator(
             categories)
 
         def print_time(message, start):
             logging.info("==> %g seconds to %s", time.time() - start, message)
 
-
         # Reads the ground truth data.
-        boxes, labels, _ = read_csv(open(self.dataset.ann_file), class_whitelist, 0)
+        boxes, labels, _ = read_csv(
+            open(self.dataset.ann_file), class_whitelist, 0)
         start = time.time()
         for image_key in boxes:
             if verbose and image_key in excluded_keys:
                 logging.info("Found excluded timestamp in detections: %s."
-                      "It will be ignored.", image_key)
+                             "It will be ignored.", image_key)
                 continue
             pascal_evaluator.add_single_ground_truth_image_info(
                 image_key, {
@@ -138,7 +147,7 @@ class AVADistEvalmAPHook(DistEvalHook):
                 })
         if verbose:
             print_time("Convert groundtruth", start)
-        
+
         # Read detections datas.
         tmp_file = osp.join(runner.work_dir, 'temp_0.csv')
         results2csv(self.dataset, results, tmp_file)
@@ -148,7 +157,7 @@ class AVADistEvalmAPHook(DistEvalHook):
         for image_key in boxes:
             if verbose and image_key in excluded_keys:
                 logging.info("Found excluded timestamp in detections: %s."
-                    "It will be ignored.", image_key)
+                             "It will be ignored.", image_key)
                 continue
             pascal_evaluator.add_single_detected_image_info(
                 image_key, {
@@ -169,4 +178,3 @@ class AVADistEvalmAPHook(DistEvalHook):
         for display_name in metrics:
             runner.log_buffer.output[display_name] = metrics[display_name]
         runner.log_buffer.ready = True
-

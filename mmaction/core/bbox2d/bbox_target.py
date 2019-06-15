@@ -13,7 +13,8 @@ def bbox_target(pos_bboxes_list,
                 target_means=[.0, .0, .0, .0],
                 target_stds=[1.0, 1.0, 1.0, 1.0],
                 concat=True):
-    labels, label_weights, bbox_targets, bbox_weights, class_weights = multi_apply(
+    (labels, label_weights, bbox_targets,
+     bbox_weights, class_weights) = multi_apply(
         bbox_target_single,
         pos_bboxes_list,
         neg_bboxes_list,
@@ -47,19 +48,22 @@ def bbox_target_single(pos_bboxes,
     if len(pos_gt_labels[0]) == 1:
         labels = pos_bboxes.new_zeros(num_samples, dtype=torch.long)
     else:
-        labels = pos_bboxes.new_zeros((num_samples, len(pos_gt_labels[0])), dtype=torch.long)
+        labels = pos_bboxes.new_zeros(
+            (num_samples, len(pos_gt_labels[0])), dtype=torch.long)
     label_weights = pos_bboxes.new_zeros(num_samples)
     if len(pos_gt_labels[0]) == 1:
         class_weights = pos_bboxes.new_zeros(num_samples)
     else:
-        class_weights = pos_bboxes.new_zeros(num_samples, len(pos_gt_labels[0]))
+        class_weights = pos_bboxes.new_zeros(
+            num_samples, len(pos_gt_labels[0]))
     bbox_targets = pos_bboxes.new_zeros(num_samples, 4)
     bbox_weights = pos_bboxes.new_zeros(num_samples, 4)
     if num_pos > 0:
         labels[:num_pos] = pos_gt_labels
         pos_weight = 1.0 if cfg.pos_weight <= 0 else cfg.pos_weight
         label_weights[:num_pos] = pos_weight
-        class_weight = 1.0 if not hasattr(cfg, 'cls_weight') or cfg.cls_weight <= 0 else cfg.cls_weight
+        class_weight = 1.0 if not hasattr(
+            cfg, 'cls_weight') or cfg.cls_weight <= 0 else cfg.cls_weight
         class_weights[:num_pos] = class_weight
         pos_bbox_targets = bbox2delta(pos_bboxes, pos_gt_bboxes, target_means,
                                       target_stds)

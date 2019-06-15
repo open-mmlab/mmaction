@@ -8,14 +8,15 @@ from .transforms import (GroupImageTransform, BboxTransform)
 from .utils import (to_tensor, random_scale)
 
 _TIMESTAMP_BIAS = 600
-_TIMESTAMP_START = 840 # 60*14min
-_TIMESTAMP_END = 1860 # 60*31min
+_TIMESTAMP_START = 840  # 60*14min
+_TIMESTAMP_END = 1860  # 60*31min
 _FPS = 30
+
 
 class RawFramesRecord(object):
     def __init__(self, row):
         self._data = row
-    
+
     @property
     def video_id(self):
         return self._data[0]
@@ -77,7 +78,8 @@ class AVADataset(Dataset):
         self.img_prefix = img_prefix
 
         # load annotations
-        self.video_infos = self.load_annotations(ann_file, video_stat_file, exclude_file)
+        self.video_infos = self.load_annotations(
+            ann_file, video_stat_file, exclude_file)
         self.ann_file = ann_file
         self.exclude_file = exclude_file
         self.label_file = label_file
@@ -85,12 +87,12 @@ class AVADataset(Dataset):
             self.proposals = self.load_proposals(proposal_file)
         else:
             self.proposals = None
-        
 
         # filter videos with no annotation during training
         if not test_mode:
             valid_inds = self._filter_records(exclude_file=exclude_file)
-            print("{} out of {} frames are valid.".format(len(valid_inds), len(self.video_infos)))
+            print("{} out of {} frames are valid.".format(
+                len(valid_inds), len(self.video_infos)))
             self.video_infos = [self.video_infos[i] for i in valid_inds]
 
         # normalization config
@@ -99,7 +101,7 @@ class AVADataset(Dataset):
         # max proposals per image
         self.num_max_proposals = num_max_proposals
 
-        ### parameters for frame fetching
+        # parameters for frame fetching
         # number of consecutive frames
         self.old_length = new_length * new_step
         self.new_length = new_length
@@ -108,7 +110,7 @@ class AVADataset(Dataset):
         # whether to temporally random shift when training
         self.random_shift = random_shift
 
-        ### parameters for modalities
+        # parameters for modalities
         if isinstance(modality, (list, tuple)):
             self.modalities = modality
             num_modality = len(modality)
@@ -121,7 +123,7 @@ class AVADataset(Dataset):
             self.image_tmpls = [image_tmpl]
         assert len(self.image_tmpls) == num_modality
 
-        ### parameters for image preprocessing
+        # parameters for image preprocessing
         # img_scale
         if isinstance(img_scale, int):
             img_scale = (np.Inf, img_scale)
@@ -131,17 +133,16 @@ class AVADataset(Dataset):
             input_size = (input_size, input_size)
         self.input_size = input_size
 
-        ### parameters for specification from pre-trained networks (lecacy issue)
+        # parameters for specification from pre-trained networks (lecacy issue)
         self.div_255 = div_255
 
-        ### parameters for data augmentation
+        # parameters for data augmentation
         # multi-scale mode (only applicable for multi-scale training)
         self.multiscale_mode = multiscale_mode
         assert multiscale_mode in ['value', 'range']
         # flip ratio
         self.flip_ratio = flip_ratio
         self.resize_keep_ratio = resize_keep_ratio
-
 
         # with_label is False for RPN
         self.with_label = with_label
@@ -154,17 +155,20 @@ class AVADataset(Dataset):
             self._set_group_flag()
 
         # transforms
-        self.img_group_transform = GroupImageTransform(size_divisor=None, crop_size=self.input_size,
-                                                       oversample=oversample, random_crop=random_crop, more_fix_crop=more_fix_crop,
-                                                       multiscale_crop=multiscale_crop, scales=scales, max_distort=max_distort,
-                                                       **self.img_norm_cfg)
+        self.img_group_transform = GroupImageTransform(
+            size_divisor=None,
+            crop_size=self.input_size,
+            oversample=oversample,
+            random_crop=random_crop, more_fix_crop=more_fix_crop,
+            multiscale_crop=multiscale_crop, scales=scales,
+            max_distort=max_distort,
+            **self.img_norm_cfg)
 
         # input format
         assert input_format in ['NCHW', 'NCTHW']
         self.input_format = input_format
 
         self.bbox_transform = BboxTransform()
-
 
     def __len__(self):
         return len(self.video_infos)
@@ -198,24 +202,29 @@ class AVADataset(Dataset):
                 record_dict_by_image[image_key] = [record]
             else:
                 record_dict_by_image[image_key].append(record)
-        
+
         def merge(records):
             bboxes = []
             labels = []
             pids = []
             while len(records) > 0:
                 r = records[0]
-                rs = list(filter(lambda x: np.array_equal(x.entity_box, r.entity_box), records))
-                records = list(filter(lambda x: not np.array_equal(x.entity_box, r.entity_box), records))
-                bboxes.append(r.entity_box * np.array([width, height, width, height]))
+                rs = list(filter(lambda x: np.array_equal(
+                    x.entity_box, r.entity_box), records))
+                records = list(filter(lambda x: not np.array_equal(
+                    x.entity_box, r.entity_box), records))
+                bboxes.append(
+                    r.entity_box * np.array([width, height, width, height]))
                 valid_labels = np.stack([r.label for r in rs])
-                padded_labels = np.pad(valid_labels, (0, 81 - valid_labels.shape[0]), 'constant', constant_values=-1)
+                padded_labels = np.pad(
+                    valid_labels, (0, 81 - valid_labels.shape[0]),
+                    'constant', constant_values=-1)
                 labels.append(padded_labels)
                 pids.append(r.entity_id)
             bboxes = np.stack(bboxes)
             labels = np.stack(labels)
-            #print(bboxes)
-            #print(labels)
+            # print(bboxes)
+            # print(labels)
             pids = np.stack(pids)
             return bboxes, labels, pids
 
@@ -228,7 +237,6 @@ class AVADataset(Dataset):
 
             bboxes, labels, pids = merge(record_dict_by_image[image_key])
 
-
             ann = dict(bboxes=bboxes,
                        labels=labels,
                        pids=pids)
@@ -239,17 +247,19 @@ class AVADataset(Dataset):
                               shot_info=shot_info,
                               fps=_FPS,
                               ann=ann)
-            new_records.append(new_record)            
-            
+            new_records.append(new_record)
+
         return new_records
 
     def load_annotations(self, ann_file, video_stat_file, exclude_file=None):
-        rawframe_records = [RawFramesRecord(x.strip().split(',')) for x in open(ann_file)]
-        video_stats = [tuple(x.strip().split(' '))for x in open(video_stat_file)]
+        rawframe_records = [RawFramesRecord(
+            x.strip().split(',')) for x in open(ann_file)]
+        video_stats = [tuple(x.strip().split(' '))
+                       for x in open(video_stat_file)]
         video_stats = {item[0]: item[1] for item in video_stats}
         return self.arrange_annotations(rawframe_records, video_stats)
-        #return mmcv.load(ann_file)
-    
+        # return mmcv.load(ann_file)
+
     def load_proposals(self, proposal_file):
         return mmcv.load(proposal_file)
 
@@ -258,17 +268,19 @@ class AVADataset(Dataset):
 
     def _filter_records(self, exclude_file=None):
         if exclude_file is not None:
-            exclude_records = [x.strip().split(',') for x in open(exclude_file)]
+            exclude_records = [x.strip().split(',')
+                               for x in open(exclude_file)]
             valid_inds = []
             for i, video_info in enumerate(self.video_infos):
                 valid = True
                 for vv, tt in exclude_records:
-                    if video_info['video_id'] == vv and video_info['timestamp'] == int(tt):
+                    if (video_info['video_id'] == vv
+                            and video_info['timestamp'] == int(tt)):
                         valid = False
                         break
                 if valid:
                     valid_inds.append(i)
-        else: 
+        else:
             for i, _ in enumerate(self.video_infos):
                 valid_inds.append(i)
         return valid_inds
@@ -285,30 +297,40 @@ class AVADataset(Dataset):
             # if img_info['width'] / img_info['height'] > 1:
             self.flag[i] = 1
 
-
     def _load_image(self, directory, image_tmpl, modality, idx):
         if modality in ['RGB', 'RGBDiff']:
             return [mmcv.imread(osp.join(directory, image_tmpl.format(idx)))]
         elif modality == 'Flow':
-            x_imgs = mmcv.imread(osp.join(directory, image_tmpl.format('x', idx)), flag='grayscale')
-            y_imgs = mmcv.imread(osp.join(directory, image_tmpl.format('y', idx)), flag='grayscale')
+            x_imgs = mmcv.imread(
+                osp.join(directory, image_tmpl.format('x', idx)),
+                flag='grayscale')
+            y_imgs = mmcv.imread(
+                osp.join(directory, image_tmpl.format('y', idx)),
+                flag='grayscale')
             return [x_imgs, y_imgs]
         else:
-            raise ValueError("Not implemented yet; modality should be ['RGB', 'RGBDiff', 'Flow']")
-            
+            raise ValueError(
+                'Not implemented yet; modality should be '
+                '["RGB", "RGBDiff", "Flow"]')
 
     def _get_frames(self, record, image_tmpl, modality, indice, skip_offsets):
         images = list()
-        # 
+        #
         p = indice - self.new_step
-        for i, ind in enumerate(range(-2, -(self.old_length+1) // 2, -self.new_step)):
-            seg_imgs = self._load_image(osp.join(self.img_prefix, record['video_id']), image_tmpl, modality, p + skip_offsets[i]) 
+        for i, ind in enumerate(
+                range(-2, -(self.old_length+1) // 2, -self.new_step)):
+            seg_imgs = self._load_image(osp.join(
+                self.img_prefix, record['video_id']),
+                image_tmpl, modality, p + skip_offsets[i])
             images = seg_imgs + images
             if p - self.new_step >= record['shot_info'][0]:
                 p -= self.new_step
         p = indice
-        for i, ind in enumerate(range(0, (self.old_length+1) // 2, self.new_step)):
-            seg_imgs = self._load_image(osp.join(self.img_prefix, record['video_id']), image_tmpl, modality, p + skip_offsets[i]) 
+        for i, ind in enumerate(
+                range(0, (self.old_length+1) // 2, self.new_step)):
+            seg_imgs = self._load_image(osp.join(
+                self.img_prefix, record['video_id']),
+                image_tmpl, modality, p + skip_offsets[i])
             images.extend(seg_imgs)
             if p + self.new_step < record['shot_info'][1]:
                 p += self.new_step
@@ -333,7 +355,8 @@ class AVADataset(Dataset):
 
         # load proposals if necessary
         if self.proposals is not None:
-            image_key = "{},{:04d}".format(video_info['video_id'], video_info['timestamp'])
+            image_key = "{},{:04d}".format(
+                video_info['video_id'], video_info['timestamp'])
             if image_key not in self.proposals:
                 return None
             proposals = self.proposals[image_key][: self.num_max_proposals]
@@ -344,14 +367,16 @@ class AVADataset(Dataset):
                     'proposals should have shapes (n, 4) or (n,5), '
                     'but found {}'.format(proposals.shape))
             if proposals.shape[1] == 4:
-                proposals = proposals * np.array([video_info['width'], video_info['height'],
-                                                  video_info['width'], video_info['height']])
+                proposals = proposals * np.array(
+                    [video_info['width'], video_info['height'],
+                     video_info['width'], video_info['height']])
             else:
-                proposals = proposals * np.array([video_info['width'], video_info['height'],
-                                                  video_info['width'], video_info['height'], 1.0])
+                proposals = proposals * np.array(
+                    [video_info['width'], video_info['height'],
+                     video_info['width'], video_info['height'], 1.0])
             proposals = proposals.astype(np.float32)
             if proposals.shape[1] == 5:
-                scores = proposals[: , 4, None]
+                scores = proposals[:, 4, None]
                 proposals = proposals[:, :4]
             else:
                 scores = None
@@ -359,31 +384,37 @@ class AVADataset(Dataset):
         ann = self.get_ann_info(idx)
         gt_bboxes = ann['bboxes']
         gt_labels = ann['labels']
-        
+
         # skip the record if there is no valid gt bbox
         if len(gt_bboxes) == 0:
             return None
 
         gt_bboxes = gt_bboxes.astype(np.float32)
 
-        indice = video_info['fps'] * (video_info['timestamp'] - _TIMESTAMP_START) + 1
-        skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        indice = video_info['fps'] * \
+            (video_info['timestamp'] - _TIMESTAMP_START) + 1
+        skip_offsets = np.random.randint(
+            self.new_step, size=self.old_length // self.new_step)
 
         data = dict(num_modalities=DC(to_tensor(len(self.modalities))))
 
         # handle the first modality
         modality = self.modalities[0]
         image_tmpl = self.image_tmpls[0]
-        img_group = self._get_frames(video_info, image_tmpl, modality, indice, skip_offsets)
+        img_group = self._get_frames(
+            video_info, image_tmpl, modality, indice, skip_offsets)
 
         # TODO: add extra augmentation ...
 
         flip = True if np.random.rand() < self.flip_ratio else False
         img_scale = random_scale(self.img_scales, self.multiscale_mode)
-        img_group, img_shape, pad_shape, scale_factor,crop_quadruple = self.img_group_transform(img_group, img_scale,
+        (img_group, img_shape, pad_shape,
+         scale_factor, crop_quadruple) = self.img_group_transform(
+            img_group, img_scale,
             crop_history=None,
             flip=flip, keep_ratio=self.resize_keep_ratio,
-            div_255=self.div_255, is_flow=True if modality=='Flow' else False)
+            div_255=self.div_255,
+            is_flow=True if modality == 'Flow' else False)
         ori_shape = (video_info['height'], video_info['width'], 3)
         img_meta = dict(
             ori_shape=ori_shape,
@@ -395,45 +426,53 @@ class AVADataset(Dataset):
 
         # [L x C x H x W]
         if self.input_format == "NCTHW":
-            img_group = np.transpose(img_group, (1,0,2,3))
+            img_group = np.transpose(img_group, (1, 0, 2, 3))
             # img_group = img_group[None, :]
-        
+
         data.update(dict(
             img_group_0=DC(to_tensor(img_group), stack=True, pad_dims=2),
             img_meta=DC(img_meta, cpu_only=True)
-            ))
+        ))
 
-        # handle the rest modalities using the same 
-        for i, (modality, image_tmpl) in enumerate(zip(self.modalities[1:], self.image_tmpls[1:])):
-            img_group = self._get_frames(video_info, image_tmpl, modality, indice, skip_offsets)
+        # handle the rest modalities using the same
+        for i, (modality, image_tmpl) in enumerate(
+                zip(self.modalities[1:], self.image_tmpls[1:])):
+            img_group = self._get_frames(
+                video_info, image_tmpl, modality, indice, skip_offsets)
 
             # TODO: add extra augmentation ...
 
             # apply transforms
             flip = True if np.random.rand() < self.flip_ratio else False
-            img_group, img_shape, pad_shape, scale_factor, crop_quadruple = self.img_group_transform(img_group, img_scale,
+            (img_group, img_shape, pad_shape,
+             scale_factor, crop_quadruple) = self.img_group_transform(
+                img_group, img_scale,
                 crop_history=data['img_meta']['crop_quadruple'],
-                flip=data['img_meta']['flip'], keep_ratio=self.resize_keep_ratio,
-                div_255=self.div_255, is_flow=True if modality=='Flow' else False)
-            
+                flip=data['img_meta']['flip'],
+                keep_ratio=self.resize_keep_ratio,
+                div_255=self.div_255,
+                is_flow=True if modality == 'Flow' else False)
+
             if self.input_format == "NCTHW":
                 # Convert [L x C x H x W] to [C x L x H x W]
-                img_group = np.transpose(img_group, (1,0,2,3))
+                img_group = np.transpose(img_group, (1, 0, 2, 3))
                 # img_group = img_group[None, :]
 
-            
             else:
                 data.update({
-                    'img_group_{}'.format(i+1): DC(to_tensor(img_group), stack=True, pad_dims=2),
-                    })
+                    'img_group_{}'.format(i+1): DC(
+                        to_tensor(img_group), stack=True, pad_dims=2),
+                })
 
         if self.proposals is not None:
-            proposals = self.bbox_transform(proposals, img_shape, scale_factor, flip, crop=crop_quadruple)
+            proposals = self.bbox_transform(
+                proposals, img_shape, scale_factor, flip, crop=crop_quadruple)
             proposals = np.hstack(
                 [proposals, scores]) if scores is not None else proposals
             data['proposals'] = DC(to_tensor(proposals))
 
-        gt_bboxes = self.bbox_transform(gt_bboxes, img_shape, scale_factor, flip, crop=crop_quadruple)
+        gt_bboxes = self.bbox_transform(
+            gt_bboxes, img_shape, scale_factor, flip, crop=crop_quadruple)
         data['gt_bboxes'] = DC(to_tensor(gt_bboxes))
 
         if self.with_label:
@@ -446,9 +485,10 @@ class AVADataset(Dataset):
 
         # load proposals if necessary
         if self.proposals is not None:
-            image_key = "{},{:04d}".format(video_info['video_id'], video_info['timestamp'])
+            image_key = "{},{:04d}".format(
+                video_info['video_id'], video_info['timestamp'])
             if image_key not in self.proposals:
-                proposal = np.array([[0,0,1,1,1]],dtype=float)
+                proposal = np.array([[0, 0, 1, 1, 1]], dtype=float)
             else:
                 proposal = self.proposals[image_key][: self.num_max_proposals]
             if not (proposal.shape[1] == 4 or proposal.shape[1] == 5):
@@ -456,18 +496,25 @@ class AVADataset(Dataset):
                     'proposals should have shapes (n, 4) or (n,5), '
                     'but found {}'.format(proposal.shape))
             if proposal.shape[1] == 4:
-                proposal = proposal * np.array([video_info['width'], video_info['height'],
-                                                video_info['width'], video_info['height']])
+                proposal = proposal * np.array(
+                    [video_info['width'], video_info['height'],
+                     video_info['width'], video_info['height']])
             else:
-                proposal = proposal * np.array([video_info['width'], video_info['height'],
-                                                video_info['width'], video_info['height'], 1.0])
+                proposal = proposal * np.array(
+                    [video_info['width'], video_info['height'],
+                     video_info['width'], video_info['height'], 1.0])
             proposal = proposal.astype(np.float32)
         else:
             proposal = None
 
-        def prepare_single(img_group, scale, crop_quadruple, flip, proposal=None):
-            _img_group, img_shape, pad_shape, scale_factor, crop_quadruple = self.img_group_transform(
-                img_group, scale, crop_history=crop_quadruple, flip=flip, keep_ratio=self.resize_keep_ratio)
+        def prepare_single(img_group, scale,
+                           crop_quadruple, flip, proposal=None):
+            (_img_group, img_shape, pad_shape,
+             scale_factor, crop_quadruple) = self.img_group_transform(
+                img_group, scale,
+                crop_history=crop_quadruple,
+                 flip=flip,
+                 keep_ratio=self.resize_keep_ratio)
             _img_group = to_tensor(_img_group)
             _img_meta = dict(
                 ori_shape=(video_info['height'], video_info['width'], 3),
@@ -482,38 +529,45 @@ class AVADataset(Dataset):
                     proposal = proposal[:, :4]
                 else:
                     score = None
-                _proposal = self.bbox_transform(proposal, img_shape, scale_factor, flip, crop=crop_quadruple)
+                _proposal = self.bbox_transform(
+                    proposal, img_shape,
+                    scale_factor, flip, crop=crop_quadruple)
                 _proposal = np.hstack(
                     [_proposal, score] if score is not None else _proposal)
                 _proposal = to_tensor(_proposal)
             else:
                 _proposal = None
             return _img_group, _img_meta, _proposal
-          
 
-        indice = video_info['fps'] * (video_info['timestamp'] - _TIMESTAMP_START) + 1
-        skip_offsets = np.random.randint(self.new_step, size=self.old_length // self.new_step)
+        indice = video_info['fps'] * \
+            (video_info['timestamp'] - _TIMESTAMP_START) + 1
+        skip_offsets = np.random.randint(
+            self.new_step, size=self.old_length // self.new_step)
 
         data = dict(num_modalities=DC(to_tensor(len(self.modalities))))
-    
-        for i, (modality, image_tmpl) in enumerate(zip(self.modalities, self.image_tmpls)):
-            img_group = self._get_frames(video_info, image_tmpl, modality, indice, skip_offsets)
+
+        for i, (modality, image_tmpl) in enumerate(
+                zip(self.modalities, self.image_tmpls)):
+            img_group = self._get_frames(
+                video_info, image_tmpl, modality, indice, skip_offsets)
             img_groups = []
-            img_metas =[]
+            img_metas = []
             proposals = []
             for scale in self.img_scales:
-                _img_group, _img_meta, _proposal = prepare_single(img_group, scale, None, False, proposal)
+                _img_group, _img_meta, _proposal = prepare_single(
+                    img_group, scale, None, False, proposal)
                 if self.input_format == "NCTHW":
                     # Convert [L x C x H x W] to [C x L x H x W]
-                    _img_group = np.transpose(_img_group, (1,0,2,3))
+                    _img_group = np.transpose(_img_group, (1, 0, 2, 3))
                 img_groups.append(_img_group)
                 img_metas.append(DC(_img_meta, cpu_only=True))
                 proposals.append(_proposal)
                 if self.flip_ratio > 0:
-                    _img_group, _img_meta, _proposal = prepare_single(img_group, scale, None, True, proposal)
+                    _img_group, _img_meta, _proposal = prepare_single(
+                        img_group, scale, None, True, proposal)
                     if self.input_format == "NCTHW":
                         # Convert [L x C x H x W] to [C x L x H x W]
-                        _img_group = np.transpose(_img_group, (1,0,2,3))
+                        _img_group = np.transpose(_img_group, (1, 0, 2, 3))
                     img_groups.append(_img_group)
                     img_metas.append(DC(_img_meta, cpu_only=True))
                     proposals.append(_proposal)
@@ -522,5 +576,5 @@ class AVADataset(Dataset):
                 data['img_meta'] = img_metas
             if self.proposals is not None:
                 data['proposals'] = proposals
-        
+
         return data

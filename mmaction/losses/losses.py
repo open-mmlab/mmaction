@@ -1,6 +1,5 @@
 import torch
 import torch.nn.functional as F
-import numpy as np
 
 
 def weighted_nll_loss(pred, label, weight, avg_factor=None):
@@ -82,8 +81,10 @@ def _expand_binary_labels(labels, label_weights, label_channels):
     return bin_labels, bin_label_weights
 
 
-def weighted_multilabel_binary_cross_entropy(pred, label, weight, avg_factor=None):
-    label, weight = _expand_multilabel_binary_labels(label, weight, pred.size(-1))
+def weighted_multilabel_binary_cross_entropy(
+        pred, label, weight, avg_factor=None):
+    label, weight = _expand_multilabel_binary_labels(
+        label, weight, pred.size(-1))
     if avg_factor is None:
         avg_factor = max(torch.sum(weight > 0).float().item(), 1.)
     return F.binary_cross_entropy_with_logits(
@@ -119,14 +120,15 @@ def multilabel_accuracy(pred, target, topk=1, thr=0.5):
             # pred_bin_labels[i] = 1
         if pred[i, 0] > thr:
             pred_bin_labels[i] = 1
-    target_bin_labels = target.new_full((target.size(0), ), 0, dtype=torch.long)
+    target_bin_labels = target.new_full(
+        (target.size(0), ), 0, dtype=torch.long)
     target_vec_labels = target.new_full(target.size(), 0, dtype=torch.long)
     for i in range(target.size(0)):
         inds = torch.nonzero(target[i, :] >= 1).squeeze()
         if inds.numel() > 0:
             target_vec_labels[i, target[i, inds]] = 1
             target_bin_labels[i] = 1
-    ## overall accuracy
+    # overall accuracy
     correct = pred_bin_labels.eq(target_bin_labels)
     acc = correct.float().sum(0, keepdim=True).mul_(100.0 / correct.size(0))
 
@@ -135,8 +137,8 @@ def multilabel_accuracy(pred, target, topk=1, thr=0.5):
     #     for elem in tensor2:
     #         indices = indices | (tensor1 == elem)
     #     return tensor1[indices]
-    
-    ## recall@thr
+
+    # recall@thr
     recall_thr, prec_thr = recall_prec(pred_vec_labels, target_vec_labels)
 
     # recall@k
@@ -153,13 +155,13 @@ def multilabel_accuracy(pred, target, topk=1, thr=0.5):
 
     return acc, recall_thr, prec_thr, recalls, precs
 
-    
+
 def recall_prec(pred_vec, target_vec):
     """
     Args:
         pred_vec: <torch.tensor> (n, C+1), each element is either 0 or 1
         target_vec: <torch.tensor> (n, C+1), each element is either 0 or 1
-    
+
     Returns:
         recall
         prec
@@ -171,8 +173,10 @@ def recall_prec(pred_vec, target_vec):
         if target_vec[i, :].float().sum(0) == 0:
             continue
         correct_labels = pred_vec[i, :] & target_vec[i, :]
-        recall[i] = correct_labels.float().sum(0, keepdim=True) / target_vec[i, :].float().sum(0, keepdim=True)
-        prec[i] = correct_labels.float().sum(0, keepdim=True) / (pred_vec[i, :].float().sum(0, keepdim=True) + 1e-6)
+        recall[i] = correct_labels.float().sum(0, keepdim=True) / \
+            target_vec[i, :].float().sum(0, keepdim=True)
+        prec[i] = correct_labels.float().sum(0, keepdim=True) / \
+            (pred_vec[i, :].float().sum(0, keepdim=True) + 1e-6)
         num_pos += 1
     recall = recall.float().sum(0, keepdim=True).mul_(100. / num_pos)
     prec = prec.float().sum(0, keepdim=True).mul_(100. / num_pos)

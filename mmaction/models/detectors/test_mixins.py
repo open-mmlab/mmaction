@@ -1,11 +1,13 @@
 from mmaction.core.bbox2d import bbox2roi, bbox_mapping
-from mmaction.core.post_processing import (merge_aug_proposals, merge_aug_bboxes,
+from mmaction.core.post_processing import (merge_aug_proposals,
+                                           merge_aug_bboxes,
                                            multiclass_nms)
+
 
 class RPNTestMixin(object):
 
     def simple_test_rpn(self, x, img_meta, rpn_test_cfg):
-        x_slice = (xx[:, :, xx.size(2) // 2, : ,:] for xx in x)
+        x_slice = (xx[:, :, xx.size(2) // 2, :, :] for xx in x)
         rpn_outs = self.rpn_head(x_slice)
         proposal_inputs = rpn_outs + (img_meta, rpn_test_cfg)
         proposal_list = self.rpn_head.get_bboxes(*proposal_inputs)
@@ -83,7 +85,7 @@ class BBoxTestMixin(object):
             aug_bboxes.append(bboxes)
             aug_scores.append(scores)
         # after merging, bboxes will be rescaled to the original image size
-        merged_bboxes, merged_scores = merg_aug_bboxes(
+        merged_bboxes, merged_scores = merge_aug_bboxes(
             aug_bboxes, aug_scores, img_metas, rcnn_test_cfg)
         det_bboxes, det_labels = multiclass_nms(
             merged_bboxes, merged_scores, rcnn_test_cfg.score_thr,

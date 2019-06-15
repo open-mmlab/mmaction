@@ -1,15 +1,16 @@
-import torch
 import torch.nn as nn
 
 from .base import BaseDetector
 from .test_mixins import RPNTestMixin, BBoxTestMixin
 from .. import builder
 from ..registry import DETECTORS
-from mmaction.core.bbox2d import bbox2roi, bbox2result, build_assigner, build_sampler
+from mmaction.core.bbox2d import (bbox2roi, bbox2result,
+                                  build_assigner, build_sampler)
+
 
 @DETECTORS.register_module
 class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
-    
+
     def __init__(self,
                  backbone,
                  neck=None,
@@ -21,10 +22,10 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        
+
         super(TwoStageDetector, self).__init__()
         self.backbone = builder.build_backbone(backbone)
-        
+
         if neck is not None:
             self.neck = builder.build_neck(neck)
 
@@ -49,7 +50,6 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
 
         self.init_weights()
 
-    
     @property
     def with_rpn(self):
         return hasattr(self, 'rpn_head') and self.rpn_head is not None
@@ -68,14 +68,14 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
         if self.with_bbox:
             self.bbox_roi_extractor.init_weights()
             self.bbox_head.init_weights()
-        
+
     def extract_feat(self, image_group):
         x = self.backbone(image_group)
         if self.with_neck:
             x = self.neck()
         else:
             if not isinstance(x, (list, tuple)):
-               x = (x, )
+                x = (x, )
         return x
 
     def forward_train(self,
@@ -95,9 +95,10 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
 
         # RPN forward and loss
         if self.with_rpn:
-            x_slice = (xx[:, :, xx.size(2) // 2, : ,:] for xx in x)
+            x_slice = (xx[:, :, xx.size(2) // 2, :, :] for xx in x)
             rpn_outs = self.rpn_head(x_slice)
-            rpn_loss_inputs = rpn_outs + (gt_bboxes, img_meta, self.train_cfg.rpn)
+            rpn_loss_inputs = rpn_outs + \
+                (gt_bboxes, img_meta, self.train_cfg.rpn)
             rpn_losses = self.rpn_head.loss(
                 *rpn_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rpn_losses)
@@ -106,12 +107,13 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
             proposal_list = self.rpn_head.get_bboxes(*proposal_inputs)
         else:
             proposal_list = proposals
-        
+
         if not self.train_cfg.train_detector:
             proposal_list = []
             for proposal in proposals:
-                select_inds = proposal[:, 4] >= min(self.train_cfg.person_det_score_thr,
-                                                    max(proposal[:, 4]))
+                select_inds = proposal[:, 4] >= min(
+                    self.train_cfg.person_det_score_thr,
+                    max(proposal[:, 4]))
                 proposal_list.append(proposal[select_inds])
 
         # assign gts and sample proposals
@@ -146,7 +148,7 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
 
             if self.dropout is not None:
                 bbox_feats = self.dropout(bbox_feats)
-            
+
             cls_score, bbox_pred = self.bbox_head(bbox_feats)
 
             bbox_targets = self.bbox_head.get_target(
@@ -159,7 +161,8 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
 
         return losses
 
-    def simple_test(self, num_modalities, img_meta, proposals=None, rescale=False,
+    def simple_test(self, num_modalities, img_meta,
+                    proposals=None, rescale=False,
                     **kwargs):
         """Test without augmentation."""
         assert self.with_bbox, "Bbox head must be implemented."
@@ -167,7 +170,6 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
         assert num_modalities == 1
         img_group = kwargs['img_group_0'][0]
         x = self.extract_feat(img_group)
-
 
         if proposals is None:
             proposal_list = self.simple_test_rpn(
@@ -177,8 +179,9 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
             for proposal in proposals:
                 proposal = proposal[0, ...]
                 if not self.test_cfg.train_detector:
-                    select_inds = proposal[:, 4] >= min(self.test_cfg.person_det_score_thr,
-                                                        max(proposal[:, 4]))
+                    select_inds = proposal[:, 4] >= min(
+                        self.test_cfg.person_det_score_thr,
+                        max(proposal[:, 4]))
                     proposal = proposal[select_inds]
                 proposal_list.append(proposal)
 
@@ -192,10 +195,11 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
 
         return bbox_results
 
-    def aug_test(self, num_modalities, img_metas, proposals=None, rescale=False,
+    def aug_test(self, num_modalities, img_metas,
+                 proposals=None, rescale=False,
                  **kwargs):
         """Test with augmentations.
-        
+
         If rescale is False, then returned bboxes will fit the scale
         of imgs[0]
         """
@@ -210,15 +214,16 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
             for proposal in proposals:
                 proposal = proposal[0, ...]
                 if not self.test_cfg.train_detector:
-                    select_inds = proposal[:, 4] >= min(self.test_cfg.person_det_score_thr,
-                                                       max(proposal[:, 4]))
+                    select_inds = proposal[:, 4] >= min(
+                        self.test_cfg.person_det_score_thr,
+                        max(proposal[:, 4]))
                     proposal = proposal[select_inds]
                 proposal_list.append(proposal)
 
         det_bboxes, det_labels = self.aug_test_bboxes(
             self.extract_feats(img_groups), img_metas, proposal_list,
             self.test_cfg.rcnn)
-        
+
         if rescale:
             _det_bboxes = det_bboxes
         else:
@@ -227,5 +232,5 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin):
         bbox_results = bbox2result(_det_bboxes, det_labels,
                                    self.bbox_head.num_classes,
                                    thr=self.test_cfg.rcnn.action_thr)
-        
+
         return bbox_results

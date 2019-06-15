@@ -3,10 +3,18 @@ from .accuracy import softmax
 import pandas as pd
 from multiprocessing import Pool
 import mmcv
-import sys
-import os.path as osp
-sys.path.append(osp.abspath(osp.join(__file__, '../../../', 'third_party/ActivityNet/Evaluation')))
-from mmaction.third_party.ActivityNet.Evaluation.eval_detection import compute_average_precision_detection
+
+try:
+    import sys
+    import os.path as osp
+    sys.path.append(
+        osp.abspath(osp.join(__file__, '../../../',
+                             'third_party/ActivityNet/Evaluation')))
+    from mmaction.third_party.ActivityNet.Evaluation.eval_detection import (
+        compute_average_precision_detection)
+except ImportError:
+    print('Failed to import ActivityNet evaluation toolbox. Did you clone with'
+          '"--recursive"?')
 
 
 def results2det(dataset, outputs,
@@ -27,7 +35,8 @@ def results2det(dataset, outputs,
         comp_scores = outputs[idx][2]
         reg_scores = outputs[idx][3]
         if reg_scores is None:
-            reg_scores = np.zeros(len(rel_prop), num_class, 2, dtype=np.float32)
+            reg_scores = np.zeros(
+                len(rel_prop), num_class, 2, dtype=np.float32)
         reg_scores = reg_scores.reshape((-1, num_class, 2))
 
         if top_k <= 0 and cls_score_dict is None:
@@ -36,15 +45,18 @@ def results2det(dataset, outputs,
                 loc_scores = reg_scores[:, i, 0][:, None]
                 dur_scores = reg_scores[:, i, 1][:, None]
                 detections[i][video_id] = np.concatenate((
-                    rel_prop, combined_scores[:, i][:, None], loc_scores, dur_scores), axis=1)
+                    rel_prop, combined_scores[:, i][:, None],
+                    loc_scores, dur_scores), axis=1)
         elif cls_score_dict is None:
             combined_scores = softmax(act_scores[:, 1:]) * np.exp(comp_scores)
             keep_idx = np.argsort(combined_scores.ravel())[-top_k:]
             for k in keep_idx:
                 cls = k % num_class
                 prop_idx = k // num_class
-                new_item = [rel_prop[prop_idx, 0], rel_prop[prop_idx, 1], combined_scores[prop_idx, cls],
-                            reg_scores[prop_idx, cls, 0], reg_scores[prop_idx, cls, 1]]
+                new_item = [rel_prop[prop_idx, 0], rel_prop[prop_idx, 1],
+                            combined_scores[prop_idx, cls],
+                            reg_scores[prop_idx, cls, 0],
+                            reg_scores[prop_idx, cls, 1]]
                 if video_id not in detections[cls]:
                     detections[cls][video_id] = np.array([new_item])
                 else:
@@ -53,7 +65,8 @@ def results2det(dataset, outputs,
         else:
             cls_score_dict = mmcv.load(cls_score_dict)
             if softmax_before_filter:
-                combined_scores = softmax(act_scores[:, 1:]) * np.exp(comp_scores)
+                combined_scores = softmax(
+                    act_scores[:, 1:]) * np.exp(comp_scores)
             else:
                 combined_scores = act_scores[:, 1:] * np.exp(comp_scores)
             video_cls_score = cls_score_dict[video_id]
@@ -62,7 +75,8 @@ def results2det(dataset, outputs,
                 loc_scores = reg_scores[:, video_cls, 0][:, None]
                 dur_scores = reg_scores[:, video_cls, 1][:, None]
                 detections[video_cls][video_id] = np.concatenate((
-                    rel_prop, combined_scores[:, video_cls][:, None], loc_scores, dur_scores), axis=1)
+                    rel_prop, combined_scores[:, video_cls][:, None],
+                    loc_scores, dur_scores), axis=1)
 
     return detections
 
@@ -98,24 +112,29 @@ def temporal_nms(detections, thresh):
         tt0 = np.maximum(t0[i], t0[order[1:]])
         tt1 = np.minimum(t1[i], t1[order[1:]])
         intersection = tt1 - tt0
-        iou = intersection / (durations[i] + durations[order[1:]] - intersection).astype(float)
+        iou = intersection / \
+            (durations[i] + durations[order[1:]] - intersection).astype(float)
 
         inds = np.where(iou <= thresh)[0]
         order = order[inds + 1]
 
     return detections[keep, :]
 
+
 def det2df(detections, cls):
     detection_list = []
     for vid, dets in detections[cls].items():
         detection_list.extend([[vid, cls] + x[:3] for x in dets.tolist()])
-    df = pd.DataFrame(detection_list, columns=['video-id', 'cls', 't-start', 't-end', 'score'])
+    df = pd.DataFrame(detection_list, columns=[
+                      'video-id', 'cls', 't-start', 't-end', 'score'])
     return df
+
 
 def eval_ap(iou, iou_idx, cls, gt, prediction):
     ap = compute_average_precision_detection(gt, prediction, iou)
     sys.stdout.flush()
     return cls, iou_idx, ap
+
 
 def eval_ap_parallel(detections, gt_by_cls, iou_range, worker=32):
     ap_values = np.zeros((len(detections), len(iou_range)))
@@ -135,6 +154,3 @@ def eval_ap_parallel(detections, gt_by_cls, iou_range, worker=32):
     pool.close()
     pool.join()
     return ap_values
-
-
-

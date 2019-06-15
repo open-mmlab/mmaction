@@ -58,7 +58,7 @@ class BaseDetector(nn.Module):
     def forward_test(self, num_modalities, img_metas, **kwargs):
         if not isinstance(img_metas, list):
             raise TypeError('{} must be a list, but got {}'.format(
-                name, type(img_metas)))
+                img_metas, type(img_metas)))
 
         num_augs = len(kwargs['img_group_0'])
         if num_augs != len(img_metas):

@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 import torch.nn as nn
 
+
 class BaseRecognizer(nn.Module):
     """Base class for recognizers"""
 
@@ -26,7 +27,7 @@ class BaseRecognizer(nn.Module):
     @abstractmethod
     def forward_test(self, num_modalities, **kwargs):
         pass
-    
+
     def init_weights(self, pretrained=None):
         if pretrained is not None:
             logger = logging.getLogger()

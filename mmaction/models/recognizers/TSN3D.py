@@ -24,12 +24,14 @@ class TSN3D(BaseRecognizer):
             self.flownet = builder.build_flownet(flownet)
 
         if spatial_temporal_module is not None:
-            self.spatial_temporal_module = builder.build_spatial_temporal_module(spatial_temporal_module)
+            self.spatial_temporal_module = builder.build_spatial_temporal_module(
+                spatial_temporal_module)
         else:
             raise NotImplementedError
 
         if segmental_consensus is not None:
-            self.segmental_consensus = builder.build_segmental_consensus(segmental_consensus)
+            self.segmental_consensus = builder.build_segmental_consensus(
+                segmental_consensus)
         else:
             raise NotImplementedError
 
@@ -37,7 +39,7 @@ class TSN3D(BaseRecognizer):
             self.cls_head = builder.build_head(cls_head)
         else:
             raise NotImplementedError
-        
+
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
@@ -51,15 +53,13 @@ class TSN3D(BaseRecognizer):
     def with_spatial_temporal_module(self):
         return hasattr(self, 'spatial_temporal_module') and self.spatial_temporal_module is not None
 
-
     @property
     def with_segmental_consensus(self):
         return hasattr(self, 'segmental_consensus') and self.segmental_consensus is not None
-    
+
     @property
     def with_cls_head(self):
         return hasattr(self, 'cls_head') and self.cls_head is not None
-
 
     def init_weights(self):
         super(TSN3D, self).init_weights()
@@ -77,7 +77,6 @@ class TSN3D(BaseRecognizer):
         if self.with_cls_head:
             self.cls_head.init_weights()
 
-    
     def extract_feat_with_flow(self, img_group,
                                trajectory_forward=None,
                                trajectory_backward=None):
@@ -85,12 +84,11 @@ class TSN3D(BaseRecognizer):
                           trajectory_forward=trajectory_forward,
                           trajectory_backward=trajectory_backward)
         return x
-    
+
     def extract_feat(self, img_group):
         x = self.backbone(img_group)
         return x
-   
- 
+
     def forward_train(self,
                       num_modalities,
                       img_meta,
@@ -109,14 +107,18 @@ class TSN3D(BaseRecognizer):
                 if self.flownet.flip_rgb:
                     img_forward = img_forward.flip(1)
                 img_forward = img_forward.transpose(1, 2).contiguous().view(
-                    (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
-                trajectory_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
+                    (img_forward.size(0), -1,
+                     img_forward.size(3), img_forward.size(4)))
+                trajectory_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(
+                    img_forward)
                 img_backward = img_group.flip(2)[:, :, 1:, :, :]
                 if self.flownet.rgb_disorder:
                     img_backward = img_backward.flip(1)
                 img_backward = img_backward.transpose(1, 2).contiguous().view(
-                    (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
-                trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
+                    (img_backward.size(0), -1,
+                     img_backward.size(3), img_backward.size(4)))
+                trajectory_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(
+                    img_backward)
             else:
                 # TODO: Wrap it into a function, e.g. ImFlows2ImFlowStack
                 num_frames = img_group.size(2)
@@ -129,18 +131,24 @@ class TSN3D(BaseRecognizer):
                     if self.flownet.flip_rgb:
                         img_forward = img_forward.flip(1)
                     img_forward = img_forward.transpose(1, 2).contiguous().view(
-                        (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
-                    traj_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(img_forward)
+                        (img_forward.size(0), -1,
+                         img_forward.size(3), img_forward.size(4)))
+                    traj_forward, photometric_forward, ssim_forward, smooth_forward = self.flownet(
+                        img_forward)
                     traj_forwards.append(traj_forward)
                     photometric_forwards.append(photometric_forward)
                     ssim_forwards.append(ssim_forward)
                     smooth_forwards.append(smooth_forward)
-                    img_backward = img_group[:, :, num_frames - i - 1: num_frames - i + 1, :, :].flip(2)
+                    img_backward = img_group[
+                        :, :,
+                        num_frames - i - 1: num_frames - i + 1, :, :].flip(2)
                     if self.flownet.flip_rgb:
                         img_backward = img_backward.flip(1)
                     img_backward = img_backward.transpose(1, 2).contiguous().view(
-                        (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
-                    traj_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(img_backward)
+                        (img_backward.size(0), -1,
+                         img_backward.size(3), img_backward.size(4)))
+                    traj_backward, photometric_backward, ssim_backward, smooth_backward = self.flownet(
+                        img_backward)
                     traj_backwards.append(traj_backward)
                     photometric_backwards.append(photometric_backward)
                     ssim_backwards.append(ssim_backward)
@@ -177,27 +185,33 @@ class TSN3D(BaseRecognizer):
                 trajectory_forward = _organize_trajectories(traj_forwards)
                 trajectory_backward = _organize_trajectories(traj_backwards)
                 photometric_forward = _organize_loss_outs(photometric_forwards)
-                photometric_backward = _organize_loss_outs(photometric_backwards)
+                photometric_backward = _organize_loss_outs(
+                    photometric_backwards)
                 ssim_forward = _organize_loss_outs(ssim_forwards)
                 ssim_backward = _organize_loss_outs(ssim_backwards)
                 smooth_forward = _organize_loss_outs(smooth_forwards)
                 smooth_backward = _organize_loss_outs(smooth_backwards)
 
-            x = self.extract_feat_with_flow(img_group[:, :, 1:-1, :, :],
-                                            trajectory_forward=trajectory_forward,
-                                            trajectory_backward=trajectory_backward)
+            x = self.extract_feat_with_flow(
+                img_group[:, :, 1:-1, :, :],
+                trajectory_forward=trajectory_forward,
+                trajectory_backward=trajectory_backward)
         else:
             x = self.extract_feat(img_group)
         if self.with_spatial_temporal_module:
             x = self.spatial_temporal_module(x)
         if self.with_segmental_consensus:
-             x = x.reshape((-1, num_seg) + x.shape[1:])
-             x = self.segmental_consensus(x)
-             x = x.squeeze(1)
+            x = x.reshape((-1, num_seg) + x.shape[1:])
+            x = self.segmental_consensus(x)
+            x = x.squeeze(1)
         losses = dict()
         if self.with_flownet:
-            losses.update(self.flownet.loss(photometric_forward, ssim_forward, smooth_forward, direction='forward'))
-            losses.update(self.flownet.loss(photometric_backward, ssim_backward, smooth_backward, direction='backward'))
+            losses.update(self.flownet.loss(photometric_forward,
+                                            ssim_forward, smooth_forward,
+                                            direction='forward'))
+            losses.update(self.flownet.loss(photometric_backward,
+                                            ssim_backward, smooth_backward,
+                                            direction='backward'))
         if self.with_cls_head:
             cls_score = self.cls_head(x)
             gt_label = gt_label.squeeze()
@@ -223,14 +237,18 @@ class TSN3D(BaseRecognizer):
                 if self.flownet.flip_rgb:
                     img_forward = img_forward.flip(1)
                 img_forward = img_forward.transpose(1, 2).contiguous().view(
-                    (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
-                trajectory_forward, _, _, _ = self.flownet(img_forward, train=False)
+                    (img_forward.size(0), -1,
+                     img_forward.size(3), img_forward.size(4)))
+                trajectory_forward, _, _, _ = self.flownet(
+                    img_forward, train=False)
                 img_backward = img_group.flip(2)[:, :, 1:, :, :]
                 if self.flownet.flip_rgb:
                     img_backward = img_backward.flip(1)
                 img_backward = img_backward.transpose(1, 2).contiguous().view(
-                    (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
-                trajectory_backward, _, _, _ = self.flownet(img_backward, train=False)
+                    (img_backward.size(0), -1,
+                     img_backward.size(3), img_backward.size(4)))
+                trajectory_backward, _, _, _ = self.flownet(
+                    img_backward, train=False)
             else:
                 # TODO: Wrap it into a function, e.g. ImFlows2ImFlowStack
                 num_frames = img_group.size(2)
@@ -240,15 +258,21 @@ class TSN3D(BaseRecognizer):
                     if self.flownet.rgb_disorder:
                         img_forward = img_forward.flip(1)
                     img_forward = img_forward.transpose(1, 2).contiguous().view(
-                        (img_forward.size(0), -1, img_forward.size(3), img_forward.size(4)))
-                    traj_forward, _, _, _ = self.flownet(img_forward, train=False)
+                        (img_forward.size(0), -1,
+                         img_forward.size(3), img_forward.size(4)))
+                    traj_forward, _, _, _ = self.flownet(
+                        img_forward, train=False)
                     traj_forwards.append(traj_forward)
-                    img_backward = img_group[:, :, num_frames - i - 1: num_frames - i + 1, :, :].flip(2)
+                    img_backward = img_group[
+                        :, :, num_frames - i - 1:
+                        num_frames - i + 1, :, :].flip(2)
                     if self.flownet.rgb_disorder:
                         img_backward = img_backward.flip(1)
                     img_backward = img_backward.transpose(1, 2).contiguous().view(
-                        (img_backward.size(0), -1, img_backward.size(3), img_backward.size(4)))
-                    traj_backward, _, _, _ = self.flownet(img_backward, train=False)
+                        (img_backward.size(0), -1,
+                         img_backward.size(3), img_backward.size(4)))
+                    traj_backward, _, _, _ = self.flownet(
+                        img_backward, train=False)
                     traj_backwards.append(traj_backward)
 
                 def _organize_trajectories(trajectory_lvls_pairs):
@@ -263,20 +287,19 @@ class TSN3D(BaseRecognizer):
                 trajectory_forward = _organize_trajectories(traj_forwards)
                 trajectory_backward = _organize_trajectories(traj_backwards)
 
-            x = self.extract_feat_with_flow(img_group[:, :, 1:-1, :, :],
-                                            trajectory_forward=trajectory_forward,
-                                            trajectory_backward=trajectory_backward)
+            x = self.extract_feat_with_flow(
+                img_group[:, :, 1:-1, :, :],
+                trajectory_forward=trajectory_forward,
+                trajectory_backward=trajectory_backward)
         else:
             x = self.extract_feat(img_group)
         if self.with_spatial_temporal_module:
             x = self.spatial_temporal_module(x)
         if self.with_segmental_consensus:
-             x = x.reshape((-1, num_seg) + x.shape[1:])
-             x = self.segmental_consensus(x)
-             x = x.squeeze(1)
+            x = x.reshape((-1, num_seg) + x.shape[1:])
+            x = self.segmental_consensus(x)
+            x = x.squeeze(1)
         if self.with_cls_head:
             x = self.cls_head(x)
 
-        return x.cpu().numpy() 
-        
-
+        return x.cpu().numpy()

@@ -4,14 +4,23 @@ import time
 from collections import defaultdict
 import heapq
 import numpy as np
+import standard_fields
 
 from .recall import eval_recalls
 
-import sys
-import os.path as osp
-sys.path.append(osp.abspath(osp.join(__file__, '../../../', 'third_party/ActivityNet/Evaluation/ava')))
-from mmaction.third_party.ActivityNet.Evaluation.ava import object_detection_evaluation
-import standard_fields
+try:
+    import sys
+    import os.path as osp
+    sys.path.append(
+        osp.abspath(osp.join(__file__, '../../../',
+                             'third_party/ActivityNet/Evaluation/ava')))
+    from mmaction.third_party.ActivityNet.Evaluation.ava import (
+        object_detection_evaluation as det_eval)
+
+except ImportError:
+    print('Failed to import ActivityNet evaluation toolbox. Did you clone with'
+          '"--recursive"?')
+
 
 def det2csv(dataset, results):
     csv_results = []
@@ -28,7 +37,8 @@ def det2csv(dataset, results):
                 y1 = _bbox[1] / height
                 x2 = _bbox[2] / width
                 y2 = _bbox[3] / height
-                csv_results.append((video_id, timestamp, x1, y1, x2, y2, label + 1, _bbox[4]))
+                csv_results.append(
+                    (video_id, timestamp, x1, y1, x2, y2, label + 1, _bbox[4]))
     return csv_results
 
 
@@ -59,19 +69,19 @@ def read_csv(csv_file, class_whitelist=None, capacity=0):
 
     Args:
         csv_file: A file object.
-        class_whitelist: If provided, boxes corresponding to (integer) class labels
-        not in this set are skipped.
+        class_whitelist: If provided, boxes corresponding to (integer) class
+        labels not in this set are skipped.
         capacity: Maximum number of labeled boxes allowed for each example.
         Default is 0 where there is no limit.
 
     Returns:
         boxes: A dictionary mapping each unique image key (string) to a list of
         boxes, given as coordinates [y1, x1, y2, x2].
-        labels: A dictionary mapping each unique image key (string) to a list of
-        integer class lables, matching the corresponding box in `boxes`.
-        scores: A dictionary mapping each unique image key (string) to a list of
-        score values lables, matching the corresponding label in `labels`. If
-        scores are not provided in the csv, then they will default to 1.0.
+        labels: A dictionary mapping each unique image key (string) to a list
+        of integer class lables, matching the corresponding box in `boxes`.
+        scores: A dictionary mapping each unique image key (string) to a list
+        of score values lables, matching the corresponding label in `labels`.
+        If scores are not provided in the csv, then they will default to 1.0.
     """
     start = time.time()
     entries = defaultdict(list)
@@ -114,7 +124,8 @@ def read_exclusions(exclusions_file):
         exclusions_file: A file object containing a csv of video-id,timestamp.
 
     Returns:
-        A set of strings containing excluded image keys, e.g. "aaaaaaaaaaa,0904",
+        A set of strings containing excluded image keys, e.g.
+        "aaaaaaaaaaa,0904",
         or an empty set if exclusions file is None.
     """
     excluded = set()
@@ -133,7 +144,8 @@ def read_labelmap(labelmap_file):
         labelmap_file: A file object containing a label map protocol buffer.
 
     Returns:
-        labelmap: The label map in the form used by the object_detection_evaluation
+        labelmap: The label map in the form used by the
+        object_detection_evaluation
         module - a list of {"id": integer, "name": classname } dicts.
         class_ids: A set containing all of the valid class id integers.
     """
@@ -174,29 +186,35 @@ def ava_eval(result_file, result_type,
         print_time("Reading detection results", start)
 
     if result_type == 'proposal':
-        gts = [np.array(gt_boxes[image_key], dtype=float) for image_key in gt_boxes]
+        gts = [np.array(gt_boxes[image_key], dtype=float)
+               for image_key in gt_boxes]
         proposals = []
         for image_key in gt_boxes:
             if image_key in boxes:
-                proposals.append(np.concatenate((np.array(boxes[image_key], dtype=float), np.array(scores[image_key], dtype=float)[:, None]), axis=1))
+                proposals.append(
+                    np.concatenate(
+                        (np.array(boxes[image_key], dtype=float),
+                         np.array(scores[image_key], dtype=float)[:, None]),
+                        axis=1))
             else:
-                proposals.append(np.zeros((1,5)))
+                proposals.append(np.zeros((1, 5)))
 
-        recalls = eval_recalls(gts, proposals, np.array(max_dets), np.arange(0.5, 0.96, 0.05), print_summary=False)
+        recalls = eval_recalls(gts, proposals, np.array(
+            max_dets), np.arange(0.5, 0.96, 0.05), print_summary=False)
         ar = recalls.mean(axis=1)
         for i, num in enumerate(max_dets):
-            print('Recall@0.5@{}\t={:.4f}'.format(num, recalls[i,0]))
+            print('Recall@0.5@{}\t={:.4f}'.format(num, recalls[i, 0]))
             print('AR@{}\t={:.4f}'.format(num, ar[i]))
 
     if result_type == 'bbox':
-        pascal_evaluator = object_detection_evaluation.PascalDetectionEvaluator(
+        pascal_evaluator = det_eval.PascalDetectionEvaluator(
             categories)
 
         start = time.time()
         for image_key in gt_boxes:
             if verbose and image_key in excluded_keys:
                 logging.info("Found excluded timestamp in detections: %s."
-                      "It will be ignored.", image_key)
+                             "It will be ignored.", image_key)
                 continue
             pascal_evaluator.add_single_ground_truth_image_info(
                 image_key, {
@@ -214,7 +232,7 @@ def ava_eval(result_file, result_type,
         for image_key in boxes:
             if verbose and image_key in excluded_keys:
                 logging.info("Found excluded timestamp in detections: %s."
-                    "It will be ignored.", image_key)
+                             "It will be ignored.", image_key)
                 continue
             pascal_evaluator.add_single_detected_image_info(
                 image_key, {
@@ -234,6 +252,3 @@ def ava_eval(result_file, result_type,
             print_time("run_evaluator", start)
         for display_name in metrics:
             print('{}=\t{}'.format(display_name, metrics[display_name]))
-
-
-

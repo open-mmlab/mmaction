@@ -1,7 +1,8 @@
 import mmcv
 from torch import nn
 
-from .registry import (BACKBONES, FLOWNETS, SPATIAL_TEMPORAL_MODULES, SEGMENTAL_CONSENSUSES, HEADS,
+from .registry import (BACKBONES, FLOWNETS, SPATIAL_TEMPORAL_MODULES,
+                       SEGMENTAL_CONSENSUSES, HEADS,
                        RECOGNIZERS, DETECTORS, LOCALIZERS, ARCHITECTURES,
                        NECKS, ROI_EXTRACTORS)
 
@@ -54,7 +55,8 @@ def build_head(cfg):
 
 
 def build_recognizer(cfg, train_cfg=None, test_cfg=None):
-    return build(cfg, RECOGNIZERS, dict(train_cfg=train_cfg, test_cfg=test_cfg))
+    return build(cfg, RECOGNIZERS,
+                 dict(train_cfg=train_cfg, test_cfg=test_cfg))
 
 
 def build_localizer(cfg, train_cfg=None, test_cfg=None):
@@ -66,11 +68,13 @@ def build_detector(cfg, train_cfg=None, test_cfg=None):
 
 
 def build_architecture(cfg, train_cfg=None, test_cfg=None):
-    return build(cfg, ARCHITECTURES, dict(train_cfg=train_cfg, test_cfg=test_cfg))
+    return build(cfg, ARCHITECTURES,
+                 dict(train_cfg=train_cfg, test_cfg=test_cfg))
 
 
 def build_neck(cfg):
     return build(cfg, NECKS)
+
 
 def build_roi_extractor(cfg):
     return build(cfg, ROI_EXTRACTORS)

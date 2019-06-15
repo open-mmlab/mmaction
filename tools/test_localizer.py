@@ -1,6 +1,9 @@
 import argparse
-
+from terminaltables import AsciiTable
+import numpy as np
+import pandas as pd
 import torch
+
 import mmcv
 from mmcv.runner import load_checkpoint, parallel_test, obj_from_dict
 from mmcv.parallel import scatter, collate, MMDataParallel
@@ -8,16 +11,12 @@ from mmcv.parallel import scatter, collate, MMDataParallel
 from mmaction import datasets
 from mmaction.datasets import build_dataloader
 from mmaction.models import build_localizer, localizers
-from mmaction.models.tenons.segmental_consensuses.stpp import parse_stage_config
+from mmaction.models.tenons.segmental_consensuses import parse_stage_config
 from mmaction.core.evaluation.localize_utils import (results2det,
                                                      perform_regression,
                                                      temporal_nms,
                                                      eval_ap_parallel,
                                                      det2df)
-
-import os.path as osp
-import pandas as pd
-from terminaltables import AsciiTable
 
 
 def single_test(model, data_loader):
@@ -25,7 +24,7 @@ def single_test(model, data_loader):
     results = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
-    for i, data in enumerate(data_loader):
+    for data in data_loader:
         with torch.no_grad():
             result = model(return_loss=False, **data)
         results.append(result)
@@ -73,20 +72,22 @@ def main():
     cfg.data.test.test_mode = True
 
     # reorganize stpp
-    num_classes = (cfg.model.cls_head.num_classes - 1 if cfg.model.cls_head.with_bg
+    num_classes = (cfg.model.cls_head.num_classes -
+                   1 if cfg.model.cls_head.with_bg
                    else cfg.model.cls_head.num_classes)
     stpp_feat_multiplier = 0
     for stpp_subcfg in cfg.model.segmental_consensus.stpp_cfg:
         _, mult = parse_stage_config(stpp_subcfg)
         stpp_feat_multiplier += mult
     cfg.model.segmental_consensus = dict(
-            type="STPPReorganized",
-            standalong_classifier=cfg.model.segmental_consensus.standalong_classifier,
-            feat_dim=num_classes + 1 + num_classes * 3 * stpp_feat_multiplier,
-            act_score_len=num_classes + 1,
-            comp_score_len=num_classes,
-            reg_score_len=num_classes * 2,
-            stpp_cfg=cfg.model.segmental_consensus.stpp_cfg)
+        type="STPPReorganized",
+        standalong_classifier=cfg.model.
+        segmental_consensus.standalong_classifier,
+        feat_dim=num_classes + 1 + num_classes * 3 * stpp_feat_multiplier,
+        act_score_len=num_classes + 1,
+        comp_score_len=num_classes,
+        reg_score_len=num_classes * 2,
+        stpp_cfg=cfg.model.segmental_consensus.stpp_cfg)
 
     dataset = obj_from_dict(cfg.data.test, datasets, dict(test_mode=True))
     if args.gpus == 1:
@@ -130,15 +131,16 @@ def main():
             print("Performing location regression")
             for cls in range(len(detections)):
                 detections[cls] = {
-                        k: perform_regression(v) for k, v in detections[cls].items()
+                    k: perform_regression(v)
+                    for k, v in detections[cls].items()
                 }
             print("Regression finished")
 
         print("Performing NMS")
         for cls in range(len(detections)):
             detections[cls] = {
-                    k: temporal_nms(v, cfg.test_cfg.ssn.evaluater.nms)
-                    for k, v in detections[cls].items()}
+                k: temporal_nms(v, cfg.test_cfg.ssn.evaluater.nms)
+                for k, v in detections[cls].items()}
         print("NMS finished")
 
         if eval_type == 'activitynet':
@@ -147,9 +149,11 @@ def main():
             iou_range = np.arange(0.1, 1.0, .1)
 
         # get gt
-        all_gt = pd.DataFrame(dataset.get_all_gt(), columns=['video-id', 'cls', 't-start', 't-end'])
-        gt_by_cls = [all_gt[all_gt.cls == cls].reset_index(drop=True).drop('cls', 1) 
-                     for cls in range(len(detections))]
+        all_gt = pd.DataFrame(dataset.get_all_gt(), columns=[
+                              'video-id', 'cls', 't-start', 't-end'])
+        gt_by_cls = [all_gt[all_gt.cls == cls].reset_index(
+            drop=True).drop('cls', 1)
+            for cls in range(len(detections))]
         plain_detections = [det2df(detections, cls)
                             for cls in range(len(detections))]
         ap_values = eval_ap_parallel(plain_detections, gt_by_cls, iou_range)

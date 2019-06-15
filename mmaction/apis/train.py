@@ -37,7 +37,8 @@ def batch_processor(model, data, train_mode):
     loss, log_vars = parse_losses(losses)
 
     outputs = dict(
-        loss=loss, log_vars=log_vars, num_samples=len(data['img_group_0'].data))
+        loss=loss, log_vars=log_vars,
+        num_samples=len(data['img_group_0'].data))
 
     return outputs
 
@@ -79,10 +80,11 @@ def _dist_train(model, dataset, cfg, validate=False):
     runner.register_hook(DistSamplerSeedHook())
     # register eval hooks
     if validate:
-            if cfg.data.val.type in ['RawFramesDataset', 'VideoDataset']:
-                runner.register_hook(DistEvalTopKAccuracyHook(cfg.data.val, k=(1, 5)))
-            if cfg.data.val.type == 'AVADataset':
-                runner.register_hook(AVADistEvalmAPHook(cfg.data.val))
+        if cfg.data.val.type in ['RawFramesDataset', 'VideoDataset']:
+            runner.register_hook(
+                DistEvalTopKAccuracyHook(cfg.data.val, k=(1, 5)))
+        if cfg.data.val.type == 'AVADataset':
+            runner.register_hook(AVADistEvalmAPHook(cfg.data.val))
     # if validate:
     #     if isinstance(model.module, RPN):
     #         # TODO: implement recall hooks for other datasets

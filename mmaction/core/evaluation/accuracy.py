@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
+
 def softmax(x, dim=1):
     """Compute softmax values for each sets of scores in x."""
     e_x = np.exp(x - np.max(x, axis=dim, keepdims=True))
@@ -31,9 +32,8 @@ def top_k_accuracy(scores, labels, k=(1,)):
     res = []
     for kk in k:
         hits = []
-        for x,y in zip(scores, labels):
+        for x, y in zip(scores, labels):
             y = [y] if isinstance(y, int) else y
             hits.append(top_k_hit(x, set(y), k=kk)[0])
         res.append(np.mean(hits))
-    return res 
-    
+    return res

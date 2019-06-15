@@ -2,6 +2,7 @@ from torch.nn.modules.module import Module
 from torch.autograd import Function, Variable
 import resample2d_cuda
 
+
 class Resample2dFunction(Function):
 
     @staticmethod
@@ -35,6 +36,7 @@ class Resample2dFunction(Function):
                                  ctx.kernel_size)
 
         return grad_input1, grad_input2, None
+
 
 class Resample2d(Module):
 

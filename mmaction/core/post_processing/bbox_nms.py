@@ -1,7 +1,7 @@
 import torch
 
 from mmaction.ops.nms import nms_wrapper
- 
+
 
 def multiclass_nms(multi_bboxes, multi_scores, score_thr, nms_cfg, max_num=-1):
     """NMS for multi-class bboxes.
@@ -55,7 +55,8 @@ def multiclass_nms(multi_bboxes, multi_scores, score_thr, nms_cfg, max_num=-1):
     return bboxes, labels
 
 
-def singleclass_nms(multi_bboxes, multi_scores, score_thr, nms_cfg, max_num=-1):
+def singleclass_nms(multi_bboxes, multi_scores, score_thr, nms_cfg,
+                    max_num=-1):
     """NMS for single-class bboxes.
 
     Args:
@@ -66,10 +67,10 @@ def singleclass_nms(multi_bboxes, multi_scores, score_thr, nms_cfg, max_num=-1):
         nms_thr (float): NMS IoU threshold
         max_num (int): if there are more than max_num bboxes after NMS,
             only top max_num will be kept.
-    
+
     Returns:
-        tuple: (bboxes, scores), tensors of shape (k, 5) and (k, #class). labels
-            are 0-based.
+        tuple: (bboxes, scores), tensors of shape (k, 5) and (k, #class).
+            labels are 0-based.
     """
     bboxes, scores = [], []
     nms_cfg_ = nms_cfg.copy()

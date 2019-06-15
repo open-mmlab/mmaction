@@ -11,13 +11,9 @@ from mmaction.core.evaluation.localize_utils import (results2det,
                                                      eval_ap_parallel,
                                                      det2df)
 
-import os.path as osp
 import pandas as pd
 from terminaltables import AsciiTable
-from multiprocessing import Pool
-import sys
-sys.path.append(osp.abspath(osp.join(__file__, '../../../', 'third_party/ActivityNet/Evaluation')))
-from mmaction.third_party.ActivityNet.Evaluation.eval_detection import compute_average_precision_detection
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test an action detector')
@@ -50,7 +46,8 @@ def main():
     def merge_scores(idx):
         def merge_part(arrs, index, weights):
             if arrs[0][index] is not None:
-                return np.sum([a[index] * w for a, w in zip(arrs, weights)], axis=0)
+                return np.sum([a[index] * w for a, w in zip(arrs, weights)],
+                              axis=0)
             else:
                 return None
 
@@ -68,22 +65,23 @@ def main():
     if eval_type:
         print('Starting evaluate {}'.format(eval_type))
 
-        num_classes = (cfg.model.cls_head.num_classes - 1 if cfg.model.cls_head.with_bg
-                       else cfg.model.cls_head.num_classes)
-        detections = results2det(dataset, outputs, **cfg.test_cfg.ssn.evaluater)
+        detections = results2det(
+            dataset, outputs, **cfg.test_cfg.ssn.evaluater)
 
         if not args.no_regression:
             print("Performing location regression")
             for cls in range(len(detections)):
                 detections[cls] = {
-                        k: perform_regression(v) for k, v in detections[cls].items()
+                    k: perform_regression(v)
+                    for k, v in detections[cls].items()
                 }
             print("Regression finished")
 
         print("Performing NMS")
         for cls in range(len(detections)):
             detections[cls] = {
-                    k: temporal_nms(v, cfg.test_cfg.ssn.evaluater.nms) for k, v in detections[cls].items()
+                k: temporal_nms(v, cfg.test_cfg.ssn.evaluater.nms)
+                for k, v in detections[cls].items()
             }
         print("NMS finished")
 
@@ -94,9 +92,11 @@ def main():
             # iou_range = [0.5]
 
         # get gt
-        all_gt = pd.DataFrame(dataset.get_all_gt(), columns=['video-id', 'cls', 't-start', 't-end'])
-        gt_by_cls = [all_gt[all_gt.cls == cls].reset_index(drop=True).drop('cls', 1) 
-                     for cls in range(len(detections))]
+        all_gt = pd.DataFrame(dataset.get_all_gt(), columns=[
+                              'video-id', 'cls', 't-start', 't-end'])
+        gt_by_cls = [all_gt[all_gt.cls == cls].reset_index(
+            drop=True).drop('cls', 1)
+            for cls in range(len(detections))]
         plain_detections = [det2df(detections, cls)
                             for cls in range(len(detections))]
 

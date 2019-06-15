@@ -10,8 +10,8 @@ class GroupCrop(object):
         self.crop_quadruple = crop_quadruple
 
     def __call__(self, img_group, is_flow=False):
-        t = mmcv.imcrop(img_group[0], self.crop_quadruple)
-        return [mmcv.imcrop(img, box) for img in img_group], self.crop_quadruple
+        return [mmcv.imcrop(img, self.crop_quadruple)
+                for img in img_group], self.crop_quadruple
 
 
 class GroupCenterCrop(object):
@@ -25,13 +25,14 @@ class GroupCenterCrop(object):
         x1 = (w - tw) // 2
         y1 = (h - th) // 2
         box = np.array([x1, y1, x1+tw-1, y1+th-1])
-        t = mmcv.imcrop(img_group[0], box)
-        return [mmcv.imcrop(img, box) for img in img_group], np.array([x1, y1, tw, th], dtype=np.float32)
+        return ([mmcv.imcrop(img, box) for img in img_group],
+                np.array([x1, y1, tw, th], dtype=np.float32))
 
 
 class Group3CropSample(object):
     def __init__(self, crop_size):
-        self.crop_size = crop_size if not isinstance(crop_size, int) else (crop_size, crop_size)
+        self.crop_size = crop_size if not isinstance(
+            crop_size, int) else (crop_size, crop_size)
 
     def __call__(self, img_group, is_flow=False):
 
@@ -58,7 +59,8 @@ class Group3CropSample(object):
             normal_group = list()
             flip_group = list()
             for i, img in enumerate(img_group):
-                crop = mmcv.imcrop(img, np.array([o_w, o_h, o_w + crop_w-1, o_h + crop_h-1]))
+                crop = mmcv.imcrop(img, np.array(
+                    [o_w, o_h, o_w + crop_w-1, o_h + crop_h-1]))
                 normal_group.append(crop)
                 flip_crop = mmcv.imflip(crop)
 
@@ -72,10 +74,10 @@ class Group3CropSample(object):
         return oversample_group, None
 
 
-
 class GroupOverSample(object):
     def __init__(self, crop_size):
-        self.crop_size = crop_size if not isinstance(crop_size, int) else (crop_size, crop_size)
+        self.crop_size = crop_size if not isinstance(
+            crop_size, int) else (crop_size, crop_size)
 
     def __call__(self, img_group, is_flow=False):
 
@@ -83,13 +85,15 @@ class GroupOverSample(object):
         image_w = img_group[0].shape[1]
         crop_w, crop_h = self.crop_size
 
-        offsets = GroupMultiScaleCrop.fill_fix_offset(False, image_w, image_h, crop_w, crop_h)
+        offsets = GroupMultiScaleCrop.fill_fix_offset(
+            False, image_w, image_h, crop_w, crop_h)
         oversample_group = list()
         for o_w, o_h in offsets:
             normal_group = list()
             flip_group = list()
             for i, img in enumerate(img_group):
-                crop = mmcv.imcrop(img, np.array([o_w, o_h, o_w + crop_w-1, o_h + crop_h-1]))
+                crop = mmcv.imcrop(img, np.array(
+                    [o_w, o_h, o_w + crop_w-1, o_h + crop_h-1]))
                 normal_group.append(crop)
                 flip_crop = mmcv.imflip(crop)
 
@@ -104,13 +108,16 @@ class GroupOverSample(object):
 
 
 class GroupMultiScaleCrop(object):
-    
-    def __init__(self, input_size, scales=None, max_distort=1, fix_crop=True, more_fix_crop=True):
+
+    def __init__(self, input_size,
+                 scales=None, max_distort=1,
+                 fix_crop=True, more_fix_crop=True):
         self.scales = scales if scales is not None else [1, .875, .75, .66]
         self.max_distort = max_distort
         self.fix_crop = fix_crop
         self.more_fix_crop = more_fix_crop
-        self.input_size = input_size if not isinstance(input_size, int) else [input_size, input_size]
+        self.input_size = input_size if not isinstance(input_size, int) else [
+            input_size, input_size]
         self.interpolation = 'bilinear'
 
     def __call__(self, img_group, is_flow=False):
@@ -118,12 +125,17 @@ class GroupMultiScaleCrop(object):
         im_h = img_group[0].shape[0]
         im_w = img_group[0].shape[1]
 
-        crop_w, crop_h, offset_w, offset_h = self._sample_crop_size((im_w, im_h))
-        box = np.array([offset_w, offset_h, offset_w + crop_w - 1, offset_h + crop_h - 1])
+        crop_w, crop_h, offset_w, offset_h = self._sample_crop_size(
+            (im_w, im_h))
+        box = np.array([offset_w, offset_h, offset_w +
+                        crop_w - 1, offset_h + crop_h - 1])
         crop_img_group = [mmcv.imcrop(img, box) for img in img_group]
-        ret_img_group = [mmcv.imresize(img, (self.input_size[0], self.input_size[1]), interpolation=self.interpolation)
-                        for img in crop_img_group]
-        return ret_img_group, np.array([offset_w, offset_h, crop_w, crop_h], dtype=np.float32)
+        ret_img_group = [mmcv.imresize(
+            img, (self.input_size[0], self.input_size[1]),
+            interpolation=self.interpolation)
+            for img in crop_img_group]
+        return (ret_img_group, np.array([offset_w, offset_h, crop_w, crop_h],
+                                        dtype=np.float32))
 
     def _sample_crop_size(self, im_size):
         image_w, image_h = im_size[0], im_size[1]
@@ -131,8 +143,10 @@ class GroupMultiScaleCrop(object):
         # find a crop size
         base_size = min(image_w, image_h)
         crop_sizes = [int(base_size * x) for x in self.scales]
-        crop_h = [self.input_size[1] if abs(x - self.input_size[1]) < 3 else x for x in crop_sizes]
-        crop_w = [self.input_size[0] if abs(x - self.input_size[0]) < 3 else x for x in crop_sizes]
+        crop_h = [self.input_size[1] if abs(
+            x - self.input_size[1]) < 3 else x for x in crop_sizes]
+        crop_w = [self.input_size[0] if abs(
+            x - self.input_size[0]) < 3 else x for x in crop_sizes]
 
         pairs = []
         for i, h in enumerate(crop_h):
@@ -145,12 +159,14 @@ class GroupMultiScaleCrop(object):
             w_offset = random.randint(0, image_w - crop_pair[0])
             h_offset = random.randint(0, image_h - crop_pair[1])
         else:
-            w_offset, h_offset = self._sample_fix_offset(image_w, image_h, crop_pair[0], crop_pair[1])
+            w_offset, h_offset = self._sample_fix_offset(
+                image_w, image_h, crop_pair[0], crop_pair[1])
 
         return crop_pair[0], crop_pair[1], w_offset, h_offset
 
     def _sample_fix_offset(self, image_w, image_h, crop_w, crop_h):
-        offsets = self.fill_fix_offset(self.more_fix_crop, image_w, image_h, crop_w, crop_h)
+        offsets = self.fill_fix_offset(
+            self.more_fix_crop, image_w, image_h, crop_w, crop_h)
         return random.choice(offsets)
 
     @staticmethod
@@ -218,59 +234,70 @@ class GroupImageTransform(object):
                 self.op_crop = GroupOverSample(crop_size)
             elif multiscale_crop:
                 # multiscale crop (train)
-                self.op_crop = GroupMultiScaleCrop(crop_size, scales=scales, max_distort=max_distort, fix_crop=not random_crop, more_fix_crop=more_fix_crop)
+                self.op_crop = GroupMultiScaleCrop(
+                    crop_size, scales=scales, max_distort=max_distort,
+                    fix_crop=not random_crop, more_fix_crop=more_fix_crop)
             else:
                 # center crop (val)
                 self.op_crop = GroupCenterCrop(crop_size)
         else:
             self.op_crop = None
 
-    def __call__(self, img_group, scale, crop_history=None, flip=False, keep_ratio=True, div_255=False, is_flow=False):
-        ## 1. rescale
+    def __call__(self, img_group, scale, crop_history=None, flip=False,
+                 keep_ratio=True, div_255=False, is_flow=False):
+        # 1. rescale
         if keep_ratio:
-            tuple_list = [mmcv.imrescale(img, scale, return_scale=True) for img in img_group]
+            tuple_list = [mmcv.imrescale(
+                img, scale, return_scale=True) for img in img_group]
             img_group, scale_factors = list(zip(*tuple_list))
             scale_factor = scale_factors[0]
         else:
             tuple_list = [mmcv.imresize(
                 img, scale, return_scale=True) for img in img_group]
             img_group, w_scales, h_scales = list(zip(*tuple_list))
-            scale_factor = np.array([w_scales[0], h_scales[0], w_scales[0], h_scales[0]],
+            scale_factor = np.array([w_scales[0], h_scales[0],
+                                     w_scales[0], h_scales[0]],
                                     dtype=np.float32)
 
-        ## 2. crop (if necessary)
+        # 2. crop (if necessary)
         if crop_history is not None:
-            self.op_crop = GroupCrop(crop_size, crop_history)
+            self.op_crop = GroupCrop(crop_history)
         if self.op_crop is not None:
-            img_group, crop_quadruple = self.op_crop(img_group, is_flow=is_flow)
+            img_group, crop_quadruple = self.op_crop(
+                img_group, is_flow=is_flow)
         else:
             crop_quadruple = None
 
         img_shape = img_group[0].shape
-        ## 3. flip
+        # 3. flip
         if flip:
             img_group = [mmcv.imflip(img) for img in img_group]
         if is_flow:
             for i in range(0, len(img_group), 2):
                 img_group[i] = mmcv.iminvert(img_group[i])
-        ## 4a. div_255
+        # 4a. div_255
         if div_255:
-            img_group = [mmcv.imnormalize(img, 0, 255, False) for img in img_group]
-        ## 4. normalize
-        img_group = [mmcv.imnormalize(img, self.mean, self.std, self.to_rgb) for img in img_group]
-        ## 5. pad
+            img_group = [mmcv.imnormalize(img, 0, 255, False)
+                         for img in img_group]
+        # 4. normalize
+        img_group = [mmcv.imnormalize(
+            img, self.mean, self.std, self.to_rgb) for img in img_group]
+        # 5. pad
         if self.size_divisor is not None:
-            img_group = [mmcv.impad_to_multiple(img, self.size_divisor) for img in img_group]
+            img_group = [mmcv.impad_to_multiple(
+                img, self.size_divisor) for img in img_group]
             pad_shape = img_group[0].shape
         else:
             pad_shape = img_shape
         if is_flow:
             assert len(img_group[0].shape) == 2
-            img_group = [np.stack((flow_x, flow_y), axis=2) for flow_x, flow_y in zip(img_group[0::2], img_group[1::2])]
-        ## 6. transpose
+            img_group = [np.stack((flow_x, flow_y), axis=2)
+                         for flow_x, flow_y in zip(
+                             img_group[0::2], img_group[1::2])]
+        # 6. transpose
         img_group = [img.transpose(2, 0, 1) for img in img_group]
- 
-        ## Stack into numpy.array
+
+        # Stack into numpy.array
         img_group = np.stack(img_group, axis=0)
         return img_group, img_shape, pad_shape, scale_factor, crop_quadruple
 
@@ -369,4 +396,3 @@ class BboxTransform(object):
             padded_bboxes = np.zeros((self.max_num_gts, 4), dtype=np.float32)
             padded_bboxes[:num_gts, :] = gt_bboxes
             return padded_bboxes
-

@@ -2,6 +2,7 @@ import mmcv
 import numpy as np
 import torch
 
+
 def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     assert proposals.size() == gt.size()
 
@@ -16,7 +17,7 @@ def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     gy = (gt[..., 1] + gt[..., 3]) * 0.5
     gw = (gt[..., 2] - gt[..., 0]) + 1.0
     gh = (gt[..., 3] - gt[..., 1]) + 1.0
-    
+
     dx = (gx - px) / pw
     dy = (gy - py) / ph
     dw = torch.log(gw / pw)
@@ -66,6 +67,7 @@ def delta2bbox(rois,
     bboxes = torch.stack([x1, y1, x2, y2], dim=-1).view_as(deltas)
     return bboxes
 
+
 def bbox_flip(bboxes, img_shape):
     """Flip bboxes horizontally.
 
@@ -85,12 +87,14 @@ def bbox_flip(bboxes, img_shape):
     elif isinstance(bboxes, np.ndarray):
         return mmcv.bbox_flip(bboxes, img_shape)
 
+
 def bbox_mapping(bboxes, img_shape, scale_factor, flip):
     """Map bboxes from the original image scale to testing scale"""
     new_bboxes = bboxes * scale_factor
     if flip:
         new_bboxes = bbox_flip(new_bboxes, img_shape)
     return new_bboxes
+
 
 def bbox_mapping_back(bboxes, img_shape, scale_factor, flip):
     """Map bboxes from testing scale to original image scale"""
@@ -103,7 +107,8 @@ def bbox2roi(bbox_list):
     """Convert a list of bboxes to roi format
 
     Args:
-        bbox_list (list[Tensor]): a list of bboxes corresponding to a batch of images
+        bbox_list (list[Tensor]): a list of bboxes
+        corresponding to a batch of images
 
     Returns:
         Tensor: shape (n, 5), [batch_ind, x1, y1, x2, y2]
@@ -149,14 +154,14 @@ def bbox2result(bboxes, labels, num_classes, thr=0.01):
         if labels.ndim == 1:
             return [bboxes[labels == i, :] for i in range(num_classes - 1)]
         else:
-            scores = labels # rename for clarification
+            scores = labels  # rename for clarification
             thr = (thr, ) * num_classes if isinstance(thr, float) else thr
             assert scores.shape[1] == num_classes
             assert len(thr) == num_classes
-            
+
             result = []
             for i in range(num_classes - 1):
                 where = scores[:, i+1] > thr[i+1]
-                result.append(np.concatenate((bboxes[where, :4], scores[where, i+1:i+2]), axis=1))
+                result.append(np.concatenate(
+                    (bboxes[where, :4], scores[where, i+1:i+2]), axis=1))
             return result
-        

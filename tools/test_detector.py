@@ -18,7 +18,7 @@ def single_test(model, data_loader):
     results = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
-    for i, data in enumerate(data_loader):
+    for data in data_loader:
         with torch.no_grad():
             result = model(return_loss=False, **data)
         results.append(result)
@@ -48,9 +48,14 @@ def parse_args():
     parser.add_argument('--out', help='output result file')
     parser.add_argument('--eval', type=str,
                         choices=['proposal', 'bbox'], help='eval types')
-    parser.add_argument('--ann_file', type=str, default='data/ava/ava_val_v2.1.csv')
-    parser.add_argument('--label_file', type=str, default='data/ava/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
-    parser.add_argument('--exclude_file', type=str, default='data/ava/ava_val_excluded_timestamps_v2.1.csv')
+    parser.add_argument('--ann_file', type=str,
+                        default='data/ava/ava_val_v2.1.csv')
+    parser.add_argument('--label_file', type=str,
+                        default='data/ava/'
+                        'ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+    parser.add_argument('--exclude_file', type=str,
+                        default='data/ava/'
+                        'ava_val_excluded_timestamps_v2.1.csv')
     args = parser.parse_args()
     return args
 

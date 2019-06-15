@@ -8,8 +8,8 @@ from mmcv.parallel import scatter, collate, MMDataParallel
 from mmaction import datasets
 from mmaction.datasets import build_dataloader
 from mmaction.models import build_recognizer, recognizers
-from mmaction.core.evaluation.accuracy import softmax, top_k_accuracy, mean_class_accuracy
-
+from mmaction.core.evaluation.accuracy import (softmax, top_k_accuracy,
+                                               mean_class_accuracy)
 
 
 def single_test(model, data_loader):
@@ -45,7 +45,8 @@ def parse_args():
         type=int,
         help='Number of processes per GPU')
     parser.add_argument('--out', help='output result file')
-    parser.add_argument('--use_softmax', action='store_true', help='whether to use softmax score')
+    parser.add_argument('--use_softmax', action='store_true',
+                        help='whether to use softmax score')
     args = parser.parse_args()
     return args
 
@@ -102,16 +103,19 @@ def main():
         gt_labels.append(ann['label'])
 
     if args.use_softmax:
-        print("Averaging score over {} clips with softmax".format(outputs[0].shape[0]))
+        print("Averaging score over {} clips with softmax".format(
+            outputs[0].shape[0]))
         results = [softmax(res, dim=1).mean(axis=0) for res in outputs]
     else:
-        print("Averaging score over {} clips without softmax (ie, raw)".format(outputs[0].shape[0]))
+        print("Averaging score over {} clips without softmax (ie, raw)".format(
+            outputs[0].shape[0]))
         results = [res.mean(axis=0) for res in outputs]
-    top1, top5 = top_k_accuracy(results, gt_labels, k=(1,5))
+    top1, top5 = top_k_accuracy(results, gt_labels, k=(1, 5))
     mean_acc = mean_class_accuracy(results, gt_labels)
     print("Mean Class Accuracy = {:.02f}".format(mean_acc * 100))
     print("Top-1 Accuracy = {:.02f}".format(top1 * 100))
     print("Top-5 Accuracy = {:.02f}".format(top5 * 100))
+
 
 if __name__ == '__main__':
     main()
