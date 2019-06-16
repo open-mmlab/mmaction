@@ -7,24 +7,25 @@ from torch.utils.data import Dataset
 from .transforms import (GroupImageTransform)
 from .utils import to_tensor
 
-import decord
+try:
+    import decord
+except ImportError:
+    pass
 
 
 class RawFramesRecord(object):
     def __init__(self, row):
         self._data = row
+        self.num_frames = -1
 
     @property
     def path(self):
         return self._data[0]
 
     @property
-    def num_frames(self):
+    def label(self):
         return int(self._data[1])
 
-    @property
-    def label(self):
-        return int(self._data[2])
 
 
 class VideoDataset(Dataset):
@@ -103,6 +104,8 @@ class VideoDataset(Dataset):
                                    (int(line.split(' ')[1]),
                                     int(line.split(' ')[2]))
                                    for line in open(img_scale_file)}
+        else:
+            self.img_scale_dict = None
         # network input size
         if isinstance(input_size, int):
             input_size = (input_size, input_size)
@@ -155,7 +158,6 @@ class VideoDataset(Dataset):
 
     def get_ann_info(self, idx):
         return {'path': self.video_infos[idx].path,
-                'num_frames': self.video_infos[idx].num_frames,
                 'label': self.video_infos[idx].label}
         # return self.video_infos[idx]['ann']
 
@@ -247,7 +249,15 @@ class VideoDataset(Dataset):
             images = list()
             for seg_ind in indices:
                 p = int(seg_ind)
-                self.video_reader.seek(p)
+                attempts = 0
+                # TODO: a more elegant way need!
+                while (attempts < 5):
+                    try:
+                        self.video_reader.seek(p)
+                        break
+                    except:
+                        attempts += 1
+                        p -= 1
                 for i, ind in enumerate(
                         range(0, self.old_length, self.new_step)):
                     if (skip_offsets[i] > 0 and
@@ -284,9 +294,11 @@ class VideoDataset(Dataset):
         if self.use_decord:
             self.video_reader = decord.VideoReader('{}.{}'.format(
                 osp.join(self.img_prefix, record.path), self.video_ext))
+            record.num_frames = len(self.video_reader)
         else:
             self.video_frames = mmcv.VideoReader('{}.{}'.format(
                 osp.join(self.img_prefix, record.path), self.video_ext))
+            record.num_frames = len(self.video_frames)
         if self.test_mode:
             segment_indices, skip_offsets = self._get_test_indices(record)
         else:

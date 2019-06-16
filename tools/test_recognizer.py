@@ -63,7 +63,8 @@ def main():
         torch.backends.cudnn.benchmark = True
     cfg.data.test.test_mode = True
 
-    cfg.model.spatial_temporal_module.spatial_size = 8
+    if cfg.data.test.oversample == 'three_crop':
+        cfg.model.spatial_temporal_module.spatial_size = 8
 
     dataset = obj_from_dict(cfg.data.test, datasets, dict(test_mode=True))
     if args.gpus == 1:

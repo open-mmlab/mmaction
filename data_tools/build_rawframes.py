@@ -19,7 +19,13 @@ def dump_frames(vid_item):
         pass
     vr = mmcv.VideoReader(full_path)
     for i in range(len(vr)):
-        mmcv.imwrite(vr[i], '{}/img_{:06d}.jpg'.format(out_full_path, i + 1))
+        if vr[i] is not None:
+            mmcv.imwrite(
+                vr[i], '{}/img_{:05d}.jpg'.format(out_full_path, i + 1))
+        else:
+            print('[Warning] length inconsistent!'
+                  'Early stop with {} out of {} frames'.format(i + 1, len(vr)))
+            break
     print('{} done with {} frames'.format(vid_name, len(vr)))
     sys.stdout.flush()
     return True
