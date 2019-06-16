@@ -8,6 +8,8 @@ import fnmatch
 import mmcv
 from mmcv.runner import obj_from_dict
 from .. import datasets
+import csv
+import random
 
 
 def to_tensor(data):
@@ -196,12 +198,18 @@ def process_localize_proposal_list(norm_proposal_list,
 def parse_directory(path, key_func=lambda x: x[-11:],
                     rgb_prefix='img_',
                     flow_x_prefix='flow_x_',
-                    flow_y_prefix='flow_y_'):
+                    flow_y_prefix='flow_y_',
+                    level=1):
     """
     Parse directories holding extracted frames from standard benchmarks
     """
     print('parse frames under folder {}'.format(path))
-    frame_folders = glob.glob(os.path.join(path, '*'))
+    if level == 1:
+        frame_folders = glob.glob(os.path.join(path, '*'))
+    elif level == 2:
+        frame_folders = glob.glob(os.path.join(path, '*', '*'))
+    else:
+        raise ValueError('level can be only 1 or 2')
 
     def count_files(directory, prefix_list):
         lst = os.listdir(directory)
@@ -227,3 +235,61 @@ def parse_directory(path, key_func=lambda x: x[-11:],
 
     print('frame folder analysis done')
     return frame_dict
+
+
+def build_split_list(split, frame_info, shuffle=False):
+
+    def build_set_list(set_list):
+        rgb_list, flow_list = list(), list()
+        for item in set_list:
+            if frame_info is not None:
+                rgb_cnt = frame_info[item[0]][1]
+                flow_cnt = frame_info[item[0]][2]
+                rgb_list.append('{} {} {}\n'.format(
+                    item[0], rgb_cnt, item[1]))
+                flow_list.append('{} {} {}\n'.format(
+                    item[0], flow_cnt, item[1]))
+            else:
+                rgb_list.append('{} {}\n'.format(
+                    item[0], item[1]))
+                flow_list.append('{} {}\n'.format(
+                    item[0], item[1]))
+        if shuffle:
+            random.shuffle(rgb_list)
+            random.shuffle(flow_list)
+        return rgb_list, flow_list
+
+    train_rgb_list, train_flow_list = build_set_list(split[0])
+    test_rgb_list, test_flow_list = build_set_list(split[1])
+    return (train_rgb_list, test_rgb_list), (train_flow_list, test_flow_list)
+
+
+def parse_ucf101_splits(key_func=lambda x: x[-11:]):
+    class_ind = [x.strip().split()
+                 for x in open('data/ucf101/annotations/classInd.txt')]
+    class_mapping = {x[1]: int(x[0]) - 1 for x in class_ind}
+
+    def line2rec(line):
+        items = line.strip().split(' ')
+        vid = key_func(items[0].split('.')[0])
+        label = class_mapping[items[0].split('/')[0]]
+        return vid, label
+
+    splits = []
+    for i in range(1, 4):
+        train_list = [line2rec(x) for x in open(
+            'data/ucf101/annotations/trainlist{:02d}.txt'.format(i))]
+        test_list = [line2rec(x) for x in open(
+            'data/ucf101/annotations/testlist{:02d}.txt'.format(i))]
+        splits.append((train_list, test_list))
+    return splits
+
+
+def parse_kinetics_splits():
+    csv_reader = csv.reader(open('data/kinetics400/kinetics_train.csv'))
+    # skip the first line
+    csv_reader.next()
+    labels_sorted = sorted(set([row[0] for row in csv_reader]))
+    class_mapping = {label: i for i, label in enumerate(labels_sorted)}
+
+    return ((train_list, test_list))

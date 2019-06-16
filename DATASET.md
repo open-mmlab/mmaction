@@ -81,3 +81,15 @@ The recommended practice is
 1. set `$OUT_FOLDER` to be an folder located in SSD
 2. symlink the link `$OUT_FOLDER` to `$MMACTION/data/$DATASET/rawframes`.
 
+```shell
+ln -s ${OUT_FOLDER} $MMACTION/data/$DATASET/rawframes
+```
+
+### Generate filelist
+```shell
+cd $MMACTION
+python data_tools/build_file_list.py ${DATASET} ${SRC_FOLDER} --level {1, 2} --format {rawframes, videos}
+```
+- `${SRC_FOLDER}` should point to the folder of the corresponding to the data format:
+    - "$MMACTION/data/$DATASET/rawframes" `--format rawframes`
+    - "$MMACTION/data/$DATASET/videos" if `--format videos`
