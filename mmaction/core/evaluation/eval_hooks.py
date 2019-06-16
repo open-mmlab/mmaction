@@ -14,7 +14,6 @@ from mmaction import datasets
 from .accuracy import top_k_accuracy
 from .ava_utils import (results2csv, read_csv, read_labelmap,
                         read_exclusions)
-import standard_fields
 
 try:
     import sys
@@ -23,6 +22,7 @@ try:
                              'third_party/ActivityNet/Evaluation/ava')))
     from mmaction.third_party.ActivityNet.Evaluation.ava import (
         object_detection_evaluation as det_eval)
+    import standard_fields
 except ImportError:
     print('Failed to import ActivityNet evaluation toolbox. Did you clone with'
           '"--recursive"?')
