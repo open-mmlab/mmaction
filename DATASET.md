@@ -25,9 +25,9 @@ Supported datasets include but are not limited to:
 ### Prepare videos
 Please refer to the official website and/or the official script to prepare the videos.
 Note that the videos should be arranged in either (1) a two-level directory organized by `${CLASS_NAME}/${VIDEO_ID}` or (2) a single-level directory.
-It is recommended using (1) for action recognition datasets (such as UCF101 and Kinetics) and using (2) for action detection datasets or those with multilabel (such as THUMOS14 and AVA).
+It is recommended using (1) for action recognition datasets (such as UCF101 and Kinetics) and using (2) for action detection datasets or those with multiple annotations per video (such as THUMOS14 and AVA).
 
-In the context of the whole project, this will look like this:
+In the context of the whole project, the folder structure will look like:
 ```
 mmaction
 ├── mmaction
