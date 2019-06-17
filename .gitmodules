@@ -4,3 +4,6 @@
 [submodule "mmaction/third_party/decord"]
 	path = mmaction/third_party/decord
 	url = https://github.com/zhreshold/decord.git
+[submodule "mmaction/third_party/dense_flow"]
+	path = mmaction/third_party/dense_flow
+	url = https://github.com/yjxiong/dense_flow
