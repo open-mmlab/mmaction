@@ -102,11 +102,10 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
         ],
-        license='GPLv3',
+        license='Apache License 2.0',
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],
         install_requires=[
             'mmcv', 'numpy', 'scikit-learn', 'terminaltables'
-            # 'matplotlib', 'six', 'terminaltables', 'pycocotools'
         ],
         zip_safe=False)
