@@ -2,4 +2,4 @@
 
 PYTHON=${PYTHON:-"python"}
 
-$PYTHON -m torch.distributed.launch --nproc_per_node=$2 $(dirname "$0")/train_recognizer.py $1 --launcher pytorch ${@:3}
+$PYTHON -m torch.distributed.launch --nproc_per_node=$2 $(dirname "$0")/train_localizer.py $1 --launcher pytorch ${@:3}
