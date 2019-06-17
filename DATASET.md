@@ -10,58 +10,31 @@ To alleviate such issue, we use [decord](https://github.com/zhreshold/decord) fo
 For action recognition, both formats are supported.
 For temporal action detection and spatial-temporal action detection, we still recommend the format of raw frames.
 
-**TL;DR** We provide shell scripts for data preparation under the path `$MMACTION/data_tools/`.
+
+### Supported datasets
+The supported datasets are listed below.
+We provide shell scripts for data preparation under the path `$MMACTION/data_tools/`.
+To ease usage, we provide tutorials of data deployment for each dataset.
+
+- [UCF101](https://www.crcv.ucf.edu/data/UCF101.php): See [PREPARING_UCF101.md](https://github.com/open-mmlab/mmaction/tree/master/data_tools/ucf101/PREPARING_UCF101.md)
+- [Kinetics400](https://deepmind.com/research/open-source/open-source-datasets/kinetics/): See [PREPARING_KINETICS400.md](https://github.com/open-mmlab/mmaction/tree/master/data_tools/kinetics400/PREPARING_KINETICS400.md)
+- [THUMOS14](https://www.crcv.ucf.edu/THUMOS14/download.html): See [PREPARING_TH14.md](https://github.com/open-mmlab/mmaction/tree/master/data_tools/thumos14/PREPARING_TH14.md)
+- [AVA](https://research.google.com/ava/): See [PREPARING_AVA.md](https://github.com/open-mmlab/mmaction/tree/master/data_tools/ava/PREPARING_AVA.md)
+
+
+Now, you can switch to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/tree/master/GETTING_STARTED.md) to train and test the model.
+
+
+**TL;DR** The following guide is helpful when you want to experiment with custom dataset.
+Similar to the datasets stated above, it is recommended organizing in `$MMACTION/data/$DATASET`.
 
 ### Prepare annotations
-Please first refer to the official website (links attached) to fetch the annotations.
-Supported datasets include but are not limited to:
-
-- [UCF101](https://www.crcv.ucf.edu/data/UCF101.php)
-- [Kinetics](https://deepmind.com/research/open-source/open-source-datasets/kinetics/)
-- [THUMOS14](https://www.crcv.ucf.edu/THUMOS14/download.html)
-- [AVA](https://research.google.com/ava/)
-
 
 ### Prepare videos
 Please refer to the official website and/or the official script to prepare the videos.
 Note that the videos should be arranged in either (1) a two-level directory organized by `${CLASS_NAME}/${VIDEO_ID}` or (2) a single-level directory.
 It is recommended using (1) for action recognition datasets (such as UCF101 and Kinetics) and using (2) for action detection datasets or those with multiple annotations per video (such as THUMOS14 and AVA).
 
-In the context of the whole project, the folder structure will look like:
-```
-mmaction
-├── mmaction
-├── tools
-├── configs
-├── data
-│   ├── ucf101
-│   │   ├── annotations
-│   │   ├── videos
-│   │   │   ├── ApplyEyeMakeup
-│   │   │   │   ├── v_ApplyEyeMakeup_g01_c01.avi
-
-│   │   │   ├── YoYo
-│   │   │   │   ├── v_YoYo_g25_c05.avi
-│   │   ├── rawframes
-│   │   │   ├── ApplyEyeMakeup
-│   │   │   │   ├── v_ApplyEyeMakeup_g01_c01
-│   │   │   │   │   ├── 
-
-│   │   │   ├── YoYo
-│   │   │   │   ├── v_YoYo_g25_c05
-│   │   │   │   │   ├── 
-
-
-│   ├── thumos14
-│   │   ├── annotations_val
-│   │   ├── annotations_test
-│   │   ├── videos_val
-│   │   │   ├── video_validation_0000001.mp4
-
-│   │   ├── rawframes_val
-│   │   │   ├── video_validation_0000001
-
-```
 
 ### Extract frames
 To extract frames (optical flow, to be specific), [dense_flow](https://github.com/yjxiong/dense_flow) is needed.

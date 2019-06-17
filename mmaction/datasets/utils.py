@@ -242,7 +242,10 @@ def build_split_list(split, frame_info, shuffle=False):
     def build_set_list(set_list):
         rgb_list, flow_list = list(), list()
         for item in set_list:
-            if frame_info is not None:
+            if item[0] not in frame_info:
+                # print("item:", item)
+                continue
+            elif frame_info[item[0]][1] > 0:
                 rgb_cnt = frame_info[item[0]][1]
                 flow_cnt = frame_info[item[0]][2]
                 rgb_list.append('{} {} {}\n'.format(
@@ -264,14 +267,15 @@ def build_split_list(split, frame_info, shuffle=False):
     return (train_rgb_list, test_rgb_list), (train_flow_list, test_flow_list)
 
 
-def parse_ucf101_splits(key_func=lambda x: x[-11:]):
+def parse_ucf101_splits(level):
     class_ind = [x.strip().split()
                  for x in open('data/ucf101/annotations/classInd.txt')]
     class_mapping = {x[1]: int(x[0]) - 1 for x in class_ind}
 
     def line2rec(line):
         items = line.strip().split(' ')
-        vid = key_func(items[0].split('.')[0])
+        vid = items[0].split('.')[0]
+        vid = '/'.join(vid.split('/')[-level:])
         label = class_mapping[items[0].split('/')[0]]
         return vid, label
 
@@ -285,11 +289,44 @@ def parse_ucf101_splits(key_func=lambda x: x[-11:]):
     return splits
 
 
-def parse_kinetics_splits():
-    csv_reader = csv.reader(open('data/kinetics400/kinetics_train.csv'))
+def parse_kinetics_splits(level):
+    csv_reader = csv.reader(
+        open('data/kinetics400/annotations/kinetics_train.csv'))
     # skip the first line
-    csv_reader.next()
-    labels_sorted = sorted(set([row[0] for row in csv_reader]))
+    next(csv_reader)
+
+    def convert_label(s):
+        return s.replace('"', '').replace(' ', '_')
+
+    labels_sorted = sorted(
+        set([convert_label(row[0]) for row in csv_reader]))
     class_mapping = {label: i for i, label in enumerate(labels_sorted)}
 
-    return ((train_list, test_list))
+    def list2rec(x, test=False):
+        if test:
+            vid = '{}_{:06d}_{:06d}'.format(x[0], int(x[1]), int(x[2]))
+            label = -1  # label unknown
+            return vid, label
+        else:
+            vid = '{}_{:06d}_{:06d}'.format(x[1], int(x[2]), int(x[3]))
+            if level == 2:
+                vid = '{}/{}'.format(convert_label(x[0]), vid)
+            else:
+                assert level == 1
+            label = class_mapping[convert_label(x[0])]
+            return vid, label
+        
+    csv_reader = csv.reader(
+        open('data/kinetics400/annotations/kinetics_train.csv'))
+    next(csv_reader)
+    train_list = [list2rec(x) for x in csv_reader]
+    csv_reader = csv.reader(
+        open('data/kinetics400/annotations/kinetics_val.csv'))
+    next(csv_reader)
+    val_list = [list2rec(x) for x in csv_reader]
+    csv_reader = csv.reader(
+        open('data/kinetics400/annotations/kinetics_test.csv'))
+    next(csv_reader)
+    test_list = [list2rec(x, test=True) for x in csv_reader]
+
+    return ((train_list, val_list, test_list), )

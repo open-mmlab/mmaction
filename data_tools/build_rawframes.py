@@ -46,7 +46,7 @@ def run_optical_flow(vid_item, dev_id=0):
     flow_x_path = '{}/flow_x'.format(out_full_path)
     flow_y_path = '{}/flow_y'.format(out_full_path)
 
-    cmd = osp.join(args.df_path + 'build/extract_gpu') + \
+    cmd = osp.join(args.df_path, 'build/extract_gpu') + \
         ' -f {} -x {} -y {} -i {} -b 20 -t 1 -d {} -s 1 -o {} -w {} -h {}' \
         .format(
         quote(full_path),
