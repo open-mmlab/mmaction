@@ -39,7 +39,7 @@ To perform spatial-temporal detection on AVA, we can training a baseline model b
 and evaluate a reference model by running
 ```shell
 wget -c wget -c https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ava/fast_rcnn_ava2.1_nl_r50_c4_1x_f32s2_kin-e2495b48.pth -P modelzoo/
-python tools/test_detector.py ava_fast_rcnn_nl_r50_c4_1x_kinetics_pretrain_crop.py modelzoo/fast_rcnn_ava2.1_nl_r50_c4_1x_f32s2_kin-e2495b48.pth --gpus 8
+python tools/test_detector.py ava_fast_rcnn_nl_r50_c4_1x_kinetics_pretrain_crop.py modelzoo/fast_rcnn_ava2.1_nl_r50_c4_1x_f32s2_kin-e2495b48.pth --out ava_fast_rcnn_nl_r50_multiscale.pkl --gpus 8 --eval bbox
 ```
 
 To perform temporal action detection on THUMOS14, we can training a baseline model by running
@@ -49,9 +49,8 @@ To perform temporal action detection on THUMOS14, we can training a baseline mod
 and evaluate a reference model by running
 ```shell
 wget -c wget -c https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/thumos14/ssn_thumos14_rgb_bn_inception_tag-dac9ddb0.pth -P modelzoo/
-python tools/test_detector.py ava_fast_rcnn_nl_r50_c4_1x_kinetics_pretrain_crop.py modelzoo/ssn_thumos14_rgb_bn_inception_tag-dac9ddb0.pth --gpus 8
+python tools/test_detector.py configs/thumos14/ssn_thumos14_rgb_bn_inception.py modelzoo/ssn_thumos14_rgb_bn_inception_tag-dac9ddb0.pth --gpus 8 --out ssn_thumos14_rgb_bn_inception.pkl --eval thumos14
 ```
-
 
 
 ## More Abstract Usage
