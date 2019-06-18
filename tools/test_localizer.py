@@ -125,7 +125,8 @@ def main():
     if eval_type:
         print('Starting evaluate {}'.format(eval_type))
 
-        detections = results2det(dataset, outputs, **cfg.test_cfg.ssn.evaluter)
+        detections = results2det(
+            dataset, outputs, **cfg.test_cfg.ssn.evaluater)
 
         if not args.no_regression:
             print("Performing location regression")
