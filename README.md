@@ -5,24 +5,28 @@ MMAction is an open source toolbox for action understanding based on PyTorch.
 It is a part of the [open-mmlab](https://github.com/open-mmlab) project developed by [Multimedia Laboratory, CUHK](http://mmlab.ie.cuhk.edu.hk/).
 
 ### Major Features
-- Support multiple tasks
+- Support for multiple tasks
 
-  Action understanding includes a wide variety of tasks, such as (1) action recognition from trimmed videos, (2) temporal action detection (also known as action localization) in untrimmed videos, and (3) spatial-temporal action detection in untrimmed videos. Our codebase is capable of dealing with all of the tasks above.
+  - action recognition from trimmed videos
+  - temporal action detection (also known as action localization) in untrimmed videos
+  - spatial-temporal action detection in untrimmed videos. 
+  
+MMAction is capable of dealing with all of the tasks above.
 
-- Support multiple datasets
+- Support for various datasets
 
   Video datasets have emerging throughout the recent years and have greatly fostered the devlopment of this field.
   MMAction provides tools to deal with various datasets.
 
-- Support multiple frameworks
+- Support for multiple action understanding frameworks
 
   MMAction implements popular frameworks such as TSN, I3D for action recognition and SSN for temporal action detection.
   For the recently introduced spatial temporal atomic action detection, a Fast-RCNN baseline is provided.
 
 - Modular design
 
-  The tasks share some common aspects such as backbones, and long-term and short-term sampling schemes.
-  Also, tasks can benefit each other. For example, a better backbone for action recognition will bring performance gain for action detection. 
+  The tasks in human action understanding share some common aspects such as backbones, and long-term and short-term sampling schemes.
+  Also, tasks can benefit from each other. For example, a better backbone for action recognition will bring performance gain for action detection. 
   Modular design enables us to view action understanding in a more integrated perspective.
 
 ## License
