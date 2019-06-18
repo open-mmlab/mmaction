@@ -1,12 +1,12 @@
 # Getting Started
 
-This provides basic tutorials for the usage of MMAction.
+This document provides basic tutorials for the usage of MMAction.
 For installation, please refer to [INSTALL.md](https://github.com/open-mmlab/mmaction/blob/master/INSTALL.md).
 For data deployment, please refer to [DATASET.md](https://github.com/open-mmlab/mmaction/blob/master/DATASET.md).
 
 
 ## An example on UCF-101
-We first give an example of test and train on UCF101.
+We first give an example of testing and training action recognition models on UCF101.
 ### Prepare data
 First of all, please follow [PREPARING_UCF101.md](https://github.com/open-mmlab/mmaction/blob/master/data_tools/ucf101/PREPARING_UCF101.md) for data preparation.
 
