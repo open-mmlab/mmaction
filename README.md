@@ -5,13 +5,12 @@ MMAction is an open source toolbox for action understanding based on PyTorch.
 It is a part of the [open-mmlab](https://github.com/open-mmlab) project developed by [Multimedia Laboratory, CUHK](http://mmlab.ie.cuhk.edu.hk/).
 
 ### Major Features
-- Support for multiple tasks
+- MMAction is capable of dealing with all of the tasks below.
 
   - action recognition from trimmed videos
   - temporal action detection (also known as action localization) in untrimmed videos
   - spatial-temporal action detection in untrimmed videos. 
-  
-MMAction is capable of dealing with all of the tasks above.
+ 
 
 - Support for various datasets
 
