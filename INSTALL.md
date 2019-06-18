@@ -19,7 +19,7 @@ git clone --recursive https://github.com/open-mmlab/mmaction.git
 
 Note that the last two will be contained in this codebase as a submodule.
 
-## Install Pre-requisite
+## Install Pre-requisites
 ### Install Decord (Optional)
 [Decord](https://github.com/zhreshold/decord) is an efficient video loader with smart shuffling.
 This is required when you want to use videos as the input format for training and is more efficient than OpenCV, useds by [mmcv](https://github.com/open-mmlab/mmcv). The installation steps follow decord's documentation.
