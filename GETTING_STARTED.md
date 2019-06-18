@@ -32,7 +32,7 @@ To reproduce the model, we provide training scripts as follows:
 
 ## More examples
 The procedure is not limited to action recognition in UCF101.
-To perform spatial-temporal detection on AVA, we can training a baseline model by running
+To perform spatial-temporal detection on AVA, we can train a baseline model by running
 ```shell
 ./tools/dist_train_detector.sh configs/ava/ava_fast_rcnn_nl_r50_c4_1x_kinetics_pretrain_crop.py 8 --validate
 ```
