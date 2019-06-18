@@ -71,4 +71,4 @@ mmaction
 
 ```
 
-For training and evaluating on UCF101, please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/GETTING_STARTED.md).
+For training and evaluating on UCF101, please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md).

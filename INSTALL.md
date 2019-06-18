@@ -54,7 +54,7 @@ cd ../../
 ```
 
 ### Install dense_flow (Optional)
-[Dense_flow] is used to calculate the optical flow of videos.
+[Dense_flow](https://github.com/yjxiong/dense_flow) is used to calculate the optical flow of videos.
 
 (a) Install OpenCV=2.4.13
 ```shell

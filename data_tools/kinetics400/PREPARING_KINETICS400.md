@@ -89,4 +89,4 @@ mmaction
 
 ```
 
-For training and evaluating on Kinetics-400, please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/GETTING_STARTED.md).
+For training and evaluating on Kinetics-400, please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md).
