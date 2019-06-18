@@ -51,6 +51,7 @@ bash extract_rgb_frames.sh
 
 ### Fetching proposal files and other metadata file
 Run the follow scripts to fetch pre-computed proposal list.
+The proposals are adapted from FAIR's [Long-Term Feature Banks](https://github.com/facebookresearch/video-long-term-feature-banks).
 ```shell
 bash fetch_ava_proposals.sh
 ```
@@ -69,24 +70,26 @@ mmaction
 ├── configs
 ├── data
 │   ├── ava
-│   │   ├── kinetics400_train_list_videos.txt
-│   │   ├── kinetics400_val_list_videos.txt
+│   │   ├── ava_video_resolution_stats.csv
+│   │   ├── ava_dense_proposals_train.FAIR.recall_93.9.pkl
+│   │   ├── ava_dense_proposals_val.FAIR.recall_93.9.pkl
 │   │   ├── annotations
-│   │   ├── videos_train
-│   │   ├── videos_val
-│   │   │   ├── abseiling
-│   │   │   │   ├── 0wR5jVB-WPk_000417_000427.mp4
-│   │   │   │   ├── ...
+│   │   ├── videos_trainval
+│   │   │   ├── 053oq2xB3oU.mkv
+│   │   │   ├── 0f39OWEqJ24.mp4
 │   │   │   ├── ...
-│   │   │   ├── wrapping_present
+│   │   ├── videos_trimmed_trainval
+│   │   │   ├── 053oq2xB3oU.mp4
+│   │   │   ├── 0f39OWEqJ24.mp4
 │   │   │   ├── ...
-│   │   │   ├── zumba
-│   │   ├── rawframes_train
-│   │   ├── rawframes_val
-
+│   │   ├── rawframes
+│   │   │   ├── 053oq2xB3oU.mp4
+|   │   │   │   ├── img_00001.jpg
+|   │   │   │   ├── img_00002.jpg
+|   │   │   │   ├── ...
 ```
 
-For training and evaluating on Kinetics-400, please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/GETTING_STARTED.md).
+For training and evaluating on AVA, please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md).
 
 
 Reference
