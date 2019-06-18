@@ -22,7 +22,9 @@ Note that the last two will be contained in this codebase as a submodule.
 ## Install Pre-requisites
 ### Install Decord (Optional)
 [Decord](https://github.com/zhreshold/decord) is an efficient video loader with smart shuffling.
-This is required when you want to use videos as the input format for training and is more efficient than OpenCV, useds by [mmcv](https://github.com/open-mmlab/mmcv). The installation steps follow decord's documentation.
+This is required when you want to use videos as the input format for training and is more efficient than OpenCV, useds by [mmcv](https://github.com/open-mmlab/mmcv).
+If you just want to have a quick experience with MMAction, you can simply skip this step.
+The installation steps follow decord's documentation.
 
 (a) install the required packages by running:
 
@@ -55,10 +57,13 @@ cd ../../
 
 ### Install dense_flow (Optional)
 [Dense_flow](https://github.com/yjxiong/dense_flow) is used to calculate the optical flow of videos.
+If you just want to have a quick experience with MMAction without taking pain of installing opencv, you can skip this step.
 
 (a) Install OpenCV=2.4.13
 ```shell
 cd third_party/
+sudo apt-get -qq install libopencv-dev build-essential checkinstall cmake pkg-config yasm libjpeg-dev libjasper-dev libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libv4l-dev python-dev python-numpy libtbb-dev libqt4-dev libgtk2.0-dev libfaac-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev libxvidcore-dev x264 v4l-utils
+
 wget -O OpenCV-2.4.13.zip https://github.com/Itseez/opencv/archive/2.4.13.zip
 unzip OpenCV-2.4.13.zip
 
@@ -72,6 +77,8 @@ cd ../../../
 (b) Build dense_flow
 ```shell
 cd third_party/dense_flow
+# dense_flow dependencies
+sudo apt-get -qq install libzip-dev
 mkdir build && cd build
 OpenCV_DIR=../../third_party/opencv-2.4.13/build cmake .. -DCUDA_USE_STATIC_CUDA_RUNTIME=OFF
 make -j
