@@ -31,9 +31,13 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
 ## License
 The project is release under the [Apache 2.0 license](https://github.com/open-mmlab/mmaction/blob/master/LICENSE).
 
+## Updates
+
+v0.1.0 (19/06/2019)
+- MMAction is online!
+
 ## Model zoo
 Results and reference models are available in the [model zoo](https://github.com/open-mmlab/mmaction/blob/master/MODEL_ZOO.md).
-
 
 ## Installation
 Please refer to [INSTALL.md](https://github.com/open-mmlab/mmaction/blob/master/INSTALL.md) for installation.
