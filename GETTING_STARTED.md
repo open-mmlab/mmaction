@@ -69,7 +69,7 @@ Arguments:
     - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
 - `${CONFIG_FILE}` is the config file stored in `$MMACTION/configs`.
 - `${CHECKPOINT_FILE}` is the checkpoint file.
-    Please refer to [MODEL_ZOO.md]() for more details.
+    Please refer to [MODEL_ZOO.md](https://github.com/open-mmlab/mmaction/blob/master/MODEL_ZOO.md) for more details.
 
 
 ## Train a model
