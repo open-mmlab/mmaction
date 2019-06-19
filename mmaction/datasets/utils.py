@@ -171,7 +171,7 @@ def process_localize_proposal_list(norm_proposal_list,
         vid = prop[0]
         frame_info = frame_dict[vid]
         frame_cnt = frame_info[1]
-        frame_path = frame_info[0]
+        frame_path = frame_info[0].split('/')[-1]
 
         gt = [[int(x[0]), int(float(x[1]) * frame_cnt),
                int(float(x[2]) * frame_cnt)] for x in prop[2]]
