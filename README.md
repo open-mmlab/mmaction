@@ -59,7 +59,7 @@ We will release a technical report later.
 ```
 @misc{mmaction2019,
   author =       {Yue Zhao, Yuanjun Xiong, Dahua Lin},
-  title =        {MMAcion},
+  title =        {MMAction},
   howpublished = {\url{https://github.com/open-mmlab/mmaction}},
   year =         {2019}
 }
