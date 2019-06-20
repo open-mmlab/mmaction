@@ -13,9 +13,9 @@ We use AWS as the main site to host our model zoo. Mirrors for aliyun will come 
 
 
 ### Kinetics
-| Model | Modality | Pretrained | Top-1 Acc. | Top-5 Acc. |                                     Config                                    | Download  |
-| :---: | :------: | :--------: | :--------: | :--------: | :---------------------------------------------------------------------------: | :-------: |
-|  I3D  |   RGB    |  ImageNet  |   72.9%    |   90.8%    | configs/kinetics400/i3d_kinetics400_3d_rgb_r50_c3d_inflate3x1x1_seg1_f32s2.py | [model]() |
+| Model | Modality | Pretrained | Top-1 Acc. | Top-5 Acc. |                                     Config                                    |                                                          Download                                                       |
+| :---: | :------: | :--------: | :--------: | :--------: | :---------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------: |
+|  I3D  |   RGB    |  ImageNet  |   72.9%    |   90.8%    | configs/kinetics400/i3d_kinetics400_3d_rgb_r50_c3d_inflate3x1x1_seg1_f32s2.py | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_r50_f32s2_k400-2c57e077.pth) |
 
 ### THUMOS14
 | Model | Modality | Pretrained | mAP@0.10 | mAP@0.20 | mAP@0.30 | mAP@0.40 | mAP@0.50 |                      Config                       |                                                               Download                                                              |
