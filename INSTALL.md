@@ -42,7 +42,7 @@ sudo apt-get install ffmpeg
 
 ```shell
 cd third_party/decord
-mkdir build && build
+mkdir build && cd build
 cmake .. -DUSE_CUDA=0
 make
 ```
