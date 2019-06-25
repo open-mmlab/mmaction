@@ -25,7 +25,7 @@ python tools/test_recognizer.py configs/ucf101/tsn_rgb_bninception.py tsn_2d_rgb
 ### Train a model with multiple GPUs
 To reproduce the model, we provide training scripts as follows:
 ```shell
-./tools/dist_train_recognizer.sh config/ucf101/tsn_rgb_bninception.py 8 --validate
+./tools/dist_train_recognizer.sh configs/ucf101/tsn_rgb_bninception.py 8 --validate
 ```
 - `--validate`: performs evaluation every k (default=1) epochs during the training, which help diagnose training process.
 
