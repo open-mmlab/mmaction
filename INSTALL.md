@@ -92,6 +92,7 @@ Note that you may have to do as root.
 unzip Video_Codec_SDK_9.0.20.zip
 cp Video_Codec_SDK_9.0.20/include/nvcuvid.h /usr/local/cuda-10.0/include/
 cp Video_Codec_SDK_9.0.20/include/cuviddec.h /usr/local/cuda-10.0/include/
+cp Video_Codec_SDK_9.0.20/Lib/linux/stubs/x86_64/libnvcuvid.so /usr/local/cuda-10.0/lib64/libnvcuvid.so.1
 ```
 
 1. Obtain OpenCV 4.1.0 and its extra modules (optflow, etc.) by
