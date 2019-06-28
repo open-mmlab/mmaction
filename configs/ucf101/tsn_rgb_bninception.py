@@ -20,6 +20,7 @@ model = dict(
         spatial_feature_size=1,
         dropout_ratio=0.8,
         in_channels=1024,
+        init_std=0.001,
         num_classes=101))
 train_cfg = None
 test_cfg = None
