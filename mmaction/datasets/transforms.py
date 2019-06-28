@@ -39,7 +39,7 @@ class Group3CropSample(object):
         image_h = img_group[0].shape[0]
         image_w = img_group[0].shape[1]
         crop_w, crop_h = self.crop_size
-        assert crop_h == image_h or crop_w == crop_w
+        assert crop_h == image_h or crop_w == image_w
 
         if crop_h == image_h:
             w_step = (image_w - crop_w) // 2
