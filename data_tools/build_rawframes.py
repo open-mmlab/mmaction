@@ -47,7 +47,7 @@ def run_optical_flow(vid_item, dev_id=0):
     flow_y_path = '{}/flow_y'.format(out_full_path)
 
     cmd = osp.join(args.df_path, 'build/extract_gpu') + \
-        ' -f {} -x {} -y {} -i {} -b 20 -t 1 -d {} -s 1 -o {} -w {} -h {}' \
+        ' -f={} -x={} -y={} -i={} -b=20 -t=1 -d={} -s=1 -o={} -w={} -h={}' \
         .format(
         quote(full_path),
         quote(flow_x_path), quote(flow_y_path), quote(image_path),
@@ -74,7 +74,7 @@ def run_warp_optical_flow(vid_item, dev_id=0):
     flow_y_path = '{}/flow_y'.format(out_full_path)
 
     cmd = osp.join(args.df_path + 'build/extract_warp_gpu') + \
-        ' -f {} -x {} -y {} -b 20 -t 1 -d {} -s 1 -o {}'.format(
+        ' -f={} -x={} -y={} -b=20 -t=1 -d={} -s=1 -o={}'.format(
             quote(full_path), quote(flow_x_path), quote(flow_y_path),
             dev_id, args.out_format)
 
