@@ -10,7 +10,7 @@ git clone --recursive https://github.com/open-mmlab/mmaction.git
 - Python 3.5+
 - PyTorch 1.0+
 - CUDA 9.0+
-- NCCV 2+
+- NVCC 2+
 - GCC 4.9+
 - ffmpeg 4.0+
 - [mmcv](https://github.com/open-mmlab/mmcv).
@@ -31,6 +31,7 @@ The installation steps follow decord's documentation.
 
 ```shell
 # official PPA comes with ffmpeg 2.8, which lacks tons of features, we use ffmpeg 4.0 here
+sudo apt-get install -y software-properties-common
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt-get update
 sudo apt-get install -y build-essential python3-dev python3-setuptools make cmake 
@@ -95,7 +96,18 @@ cp Video_Codec_SDK_9.0.20/include/cuviddec.h /usr/local/cuda-10.0/include/
 cp Video_Codec_SDK_9.0.20/Lib/linux/stubs/x86_64/libnvcuvid.so /usr/local/cuda-10.0/lib64/libnvcuvid.so.1
 ```
 
-1. Obtain OpenCV 4.1.0 and its extra modules (optflow, etc.) by
+1. Obtain required packages for building OpenCV 4.1.0 (duplicated with requirements of Decord in part)
+
+```shell
+sudo apt-get install -y liblapack-dev libatlas-base-dev
+sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository ppa:jonathonf/ffmpeg-4
+sudo apt update
+sudo apt install -y ffmpeg
+```
+
+2. Obtain OpenCV 4.1.0 and its extra modules (optflow, etc.) by
 
 ```shell
 cd third_party
@@ -105,7 +117,7 @@ wget -O OpenCV_contrib-4.1.0.zip https://github.com/opencv/opencv_contrib/archiv
 unzip OpenCV_contrib-4.1.0.zip
 ```
 
-2. Build OpenCV 4.1.0 from scratch (due to some custom settings)
+3. Build OpenCV 4.1.0 from scratch (due to some custom settings)
 
 ```
 cd opencv-4.1.0
