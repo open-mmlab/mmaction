@@ -56,7 +56,7 @@ test_cfg=dict(
             cls_top_k=2)))
 # dataset settings
 dataset_type = 'SSNDataset'
-data_root = '/data/thumos14/rawframes/'
+data_root = './data/thumos14/rawframes/'
 img_norm_cfg = dict(
     mean=[104, 117, 128], std=[1, 1, 1], to_rgb=False)
 data = dict(

@@ -630,10 +630,10 @@ class SSNDataset(Dataset):
 
             if prop[1] == 0:
                 reg_targets = prop[0][1].regression_targets
-                reg_targets = (reg_targets[0] - self.reg_stats[0][0]) / \
+                reg_targets = ((reg_targets[0] - self.reg_stats[0][0]) / \
                     self.reg_stats[1][0],
                 (reg_targets[1] - self.reg_stats[0][1]) / \
-                    self.reg_stats[1][1]
+                    self.reg_stats[1][1])
             else:
                 reg_targets = (0., 0.)
 
