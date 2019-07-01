@@ -106,6 +106,6 @@ if __name__ == '__main__':
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],
         install_requires=[
-            'mmcv', 'numpy', 'scikit-learn', 'terminaltables'
+            'mmcv', 'numpy', 'scipy', 'scikit-learn', 'terminaltables', 'lmdb', 'joblib'
         ],
         zip_safe=False)
