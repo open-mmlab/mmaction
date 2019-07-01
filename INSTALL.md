@@ -96,7 +96,7 @@ cp Video_Codec_SDK_9.0.20/include/cuviddec.h /usr/local/cuda-10.0/include/
 cp Video_Codec_SDK_9.0.20/Lib/linux/stubs/x86_64/libnvcuvid.so /usr/local/cuda-10.0/lib64/libnvcuvid.so.1
 ```
 
-1. Obtain required packages for building OpenCV 4.1.0 (duplicated with requirements of Decord in part)
+1. Obtain required packages for building OpenCV 4.1.0 (duplicated with requirements for Decord in part)
 
 ```shell
 sudo apt-get install -y liblapack-dev libatlas-base-dev
