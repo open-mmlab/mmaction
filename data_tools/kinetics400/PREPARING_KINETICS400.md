@@ -21,16 +21,9 @@ If this is the case, then you only need to replace all whitespaces in the class 
 detox -r ../../data/kinetics400/videos_train/
 detox -r ../../data/kinetics400/videos_val/
 ```
-or 
+or running 
 ```shell
-cd ../../data/kinetics400/
-ls ./videos_train | while read class; do \
-  newclass=`echo $class | tr " " "_"`; 
-  if [ $class != $newclass ] 
-  then 
-    mv "videos_train/${class}" "videos_train/${newclass}"; 
-  fi
-done
+bash rename_classnames.sh
 ```
 
 ### Extract frames
