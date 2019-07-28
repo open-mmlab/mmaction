@@ -136,8 +136,8 @@ cd third_party/dense_flow
 sudo apt-get -qq install libzip-dev
 mkdir build && cd build
 # deprecated:
-# OpenCV_DIR=../../third_party/opencv-2.4.13/build cmake ..
-OpenCV_DIR=../../third_party/opencv-4.1.0/build cmake ..
+# OpenCV_DIR=../../opencv-2.4.13/build cmake ..
+OpenCV_DIR=../../opencv-4.1.0/build cmake ..
 make -j
 ```
 
