@@ -111,5 +111,5 @@ class ResI3DLayer(nn.Module):
         if self.all_frozen:
             res_layer = getattr(self, 'layer{}'.format(self.stage + 1))
             res_layer.eval()
-            for param in mod.parameters():
+            for param in res_layer.parameters():
                 param.requires_grad = False
