@@ -9,12 +9,12 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
 
   - action recognition from trimmed videos
   - temporal action detection (also known as action localization) in untrimmed videos
-  - spatial-temporal action detection in untrimmed videos. 
- 
+  - spatial-temporal action detection in untrimmed videos.
+
 
 - Support for various datasets
 
-  Video datasets have emerging throughout the recent years and have greatly fostered the devlopment of this field.
+  Video datasets have emerging throughout the recent years and have greatly fostered the development of this field.
   MMAction provides tools to deal with various datasets.
 
 - Support for multiple action understanding frameworks
@@ -25,7 +25,7 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
 - Modular design
 
   The tasks in human action understanding share some common aspects such as backbones, and long-term and short-term sampling schemes.
-  Also, tasks can benefit from each other. For example, a better backbone for action recognition will bring performance gain for action detection. 
+  Also, tasks can benefit from each other. For example, a better backbone for action recognition will bring performance gain for action detection.
   Modular design enables us to view action understanding in a more integrated perspective.
 
 ## License
@@ -51,7 +51,7 @@ Please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob
 
 ## Contributing
 We appreciate all contributions to improve MMAction.
-Please refer to [CONTRUBUTING.md](https://github.com/open-mmlab/mmaction/blob/master/CONTRIBUTING.md) for the contributing guideline.
+Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmaction/blob/master/CONTRIBUTING.md) for the contributing guideline.
 
 ## Citation
 If you use our codebase or models in your research, please cite this work.

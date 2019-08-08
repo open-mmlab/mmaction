@@ -56,17 +56,17 @@ python tools/test_detector.py configs/thumos14/ssn_thumos14_rgb_bn_inception.py 
 ## More Abstract Usage
 
 ## Inference with pretrained models
-We provide testing scripts to evaluate a whole dataset. 
+We provide testing scripts to evaluate a whole dataset.
 
 ### Test a dataset
 ```shell
 python tools/test_${ARCH}.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--out ${RESULT_FILE}] [other task-specific arguments]
 ```
 Arguments:
-- `${ARCH}` could be 
+- `${ARCH}` could be
     - "recognizer" for action recognition (TSN, I3D, ...)
     - "localizer" for temporal action detection/localization (SSN)
-    - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
+    - "detector" for spatial-temporal action detection (a re-implemented Fast-RCNN baseline)
 - `${CONFIG_FILE}` is the config file stored in `$MMACTION/configs`.
 - `${CHECKPOINT_FILE}` is the checkpoint file.
     Please refer to [MODEL_ZOO.md](https://github.com/open-mmlab/mmaction/blob/master/MODEL_ZOO.md) for more details.
@@ -82,11 +82,9 @@ Training with multiple GPUs follows the rules below:
 ```shell
 ./tools/dist_train_${ARCH}.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
 ```
-- ${ARCH} could be 
+- ${ARCH} could be
     - "recognizer" for action recognition (TSN, I3D, ...)
     - "localizer" for temporal action detection/localization (SSN)
-    - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
+    - "detector" for spatial-temporal action detection (a re-implemented Fast-RCNN baseline)
 - ${CONFIG_FILE} is the config file stored in `$MMACTION/configs`.
 - ${GPU_NUM} is the number of GPU (default: 8). If you are using number other than 8, please adjust the learning rate in the config file linearly.
-
-

@@ -45,7 +45,7 @@ For the time being, please use the following command:
 python build_rawframes.py $SRC_FOLDER $OUT_FOLDER --df_path $PATH_OF_DENSE_FLOW --level {1, 2}
 ```
 - `$SRC_FOLDER` points to the folder of the original video (for example)
-- `$OUT_FOLDER` points to the root folder where the extracted frames and optical flow store 
+- `$OUT_FOLDER` points to the root folder where the extracted frames and optical flow store
 - `$PATH_OF_DENSE_FLOW` points to the root folder where dense_flow is installed.
 - `--level` is either 1 for the single-level directory or 2 for the two-level directory
 
