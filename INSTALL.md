@@ -34,8 +34,7 @@ The installation steps follow decord's documentation.
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 sudo apt-get update
-sudo apt-get install -y build-essential python3-dev python3-setuptools make cmake 
-libavcodec-dev libavfilter-dev libavformat-dev libavutil-dev
+sudo apt-get install -y build-essential python3-dev python3-setuptools make cmake libavcodec-dev libavfilter-dev libavformat-dev libavutil-dev
 # note: make sure you have cmake 3.8 or later, you can install from cmake official website if it's too old
 sudo apt-get install ffmpeg
 ```
@@ -156,4 +155,3 @@ python setup.py develop
 ```
 
 Please refer to [DATASET.md](https://github.com/open-mmlab/mmaction/blob/master/DATASET.md) to get familar with the data preparation and to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md) to use MMAction.
-
