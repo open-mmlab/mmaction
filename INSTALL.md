@@ -98,7 +98,7 @@ cp Video_Codec_SDK_9.0.20/Lib/linux/stubs/x86_64/libnvcuvid.so /usr/local/cuda-1
 1. Obtain required packages for building OpenCV 4.1.0 (duplicated with requirements for Decord in part)
 
 ```shell
-sudo apt-get install -y liblapack-dev libatlas-base-dev
+sudo apt-get install -y liblapack-dev libatlas-base-dev libboost-all-dev
 sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository ppa:jonathonf/ffmpeg-4

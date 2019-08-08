@@ -108,3 +108,5 @@ mmaction/version.py
 data
 .vscode
 .idea
+
+third_party/opencv*/
