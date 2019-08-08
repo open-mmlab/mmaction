@@ -23,7 +23,7 @@ Note that the last two will be contained in this codebase as a submodule.
 ## Install Pre-requisites
 ### Install Decord (Optional)
 [Decord](https://github.com/zhreshold/decord) is an efficient video loader with smart shuffling.
-This is required when you want to use videos as the input format for training and is more efficient than OpenCV, useds by [mmcv](https://github.com/open-mmlab/mmcv).
+This is required when you want to use videos as the input format for training and is more efficient than OpenCV, used by [mmcv](https://github.com/open-mmlab/mmcv).
 If you just want to have a quick experience with MMAction, you can simply skip this step.
 The installation steps follow decord's documentation.
 
@@ -154,4 +154,4 @@ pip install cython
 python setup.py develop
 ```
 
-Please refer to [DATASET.md](https://github.com/open-mmlab/mmaction/blob/master/DATASET.md) to get familar with the data preparation and to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md) to use MMAction.
+Please refer to [DATASET.md](https://github.com/open-mmlab/mmaction/blob/master/DATASET.md) to get familiar with the data preparation and to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md) to use MMAction.
