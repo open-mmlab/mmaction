@@ -3,6 +3,7 @@ import sys
 import os
 import os.path as osp
 import glob
+from torch.cuda import device_count
 from pipes import quote
 from multiprocessing import Pool, current_process
 
@@ -95,7 +96,7 @@ def parse_args():
     parser.add_argument('--flow_type', type=str,
                         default=None, choices=[None, 'tvl1', 'warp_tvl1'])
     parser.add_argument('--df_path', type=str,
-                        default='../mmaction/third_party/dense_flow')
+                        default='../third_party/dense_flow')
     parser.add_argument("--out_format", type=str, default='dir',
                         choices=['dir', 'zip'], help='output format')
     parser.add_argument("--ext", type=str, default='avi',
@@ -104,7 +105,7 @@ def parse_args():
                         help='resize image width')
     parser.add_argument("--new_height", type=int,
                         default=0, help='resize image height')
-    parser.add_argument("--num_gpu", type=int, default=8, help='number of GPU')
+    parser.add_argument("--num_gpu", type=int, default=-1, help='number of GPU, default -1 uses all gpu')
     parser.add_argument("--resume", action='store_true', default=False,
                         help='resume optical flow extraction '
                         'instead of overwriting')
@@ -115,6 +116,8 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    if args.num_gpu == -1:
+        args.num_gpu = device_count()
 
     if not osp.isdir(args.out_dir):
         print('Creating folder: {}'.format(args.out_dir))
