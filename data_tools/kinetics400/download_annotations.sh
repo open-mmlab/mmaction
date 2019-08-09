@@ -7,13 +7,6 @@ if [[ ! -d "${DATA_DIR}" ]]; then
   mkdir -p ${DATA_DIR}
 fi
 
-wget https://deepmind.com/documents/66/kinetics_train.zip
-wget https://deepmind.com/documents/65/kinetics_val.zip
-wget https://deepmind.com/documents/81/kinetics_test.zip
-
-unzip -j kinetics_train.zip -d ${DATA_DIR}/
-unzip -j kinetics_val.zip -d ${DATA_DIR}/
-unzip -j kinetics_test.zip -d ${DATA_DIR}/
-rm kinetics_train.zip
-rm kinetics_val.zip
-rm kinetics_test.zip
+wget -P ${DATA_DIR} https://github.com/activitynet/ActivityNet/raw/master/Crawler/Kinetics/data/kinetics-400_train.csv
+wget -P ${DATA_DIR} https://github.com/activitynet/ActivityNet/raw/master/Crawler/Kinetics/data/kinetics-400_val.csv
+wget -P ${DATA_DIR} https://github.com/activitynet/ActivityNet/raw/master/Crawler/Kinetics/data/kinetics-400_test.csv
