@@ -27,6 +27,11 @@ Then, together with provided configs files, we run the following code to test wi
 python tools/test_recognizer.py configs/ucf101/tsn_rgb_bninception.py modelzoo/tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth
 ```
 
+Tip: If the GPU is out of memory, then you can change one of the following.
+
+-   Change `num_segments` of `test` section from `25` to a smaller number.
+-   Use `three_crop` in `oversample` (Need to change `input_size` to `256` when using `three_crop`. When using `ten_crop`, `input_size=224`).
+
 ### Train a model with multiple GPUs
 
 To reproduce the model, we provide training scripts as follows:
