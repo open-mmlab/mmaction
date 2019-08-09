@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument(
-        '--gpus', default=1, type=int, help='GPU number used for testing')
+        '--gpus', default=-1, type=int, help='num of GPUs used. default -1 uses all GPUs')
     parser.add_argument(
         '--proc_per_gpu',
         default=1,
@@ -53,6 +53,8 @@ def parse_args():
 
 def main():
     args = parse_args()
+    if args.gpus == -1:
+        args.gpus = torch.cuda.device_count()
 
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
         raise ValueError('The output file must be a pkl file.')
