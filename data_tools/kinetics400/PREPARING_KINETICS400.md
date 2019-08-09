@@ -14,22 +14,22 @@ Then, use the following script to prepare videos. The codes are adapted from the
 bash download_videos.sh
 ```
 Note that some people may already have a backup of the kinetics-400 dataset using the [official crawler](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics).
-If this is the case, then you only need to replace all whitespaces in the class name for ease of processing either by [detox](http://manpages.ubuntu.com/manpages/bionic/man1/detox.1.html)
+If this is the case, then you only need to replace all whitespace in the class name for ease of processing either by [detox](http://manpages.ubuntu.com/manpages/bionic/man1/detox.1.html)
 
 ```shell
 # sudo apt-get install detox
 detox -r ../../data/kinetics400/videos_train/
 detox -r ../../data/kinetics400/videos_val/
 ```
-or running 
+or running
 ```shell
 bash rename_classnames.sh
 ```
 
 ### Extract frames
-Now it is time to extract frames from videos. 
+Now it is time to extract frames from videos.
 Before extraction, please refer to `DATASET.md` for installing [dense_flow](https://github.com/yjxiong/dense_flow).
-If you have some SSD, then we strongly recommend extracting frames there for better I/O performance. 
+If you have some SSD, then we strongly recommend extracting frames there for better I/O performance.
 ```shell
 # execute these two line (Assume the SSD is mounted at "/mnt/SSD/")
 mkdir /mnt/SSD/kinetics400_extracted_train/
@@ -41,7 +41,7 @@ Afterwards, run the following script to extract frames.
 ```shell
 bash extract_frames.sh
 ```
-If you only want to play with RGB frames (since extracting optical flow can be both time-comsuming and space-hogging), consider running the following script to extract **RGB-only** frames.
+If you only want to play with RGB frames (since extracting optical flow can be both time-consuming and space-hogging), consider running the following script to extract **RGB-only** frames.
 ```shell
 bash extract_rgb_frames.sh
 ```

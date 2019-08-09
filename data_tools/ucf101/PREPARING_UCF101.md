@@ -15,7 +15,7 @@ bash download_videos.sh
 ```
 
 ### Extract frames
-Now it is time to extract frames from videos. 
+Now it is time to extract frames from videos.
 Before extraction, please refer to `DATASET.md` for installing [dense_flow](https://github.com/yjxiong/dense_flow).
 If you have some SSD, then we recommend extracting frames there for better I/O performance. The extracted frames (RGB + Flow) will take up ~100GB.
 ```shell
