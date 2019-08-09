@@ -18,7 +18,7 @@ wget -c https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf10
 ```
 Then, together with provided configs files, we run the following code to test with multiple GPUs:
 ```shell
-python tools/test_recognizer.py configs/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth --gpus 8
+python tools/test_recognizer.py configs/ucf101/tsn_rgb_bninception.py modelzoo/tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth --gpus 8
 ```
 
 
