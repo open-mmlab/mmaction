@@ -21,7 +21,7 @@ If you have some SSD, then we recommend extracting frames there for better I/O p
 ```shell
 # execute these two line (Assume the SSD is mounted at "/mnt/SSD/")
 mkdir /mnt/SSD/ucf101_extracted/
-ln -s /mnt/SSD/ucf101_extracted/ ../data/ucf101/rawframes
+ln -s /mnt/SSD/ucf101_extracted/ ../../data/ucf101/rawframes
 ```
 
 If you didn't install dense_flow in the installation or only want to play with RGB frames (since extracting optical flow can be both time-comsuming and space-hogging), consider running the following script to extract **RGB-only** frames.
