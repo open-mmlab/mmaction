@@ -106,7 +106,7 @@ class RawFramesDataset(Dataset):
             input_size = (input_size, input_size)
         self.input_size = input_size
 
-        # parameters for specification from pre-trained networks (lecacy issue)
+        # parameters for specification from pre-trained networks (legacy issue)
         self.div_255 = div_255
 
         # parameters for data augmentation
