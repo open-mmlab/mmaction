@@ -110,3 +110,4 @@ data
 .idea
 
 third_party/opencv*/
+modelzoo/**/*.pth
