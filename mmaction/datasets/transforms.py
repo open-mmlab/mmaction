@@ -190,7 +190,7 @@ class GroupMultiScaleCrop(object):
             ret.append((1 * w_step, 1 * h_step))  # upper left quarter
             ret.append((3 * w_step, 1 * h_step))  # upper right quarter
             ret.append((1 * w_step, 3 * h_step))  # lower left quarter
-            ret.append((3 * w_step, 3 * h_step))  # lower righ quarter
+            ret.append((3 * w_step, 3 * h_step))  # lower right quarter
 
         return ret
 

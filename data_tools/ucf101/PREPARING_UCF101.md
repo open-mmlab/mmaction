@@ -24,7 +24,7 @@ mkdir /mnt/SSD/ucf101_extracted/
 ln -s /mnt/SSD/ucf101_extracted/ ../../data/ucf101/rawframes
 ```
 
-If you didn't install dense_flow in the installation or only want to play with RGB frames (since extracting optical flow can be both time-comsuming and space-hogging), consider running the following script to extract **RGB-only** frames.
+If you didn't install dense_flow in the installation or only want to play with RGB frames (since extracting optical flow can be both time-consuming and space-hogging), consider running the following script to extract **RGB-only** frames.
 ```shell
 bash extract_rgb_frames.sh
 ```
