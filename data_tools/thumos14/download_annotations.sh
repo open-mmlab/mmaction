@@ -12,3 +12,6 @@ wget http://crcv.ucf.edu/THUMOS14/test_set/TH14_Temporal_annotations_test.zip
 
 unzip -j TH14_Temporal_annotations_validation.zip -d $DATA_DIR/annotations_val
 unzip -j TH14_Temporal_annotations_test.zip -d $DATA_DIR/annotations_test
+
+rm TH14_Temporal_annotations_validation.zip
+rm TH14_Temporal_annotations_test.zip
