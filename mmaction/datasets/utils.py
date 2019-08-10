@@ -315,7 +315,7 @@ def parse_kinetics_splits(level):
                 assert level == 1
             label = class_mapping[convert_label(x[0])]
             return vid, label
-        
+
     csv_reader = csv.reader(
         open('data/kinetics400/annotations/kinetics_train.csv'))
     next(csv_reader)

@@ -1,7 +1,7 @@
 #! /usr/bin/bash env
 
 # Rename classname for convenience
-cd ../../data/kinetics400/ 
+cd ../../data/kinetics400/
 ls ./videos_train | while read class; do \
   newclass=`echo $class | tr " " "_" | tr "(" "-" | tr ")" "-" `;
   if [ "${class}" != "${newclass}" ]
