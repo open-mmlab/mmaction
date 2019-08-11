@@ -47,7 +47,7 @@ Please refer to [DATASET.md](https://github.com/open-mmlab/mmaction/blob/master/
 Detailed documents for the supported datasets are available in `data_tools/`.
 
 ## Get started
-Please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md) for detailed examples and abstract usage.
+Please refer to [GETTING_STARTED.md](https://github.com/open-mmlab/mmaction/blob/master/GETTING_STARTED.md) for detailed examples.
 
 ## Contributing
 We appreciate all contributions to improve MMAction.
