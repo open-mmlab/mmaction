@@ -1,8 +1,5 @@
 FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
 
-# for testing nvcc is coming ?
-# RUN nvcc --version
-
 RUN apt-get update && apt-get install -y software-properties-common && \
     add-apt-repository ppa:jonathonf/ffmpeg-4 -y && \
     apt-get update && \
