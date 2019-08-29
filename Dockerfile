@@ -118,7 +118,7 @@ RUN git clone --recursive https://github.com/open-mmlab/mmaction.git \
     #     .. \
     && cmake -DCMAKE_BUILD_TYPE=Release \
         -DWITH_CUDA=ON \
-        -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-9.0/lib64 \
+        -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-9.0 \
         -DCUDA_ARCH_BIN='3.0 3.5 5.0 6.0 6.2' \
         -DCUDA_ARCH_PTX="" \
         -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.1.0/modules \
