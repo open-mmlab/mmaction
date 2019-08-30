@@ -62,17 +62,15 @@ RUN apt-get update && apt-get install -y software-properties-common && \
 	libgtk2.0-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /data
-
-WORKDIR /data
-
 # unlink old-python (python2) & make new symbolic-link for python3
 RUN unlink /usr/bin/python \
     && unlink /usr/bin/pip \
-    && ln -s /usr/bin/python3 /usr/bin/python & \
+    && ln -s /usr/bin/python3 /usr/bin/python \
     && ln -s /usr/bin/pip3 /usr/bin/pip \
-    && pip install --upgrade pip \
-    && pip install torchvision==0.4.0 \
+    && pip install --upgrade pip
+
+# install essential python package
+RUN pip install torchvision==0.4.0 \
     cython==0.29.11 \
     numpy==1.16.4 \
     scipy \
@@ -81,12 +79,13 @@ RUN unlink /usr/bin/python \
     scikit-learn
 
 # 1 st step - clone repository & install opencv 4.1.0
-RUN git clone --recursive https://github.com/open-mmlab/mmaction.git \
-    && cd mmaction/third_party \
+RUN cd / \
     && wget -O OpenCV-4.1.0.zip https://github.com/opencv/opencv/archive/4.1.0.zip \
     && unzip OpenCV-4.1.0.zip \
+    && rm -rf OpenCV-4.1.0.zip \
     && wget -O OpenCV_contrib-4.1.0.zip https://github.com/opencv/opencv_contrib/archive/4.1.0.zip \
     && unzip OpenCV_contrib-4.1.0.zip \
+    && rm -rf OpenCV_contrib-4.1.0.zip \
     && cd opencv-4.1.0 \
     && mkdir build \
     && cd build \
@@ -111,29 +110,6 @@ RUN wget --no-check-certificate https://cmake.org/files/v3.9/cmake-3.9.0.tar.gz 
     && ./bootstrap --system-curl \
     && make -j && make install
 
-# install decord
-RUN cd mmaction/third_party/decord \
-    && mkdir -p build \
-    && cd build \
-    && cmake .. -DUSE_CUDA=0 \
-    && make -j4 \
-    && cd ../python \
-    && python3 setup.py install --user
+WORKDIR /root
 
-# install dense flow
-RUN cd mmaction/third_party/dense_flow \
-    && mkdir build \
-    && cd build \
-    && OpenCV_DIR=/data/mmaction/third_party/opencv-4.1.0/build/ cmake .. \
-    && make -j
-
-# install mmcv
-RUN git clone --recursive https://github.com/open-mmlab/mmcv.git \
-    && cd mmcv \
-    && pip3 install -e .
-
-# setup mmaction
-RUN cd mmaction \ 
-    && chmod 777 compile.sh \
-    && CUDA_VISIBLE_DEVICES=0 ./compile.sh \
-    && python3 setup.py develop
+# just clone mmaction -> install decord -> dense_flow -> mmcv -> mmaction
