@@ -69,7 +69,7 @@ WORKDIR /data
 # unlink old-python (python2) & make new symbolic-link for python3
 RUN unlink /usr/bin/python \
     && unlink /usr/bin/pip \
-    && ln -s /usr/bin/python3 /usr/bin/python & \
+    && ln -s /usr/bin/python3 /usr/bin/python \
     && ln -s /usr/bin/pip3 /usr/bin/pip \
     && pip install --upgrade pip \
     && pip install torchvision==0.4.0 \
