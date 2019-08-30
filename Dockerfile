@@ -1,11 +1,8 @@
 FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
 
-# Set Environments
-# ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/cuda/extras/CUPTI/lib64
-# ENV PATH ${PATH}:/usr/local/cuda-9.0/bin
-# ENV CUDA_HOME ${CUDA_HOME}:/usr/local/cuda:/usr/local/cuda-9.0
-# ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/cuda-9.0/lib64
+MAINTAINER mynameismaxz
 
+# install all-of-package
 RUN apt-get update && apt-get install -y software-properties-common && \
     add-apt-repository ppa:jonathonf/ffmpeg-4 -y && \
     apt-get update && \
@@ -37,6 +34,7 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     libzip-dev \
     libboost* \
     zip \
+    unrar \
     yasm \
     pkg-config \
     libtbb2 \
@@ -61,11 +59,26 @@ RUN apt-get update && apt-get install -y software-properties-common && \
 	libswscale-dev \
 	libeigen3-dev \
 	libtbb-dev \
-	libgtk2.0-dev
+	libgtk2.0-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /data
 
 WORKDIR /data
+
+# unlink old-python (python2) & make new symbolic-link for python3
+RUN unlink /usr/bin/python \
+    && unlink /usr/bin/pip \
+    && ln -s /usr/bin/python3 /usr/bin/python & \
+    && ln -s /usr/bin/pip3 /usr/bin/pip \
+    && pip install --upgrade pip \
+    && pip install torchvision==0.4.0 \
+    cython==0.29.11 \
+    numpy==1.16.4 \
+    scipy \
+    pandas \
+    matplotlib \
+    scikit-learn
 
 # 1 st step - clone repository & install opencv 4.1.0
 RUN git clone --recursive https://github.com/open-mmlab/mmaction.git \
@@ -77,57 +90,18 @@ RUN git clone --recursive https://github.com/open-mmlab/mmaction.git \
     && cd opencv-4.1.0 \
     && mkdir build \
     && cd build \
-    # && cmake -DBUILD_TIFF=ON \
-    #    -DBUILD_opencv_java=OFF \
-    #    -DBUILD_SHARED_LIBS=OFF \
-    #    -DWITH_CUDA=ON \
-    #    -DENABLE_FAST_MATH=1 \
-    #    -DCUDA_FAST_MATH=1 \
-    #    -DWITH_CUBLAS=1 \
-    #    -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-9.0/lib64 \
-    #    -DCMAKE_INSTALL_PREFIX=/opencv \
-    #    ##
-    #    ## Should compile for most card
-    #    ## 3.5 binary code for devices with compute capability 3.5 and 3.7,
-    #    ## 5.0 binary code for devices with compute capability 5.0 and 5.2,
-    #    ## 6.0 binary code for devices with compute capability 6.0 and 6.1,
-    #    -DCUDA_ARCH_BIN='3.0 3.5 3.7 5.0 5.2 6.0 6.1' \
-    #    -DCUDA_ARCH_PTX="" \
-    #    ##
-    #    ## AVX in dispatch because not all machines have it
-    #    -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.1.0/modules \
-    #    -DCPU_DISPATCH=AVX,AVX2 \
-    #    -DENABLE_PRECOMPILED_HEADERS=OFF \
-    #    -DWITH_OPENGL=OFF \
-    #    -DWITH_OPENCL=OFF \
-    #    -DWITH_QT=OFF \
-    #    -DWITH_IPP=ON \
-    #    -DWITH_TBB=ON \
-    #    -DFORCE_VTK=ON \
-    #    -DWITH_EIGEN=ON \
-    #    -DWITH_V4L=ON \
-    #    -DWITH_XINE=ON \
-    #    -DWITH_GDAL=ON \
-    #    -DWITH_1394=OFF \
-    #    -DWITH_FFMPEG=OFF \
-    #    -DBUILD_PROTOBUF=OFF \
-    #    -DBUILD_TESTS=OFF \
-    #    -DBUILD_PERF_TESTS=OFF \
-    #    -DCMAKE_BUILD_TYPE=RELEASE \
-    #    -DWITH_GTK=ON \
-    #     .. \
-    && cmake -DCMAKE_BUILD_TYPE=Release \
+    ### using cmake refer from INSTALLATION.md default file ###
+    && cmake \ 
+        -DCMAKE_BUILD_TYPE=Release \
         -DWITH_CUDA=ON \
-        -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-9.0 \
-        -DCUDA_ARCH_BIN='3.0 3.5 5.0 6.0 6.2' \
-        -DCUDA_ARCH_PTX="" \
-        -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.1.0/modules \
+        -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.1.0/modules/ \
         -DWITH_TBB=ON \
         -DBUILD_opencv_cnn_3dobj=OFF \
         -DBUILD_opencv_dnn=OFF \
         -DBUILD_opencv_dnn_modern=OFF \
         -DBUILD_opencv_dnns_easily_fooled=OFF \
-        -DOPENCV_ENABLE_NONFREE=ON .. \
+        -DOPENCV_ENABLE_NONFREE=ON \
+        .. \
     && make -j
 
 # install cmake first
@@ -153,22 +127,13 @@ RUN cd mmaction/third_party/dense_flow \
     && OpenCV_DIR=/data/mmaction/third_party/opencv-4.1.0/build/ cmake .. \
     && make -j
 
-RUN pip3 install http://download.pytorch.org/whl/cu90/torch-1.0.1-cp35-cp35m-linux_x86_64.whl
-
+# install mmcv
 RUN git clone --recursive https://github.com/open-mmlab/mmcv.git \
     && cd mmcv \
     && pip3 install -e .
 
-RUN unlink /usr/bin/python \
-    && unlink /usr/bin/pip
-
-RUN ln -s /usr/bin/python3 /usr/bin/python & \
-    ln -s /usr/bin/pip3 /usr/bin/pip
-
-RUN pip install --upgrade pip
-
-RUN pip install cython==0.29.11 numpy==1.16.4 scipy pandas matplotlib scikit-learn \
-    && cd mmaction \ 
+# setup mmaction
+RUN cd mmaction \ 
     && chmod 777 compile.sh \
     && CUDA_VISIBLE_DEVICES=0 ./compile.sh \
     && python3 setup.py develop
