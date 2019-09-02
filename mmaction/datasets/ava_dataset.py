@@ -267,10 +267,10 @@ class AVADataset(Dataset):
         return self.video_infos[idx]['ann']
 
     def _filter_records(self, exclude_file=None):
+        valid_inds = []
         if exclude_file is not None:
             exclude_records = [x.strip().split(',')
                                for x in open(exclude_file)]
-            valid_inds = []
             for i, video_info in enumerate(self.video_infos):
                 valid = True
                 for vv, tt in exclude_records:
