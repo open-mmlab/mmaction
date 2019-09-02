@@ -123,6 +123,6 @@ log_config = dict(
 total_epochs = 100
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/dp04_wd14_float'
+work_dir = './work_dirs/tsn_kinetics400_2d_rgb_r50_seg3_f1s1_b32_g8_imagenet'
 load_from = None
 resume_from = None
