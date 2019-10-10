@@ -104,7 +104,7 @@ def parse_args():
                         help='resize image width')
     parser.add_argument("--new_height", type=int,
                         default=0, help='resize image height')
-    parser.add_argument("--num_gpu", type=int, default=1, help='number of GPU')
+    parser.add_argument("--num_gpu", type=int, default=8, help='number of GPU')
     parser.add_argument("--resume", action='store_true', default=False,
                         help='resume optical flow extraction '
                         'instead of overwriting')
