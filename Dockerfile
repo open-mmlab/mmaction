@@ -83,12 +83,13 @@ RUN pip install torchvision==0.4.0 \
     scikit-learn
 
 # 1 st step - clone repository & install opencv 4.1.0
-RUN git clone --recursive https://github.com/open-mmlab/mmaction.git \
-    && cd mmaction/third_party \
+RUN cd / \
     && wget -O OpenCV-4.1.0.zip https://github.com/opencv/opencv/archive/4.1.0.zip \
     && unzip OpenCV-4.1.0.zip \
+    && rm -rf OpenCV-4.1.0.zip \
     && wget -O OpenCV_contrib-4.1.0.zip https://github.com/opencv/opencv_contrib/archive/4.1.0.zip \
     && unzip OpenCV_contrib-4.1.0.zip \
+    && rm -rf OpenCV_contrib-4.1.0.zip \
     && cd opencv-4.1.0 \
     && mkdir build \
     && cd build \
