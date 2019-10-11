@@ -71,8 +71,10 @@ RUN unlink /usr/bin/python \
     && unlink /usr/bin/pip \
     && ln -s /usr/bin/python3 /usr/bin/python \
     && ln -s /usr/bin/pip3 /usr/bin/pip \
-    && pip install --upgrade pip \
-    && pip install torchvision==0.4.0 \
+    && pip install --upgrade pip
+
+# install essential python package
+RUN pip install torchvision==0.4.0 \
     cython==0.29.11 \
     numpy==1.16.4 \
     scipy \
