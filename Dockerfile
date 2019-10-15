@@ -136,10 +136,10 @@ RUN cd mmaction/third_party/dense_flow \
 # install mmcv
 RUN git clone --recursive https://github.com/open-mmlab/mmcv.git \
     && cd mmcv \
-    && pip3 install -e .
+    && pip install -e .
 
 # setup mmaction
 RUN cd mmaction \ 
     && chmod 777 compile.sh \
-    && CUDA_VISIBLE_DEVICES=0 ./compile.sh \
+    && ./compile.sh \
     && python3 setup.py develop
