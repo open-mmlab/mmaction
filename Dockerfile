@@ -1,6 +1,6 @@
 FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
 
-MAINTAINER mynameismaxz
+MAINTAINER @mynameismaxz (github.com/mynameismaxz)
 
 # install all-of-package
 RUN apt-get update && apt-get install -y software-properties-common && \
@@ -62,6 +62,10 @@ RUN apt-get update && apt-get install -y software-properties-common && \
 	libgtk2.0-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /data
+
+WORKDIR /data
+
 # unlink old-python (python2) & make new symbolic-link for python3
 RUN unlink /usr/bin/python \
     && unlink /usr/bin/pip \
@@ -78,9 +82,8 @@ RUN pip install torchvision==0.4.0 \
     matplotlib \
     scikit-learn
 
-# 1 st step - clone repository & install opencv 4.1.0
-RUN cd / \
-    && wget -O OpenCV-4.1.0.zip https://github.com/opencv/opencv/archive/4.1.0.zip \
+# 1 st step - clone repository & install opencv 4.1.0 (using a lot of time!!)
+RUN wget -O OpenCV-4.1.0.zip https://github.com/opencv/opencv/archive/4.1.0.zip \
     && unzip OpenCV-4.1.0.zip \
     && rm -rf OpenCV-4.1.0.zip \
     && wget -O OpenCV_contrib-4.1.0.zip https://github.com/opencv/opencv_contrib/archive/4.1.0.zip \
@@ -103,13 +106,40 @@ RUN cd / \
         .. \
     && make -j
 
+# clone repository (mmaction)
+RUN git clone --recursive https://github.com/open-mmlab/mmaction.git
+
 # install cmake first
 RUN wget --no-check-certificate https://cmake.org/files/v3.9/cmake-3.9.0.tar.gz \
     && tar -zxvf cmake-3.9.0.tar.gz \
+    && rm -rf cmake-3.9.0.tar.gz \
     && cd cmake-3.9.0 \
     && ./bootstrap --system-curl \
     && make -j && make install
 
-WORKDIR /root
+# install decord
+RUN cd mmaction/third_party/decord \
+    && mkdir -p build \
+    && cd build \
+    && cmake .. -DUSE_CUDA=0 \
+    && make -j \
+    && cd ../python \
+    && python3 setup.py install --user
 
-# just clone mmaction -> install decord -> dense_flow -> mmcv -> mmaction
+# install dense flow
+RUN cd mmaction/third_party/dense_flow \
+    && mkdir build \
+    && cd build \
+    && OpenCV_DIR=/data/opencv-4.1.0/build/ cmake .. \
+    && make -j
+
+# install mmcv
+RUN git clone --recursive https://github.com/open-mmlab/mmcv.git \
+    && cd mmcv \
+    && pip install -e .
+
+# setup mmaction
+RUN cd mmaction \ 
+    && chmod 777 compile.sh \
+    && ./compile.sh \
+    && python3 setup.py develop
