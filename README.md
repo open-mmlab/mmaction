@@ -42,6 +42,8 @@ Results and reference models are available in the [model zoo](https://github.com
 ## Installation
 Please refer to [INSTALL.md](https://github.com/open-mmlab/mmaction/blob/master/INSTALL.md) for installation.
 
+Update: for Docker installation, Please refer to [DOCKER.md](https://github.com/open-mmlab/mmaction/blob/master/DOCKER.md) for using docker for this project.
+
 ## Data preparation
 Please refer to [DATASET.md](https://github.com/open-mmlab/mmaction/blob/master/DATASET.md) for a general knowledge of data preparation.
 Detailed documents for the supported datasets are available in `data_tools/`.

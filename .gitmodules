@@ -7,3 +7,4 @@
 [submodule "mmaction/third_party/dense_flow"]
 	path = third_party/dense_flow
 	url = https://github.com/yjxiong/dense_flow
+	branch = master
