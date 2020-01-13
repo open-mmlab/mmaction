@@ -52,6 +52,8 @@ class RawFramesDataset(Dataset):
                  random_crop=False,
                  more_fix_crop=False,
                  multiscale_crop=False,
+                 resize_crop=False,
+                 rescale_crop=False,
                  scales=None,
                  max_distort=1,
                  input_format='NCHW'):
@@ -118,8 +120,8 @@ class RawFramesDataset(Dataset):
         self.test_mode = test_mode
 
         # set group flag for the sampler
-        if not self.test_mode:
-            self._set_group_flag()
+        # if not self.test_mode:
+        self._set_group_flag()
 
         # transforms
         assert oversample in [None, 'three_crop', 'ten_crop']
@@ -129,6 +131,8 @@ class RawFramesDataset(Dataset):
             more_fix_crop=more_fix_crop,
             multiscale_crop=multiscale_crop, scales=scales,
             max_distort=max_distort,
+            resize_crop=resize_crop,
+            rescale_crop=rescale_crop,
             **self.img_norm_cfg)
 
         # input format

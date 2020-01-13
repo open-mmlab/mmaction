@@ -16,8 +16,6 @@ def init_dist(launcher, backend='nccl', **kwargs):
         _init_dist_pytorch(backend, **kwargs)
     elif launcher == 'mpi':
         _init_dist_mpi(backend, **kwargs)
-    elif launcher == 'slurm':
-        _init_dist_slurm(backend, **kwargs)
     else:
         raise ValueError('Invalid launcher type: {}'.format(launcher))
 
@@ -32,11 +30,6 @@ def _init_dist_pytorch(backend, **kwargs):
 
 def _init_dist_mpi(backend, **kwargs):
     raise NotImplementedError
-
-
-def _init_dist_slurm(backend, **kwargs):
-    raise NotImplementedError
-
 
 def set_random_seed(seed):
     random.seed(seed)
