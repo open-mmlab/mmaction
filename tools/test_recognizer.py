@@ -99,7 +99,7 @@ def parse_args():
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument(
         '--launcher',
-        choices=['none', 'pytorch', 'mpi'],
+        choices=['none', 'pytorch', 'mpi', 'slurm'],
         default='none',
         help='job launcher')
     parser.add_argument('--out', help='output result file', default='default.pkl')

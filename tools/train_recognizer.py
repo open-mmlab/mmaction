@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=None, help='random seed')
     parser.add_argument(
         '--launcher',
-        choices=['none', 'pytorch', 'mpi'],
+        choices=['none', 'pytorch', 'mpi', 'slurm'],
         default='none',
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)

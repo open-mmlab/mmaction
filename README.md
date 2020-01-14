@@ -9,8 +9,8 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
 
   - action recognition from trimmed videos
   - temporal action detection (also known as action localization) in untrimmed videos
-  - spatial-temporal action detection in untrimmed videos. 
- 
+  - spatial-temporal action detection in untrimmed videos.
+
 
 - Support for various datasets
 
@@ -25,7 +25,7 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
 - Modular design
 
   The tasks in human action understanding share some common aspects such as backbones, and long-term and short-term sampling schemes.
-  Also, tasks can benefit from each other. For example, a better backbone for action recognition will bring performance gain for action detection. 
+  Also, tasks can benefit from each other. For example, a better backbone for action recognition will bring performance gain for action detection.
   Modular design enables us to view action understanding in a more integrated perspective.
 
 ## License
