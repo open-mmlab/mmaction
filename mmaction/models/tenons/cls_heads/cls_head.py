@@ -14,7 +14,7 @@ class ClsHead(nn.Module):
                  dropout_ratio=0.8,
                  in_channels=2048,
                  num_classes=101,
-		         init_std=0.01,
+		 init_std=0.01,
                  fcn_testing=False):
 
         super(ClsHead, self).__init__()
