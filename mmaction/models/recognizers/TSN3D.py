@@ -15,9 +15,11 @@ class TSN3D(BaseRecognizer):
                  segmental_consensus=None,
                  cls_head=None,
                  train_cfg=None,
-                 test_cfg=None):
+                 test_cfg=None,
+                 fcn_testing=False):
 
         super(TSN3D, self).__init__()
+        self.fcn_testing = fcn_testing
         self.backbone = builder.build_backbone(backbone)
 
         if flownet is not None:
@@ -293,6 +295,14 @@ class TSN3D(BaseRecognizer):
                 trajectory_backward=trajectory_backward)
         else:
             x = self.extract_feat(img_group)
+
+        if self.fcn_testing:
+            x = self.cls_head(x)
+
+            prob1 = torch.nn.functional.softmax(x.mean([2,3,4]), 1).mean(0, keepdim=True)
+            return prob1.detach().cpu().numpy()
+
+
         if self.with_spatial_temporal_module:
             x = self.spatial_temporal_module(x)
         if self.with_segmental_consensus:
