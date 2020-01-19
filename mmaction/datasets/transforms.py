@@ -393,27 +393,26 @@ class GroupImageTransform(object):
         self.rescale_crop = rescale_crop
 
         # croping parameters
-        if resize_crop:
-            self.op_crop = RandomResizedCrop(crop_size)
-        elif rescale_crop:
-            self.op_crop = RandomRescaledCrop(crop_size)
-        else:
-            if crop_size is not None:
-                if oversample == 'three_crop':
-                    self.op_crop = Group3CropSample(crop_size)
-                elif oversample == 'ten_crop':
-                    # oversample crop (test)
-                    self.op_crop = GroupOverSample(crop_size)
-                elif multiscale_crop:
-                    # multiscale crop (train)
-                    self.op_crop = GroupMultiScaleCrop(
-                        crop_size, scales=scales, max_distort=max_distort,
-                        fix_crop=not random_crop, more_fix_crop=more_fix_crop)
-                else:
-                    # center crop (val)
-                    self.op_crop = GroupCenterCrop(crop_size)
+        if crop_size is not None:
+            if oversample == 'three_crop':
+                self.op_crop = Group3CropSample(crop_size)
+            elif oversample == 'ten_crop':
+                # oversample crop (test)
+                self.op_crop = GroupOverSample(crop_size)
+            elif resize_crop:
+                self.op_crop = RandomResizedCrop(crop_size)
+            elif rescale_crop:
+                self.op_crop = RandomRescaledCrop(crop_size)
+            elif multiscale_crop:
+                # multiscale crop (train)
+                self.op_crop = GroupMultiScaleCrop(
+                    crop_size, scales=scales, max_distort=max_distort,
+                    fix_crop=not random_crop, more_fix_crop=more_fix_crop)
             else:
-                self.op_crop = None
+                # center crop (val)
+                self.op_crop = GroupCenterCrop(crop_size)
+        else:
+            self.op_crop = None
 
     def __call__(self, img_group, scale, crop_history=None, flip=False,
                  keep_ratio=True, div_255=False, is_flow=False):
