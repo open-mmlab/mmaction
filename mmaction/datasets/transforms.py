@@ -1,8 +1,171 @@
 import mmcv
 import numpy as np
 import random
+import math
+import cv2
+import random as rd
 
 __all__ = ['GroupImageTransform', 'ImageTransform', 'BboxTransform']
+
+class GroupColorJitter(object):
+    def __init__(self, color_space_aug=False, alphastd=0.1, eigval=None, eigvec=None):
+        if eigval is None:
+            # note that the data range should be [0, 255]
+            self.eigval = np.array([55.46, 4.794, 1.148])
+        if eigvec is None:
+            self.eigvec = np.array([[-0.5675, 0.7192, 0.4009],
+                           [-0.5808, -0.0045, -0.8140],
+                           [-0.5836, -0.6948, 0.4203]])
+        self.alphastd = alphastd
+        self.color_space_aug = color_space_aug
+
+    @staticmethod
+    def brightnetss(img, delta):
+        if random.uniform(0, 1) > 0.5:
+           #delta = np.random.uniform(-32, 32)
+           delta = np.array(delta).astype(np.float32)
+           img = img + delta
+           #img_group = [img + delta for img in img_group]
+        return img
+
+    @staticmethod
+    def contrast(img, alpha):
+        if random.uniform(0, 1) > 0.5:
+           #alpha = np.random.uniform(0.6,1.4)
+           alpha = np.array(alpha).astype(np.float32)
+           img = img * alpha
+           #img_group = [img * alpha for img in img_group]
+        return img
+
+    @staticmethod
+    def saturation(img, alpha):
+        if random.uniform(0, 1) > 0.5:
+           #alpha = np.random.uniform(0.6,1.4)
+           gray = img * np.array([0.299, 0.587, 0.114]).astype(np.float32)
+           gray = np.sum(gray, 2, keepdims=True)
+           gray *= (1.0 - alpha)
+           img = img * alpha
+           img = img + gray
+        return img
+
+    @staticmethod
+    def hue(img, alpha):
+        if random.uniform(0, 1) > 0.5:
+           #alpha = random.uniform(-18, 18)
+           u = np.cos(alpha * np.pi)
+           w = np.sin(alpha * np.pi)
+           bt = np.array([[1.0, 0.0, 0.0],
+                           [0.0, u, -w],
+                           [0.0, w, u]])
+           tyiq = np.array([[0.299, 0.587, 0.114],
+                             [0.596, -0.274, -0.321],
+                             [0.211, -0.523, 0.311]])
+           ityiq = np.array([[1.0, 0.956, 0.621],
+                              [1.0, -0.272, -0.647],
+                              [1.0, -1.107, 1.705]])
+           t = np.dot(np.dot(ityiq, bt), tyiq).T
+           t = np.array(t).astype(np.float32)
+           img = np.dot(img, t)
+           #img_group = [np.dot(img, t) for img in img_group]
+        return img
+
+    def __call__(self, img_group):
+        if self.color_space_aug:
+            bright_delta = np.random.uniform(-32, 32)
+            contrast_alpha = np.random.uniform(0.6,1.4)
+            saturation_alpha = np.random.uniform(0.6,1.4)
+            hue_alpha = random.uniform(-18, 18)
+            out = []
+            for img in img_group:
+                img = self.brightnetss(img, delta=bright_delta)
+                if random.uniform(0, 1) > 0.5:
+                    img = self.contrast(img, alpha=contrast_alpha)
+                    img = self.saturation(img, alpha=saturation_alpha)
+                    img = self.hue(img, alpha=hue_alpha)
+                else:
+                    img = self.saturation(img, alpha=saturation_alpha)
+                    img = self.hue(img, alpha=hue_alpha)
+                    img = self.contrast(img, alpha=contrast_alpha)
+                out.append(img)
+            img_group = out
+
+        alpha = np.random.normal(0, self.alphastd, size=(3,))
+        rgb = np.array(np.dot(self.eigvec * alpha, self.eigval)).astype(np.float32)
+        bgr = np.expand_dims(np.expand_dims(rgb[::-1], 0),0)
+        return [img + rgb for img in img_group]
+
+class RandomResizedCrop(object):
+    def __init__(self, size, scale=(0.08, 1.0), ratio=(3. / 4., 4. / 3.)):
+        self.size = size
+        self.scale = scale
+        self.ratio = ratio
+
+    @staticmethod
+    def get_params(img, scale, ratio):
+        """Get parameters for ``crop`` for a random sized crop.
+        Args:
+            img (PIL Image): Image to be cropped.
+            scale (tuple): range of size of the origin size cropped
+            ratio (tuple): range of aspect ratio of the origin aspect ratio cropped
+        Returns:
+            tuple: params (i, j, h, w) to be passed to ``crop`` for a random
+                sized crop.
+        """
+        for attempt in range(10):
+            area = img.shape[0] * img.shape[1]
+            target_area = random.uniform(*scale) * area
+            aspect_ratio = random.uniform(*ratio)
+
+            w = int(round(math.sqrt(target_area * aspect_ratio)))
+            h = int(round(math.sqrt(target_area / aspect_ratio)))
+
+            if random.random() < 0.5:
+                w, h = h, w
+
+            if w <= img.shape[0] and h <= img.shape[1]:
+                i = random.randint(0, img.shape[1] - h)
+                j = random.randint(0, img.shape[0] - w)
+                return i, j, h, w
+
+        # Fallback
+        w = min(img.shape[0], img.shape[1])
+        i = (img.shape[1] - w) // 2
+        j = (img.shape[0] - w) // 2
+        return i, j, w, w
+
+    def __call__(self, img_group):
+        """
+        Args:
+            clip (list of PIL Image): list of Image to be cropped and resized.
+        Returns:
+            list of PIL Image: Randomly cropped and resized image.
+        """
+        x1, y1, th, tw = self.get_params(img_group[0], self.scale, self.ratio)
+        box = np.array([x1, y1, x1+tw-1, y1+th-1], dtype=np.float32)
+        return ([mmcv.imresize(mmcv.imcrop(img, box), self.size) for img in img_group], box)
+
+
+
+class RandomRescaledCrop(object):
+    def __init__(self, size, scale=(256, 320)):
+        self.size = size
+        self.scale = scale
+
+    def __call__(self, img_group):
+        shortedge = float(random.randint(*self.scale))
+
+        w, h, _ = img_group[0].shape
+        scale = max(shortedge / w, shortedge / h)
+        img_group = [mmcv.imrescale(img, scale) for img in img_group]
+        w, h, _ = img_group[0].shape
+        w_offset = random.randint(0, w - self.size[0])
+        h_offset = random.randint(0, h - self.size[1])
+
+        box = np.array([w_offset, h_offset,
+                        w_offset + self.size[0] - 1, h_offset + self.size[1] - 1],
+                        dtype=np.float32)
+
+        return ([img[w_offset: w_offset + self.size[0], h_offset: h_offset + self.size[1]] for img in img_group], box)
 
 
 class GroupCrop(object):
@@ -216,6 +379,8 @@ class GroupImageTransform(object):
                  crop_size=None,
                  oversample=None,
                  random_crop=False,
+                 resize_crop=False,
+                 rescale_crop=False,
                  more_fix_crop=False,
                  multiscale_crop=False,
                  scales=None,
@@ -224,6 +389,8 @@ class GroupImageTransform(object):
         self.std = np.array(std, dtype=np.float32)
         self.to_rgb = to_rgb
         self.size_divisor = size_divisor
+        self.resize_crop = resize_crop
+        self.rescale_crop = rescale_crop
 
         # croping parameters
         if crop_size is not None:
@@ -232,6 +399,10 @@ class GroupImageTransform(object):
             elif oversample == 'ten_crop':
                 # oversample crop (test)
                 self.op_crop = GroupOverSample(crop_size)
+            elif resize_crop:
+                self.op_crop = RandomResizedCrop(crop_size)
+            elif rescale_crop:
+                self.op_crop = RandomRescaledCrop(crop_size)
             elif multiscale_crop:
                 # multiscale crop (train)
                 self.op_crop = GroupMultiScaleCrop(
@@ -245,30 +416,35 @@ class GroupImageTransform(object):
 
     def __call__(self, img_group, scale, crop_history=None, flip=False,
                  keep_ratio=True, div_255=False, is_flow=False):
-        # 1. rescale
-        if keep_ratio:
-            tuple_list = [mmcv.imrescale(
-                img, scale, return_scale=True) for img in img_group]
-            img_group, scale_factors = list(zip(*tuple_list))
-            scale_factor = scale_factors[0]
-        else:
-            tuple_list = [mmcv.imresize(
-                img, scale, return_scale=True) for img in img_group]
-            img_group, w_scales, h_scales = list(zip(*tuple_list))
-            scale_factor = np.array([w_scales[0], h_scales[0],
-                                     w_scales[0], h_scales[0]],
-                                    dtype=np.float32)
 
-        # 2. crop (if necessary)
-        if crop_history is not None:
-            self.op_crop = GroupCrop(crop_history)
-        if self.op_crop is not None:
-            img_group, crop_quadruple = self.op_crop(
-                img_group, is_flow=is_flow)
+        if self.resize_crop or self.rescale_crop:
+            img_group, crop_quadruple = self.op_crop(img_group)
+            img_shape = img_group[0].shape
+            scale_factor = None
         else:
-            crop_quadruple = None
+            # 1. rescale
+            if keep_ratio:
+                tuple_list = [mmcv.imrescale(
+                    img, scale, return_scale=True) for img in img_group]
+                img_group, scale_factors = list(zip(*tuple_list))
+                scale_factor = scale_factors[0]
+            else:
+                tuple_list = [mmcv.imresize(
+                    img, scale, return_scale=True) for img in img_group]
+                img_group, w_scales, h_scales = list(zip(*tuple_list))
+                scale_factor = np.array([w_scales[0], h_scales[0],
+                                         w_scales[0], h_scales[0]],
+                                        dtype=np.float32)
+            # 2. crop (if necessary)
+            if crop_history is not None:
+                self.op_crop = GroupCrop(crop_history)
+            if self.op_crop is not None:
+                img_group, crop_quadruple = self.op_crop(
+                    img_group, is_flow=is_flow)
+            else:
+                crop_quadruple = None
 
-        img_shape = img_group[0].shape
+            img_shape = img_group[0].shape
         # 3. flip
         if flip:
             img_group = [mmcv.imflip(img) for img in img_group]

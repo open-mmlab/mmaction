@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.utils.checkpoint as cp
 
 from ....utils.misc import rgetattr, rhasattr
-from .resnet import ResNet 
+from .resnet import ResNet
 from mmcv.cnn import constant_init, kaiming_init
 from mmcv.runner import load_checkpoint
 
@@ -338,6 +338,7 @@ class ResNet_I3D(nn.Module):
                  nonlocal_stages=(-1, ),
                  nonlocal_freq=(0, 1, 1, 0),
                  nonlocal_cfg=None,
+                 no_pool2=False,
                  bn_eval=True,
                  bn_frozen=False,
                  partial_bn=False,
@@ -380,6 +381,7 @@ class ResNet_I3D(nn.Module):
         self.maxpool = nn.MaxPool3d(kernel_size=(pool1_kernel_t,3,3), stride=(pool1_stride_t,2,2), padding=(pool1_kernel_t//2,1,1))
 	 #TODO: Check whether pad=0 differs a lot
         self.pool2 = nn.MaxPool3d(kernel_size=(2,1,1), stride=(2,1,1), padding=(0,0,0))
+        self.no_pool2 = no_pool2
 
         self.res_layers = []
         for i, num_blocks in enumerate(self.stage_blocks):
@@ -452,8 +454,11 @@ class ResNet_I3D(nn.Module):
             x = res_layer(x)
             if i in self.out_indices:
                 outs.append(x)
-            if i == 0:
-                x = self.pool2(x)
+            if self.no_pool2:
+                pass
+            else:
+                if i == 0:
+                    x = self.pool2(x)
         if len(outs) == 1:
             return outs[0]
         else:
