@@ -114,6 +114,7 @@ def parse_args():
 
 
 def main():
+    global args
     args = parse_args()
 
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
