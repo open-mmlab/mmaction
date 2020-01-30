@@ -18,7 +18,7 @@ wget -c https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf10
 ```
 Then, together with provided configs files, we run the following code to test with multiple GPUs:
 ```shell
-python tools/test_recognizer.py configs/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth --gpus 8
+./tools/dist_test_recognizer.sh configs/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth 8
 ```
 
 
@@ -56,14 +56,14 @@ python tools/test_detector.py configs/thumos14/ssn_thumos14_rgb_bn_inception.py 
 ## More Abstract Usage
 
 ## Inference with pretrained models
-We provide testing scripts to evaluate a whole dataset. 
+We provide testing scripts to evaluate a whole dataset.
 
 ### Test a dataset
 ```shell
 python tools/test_${ARCH}.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--out ${RESULT_FILE}] [other task-specific arguments]
 ```
 Arguments:
-- `${ARCH}` could be 
+- `${ARCH}` could be
     - "recognizer" for action recognition (TSN, I3D, ...)
     - "localizer" for temporal action detection/localization (SSN)
     - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
@@ -82,11 +82,9 @@ Training with multiple GPUs follows the rules below:
 ```shell
 ./tools/dist_train_${ARCH}.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
 ```
-- ${ARCH} could be 
+- ${ARCH} could be
     - "recognizer" for action recognition (TSN, I3D, ...)
     - "localizer" for temporal action detection/localization (SSN)
     - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
 - ${CONFIG_FILE} is the config file stored in `$MMACTION/configs`.
 - ${GPU_NUM} is the number of GPU (default: 8). If you are using number other than 8, please adjust the learning rate in the config file linearly.
-
-
