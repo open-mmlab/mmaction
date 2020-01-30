@@ -22,6 +22,7 @@ We use AWS as the main site to host our model zoo. Mirrors for aliyun will come 
 | SlowOnly 8x8  | RGB  | None  | SE256 | 74.8%  | 91.9%  | configs/kinetics400/slowonly_kinetics400_se_rgb_r50_seg1_8x8_scratch.py  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/slowonly_kinetics400_se_rgb_r50_seg1_8x8_scratch_epoch196-4aae9339.pth) |
 | SlowOnly 8x8  | RGB  | ImageNet  | SE256 | 75.7%  | 92.2%  | configs/kinetics400/slowonly_kinetics400_se_rgb_r50_seg1_8x8_finetune.py  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/slowonly_kinetics400_se_rgb_r50_seg1_8x8_finetune_epoch150-519c2101.pth)  |
 
+
 PS: In data preprocessing, `340x256` denotes resizing all videos to 340x256,  `SE256` denotes rescaling short edge to 256 while keeping aspect ratio.
 
 ### THUMOS14
