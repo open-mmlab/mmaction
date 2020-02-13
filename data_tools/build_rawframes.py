@@ -95,7 +95,7 @@ def parse_args():
     parser.add_argument('--flow_type', type=str,
                         default=None, choices=[None, 'tvl1', 'warp_tvl1'])
     parser.add_argument('--df_path', type=str,
-                        default='../mmaction/third_party/dense_flow')
+                        default='../../mmaction/third_party/dense_flow')
     parser.add_argument("--out_format", type=str, default='dir',
                         choices=['dir', 'zip'], help='output format')
     parser.add_argument("--ext", type=str, default='avi',
