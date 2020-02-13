@@ -267,6 +267,76 @@ def build_split_list(split, frame_info, shuffle=False):
     return (train_rgb_list, test_rgb_list), (train_flow_list, test_flow_list)
 
 
+def mimic_ucf101(frame_path, anno_dir):
+    # Create classInd.txt, trainlist01.txt, testlist01.txt as in UCF101
+
+    classes_list = os.listdir(frame_path)
+    classes_list.sort()
+
+    classDict = {}
+    classIndFile = os.path.join(anno_dir, 'classInd.txt')
+    with open(classIndFile, 'w') as f:
+        for class_id, class_name in enumerate(classes_list):
+            classDict[class_name] = class_id
+            cur_line = str(class_id + 1) + ' ' + class_name + '\r\n'
+            f.write(cur_line)
+
+
+    for split_id in range(1, 4):
+        splitTrainFile = os.path.join(anno_dir, 'trainlist%02d.txt' % (split_id))
+        with open(splitTrainFile, 'w') as target_train_f:
+            for class_name in classDict.keys():
+                fname = class_name + '_test_split%d.txt' % (split_id)
+                fname_path = os.path.join(anno_dir, fname)
+                source_f = open(fname_path, 'r')
+                source_info = source_f.readlines()
+                for _, source_line in enumerate(source_info):
+                    cur_info = source_line.split(' ')
+                    video_name = cur_info[0]
+                    if cur_info[1] == '1':
+                        target_line = class_name + '/' + video_name + ' ' + str(classDict[class_name] + 1) + '\n'
+                        target_train_f.write(target_line)
+
+        splitTestFile = os.path.join(anno_dir, 'testlist%02d.txt' % (split_id))
+        with open(splitTestFile, 'w') as target_test_f:
+            for class_name in classDict.keys():
+                fname = class_name + '_test_split%d.txt' % (split_id)
+                fname_path = os.path.join(anno_dir, fname)
+                source_f = open(fname_path, 'r')
+                source_info = source_f.readlines()
+                for _, source_line in enumerate(source_info):
+                    cur_info = source_line.split(' ')
+                    video_name = cur_info[0]
+                    if cur_info[1] == '2':
+                        target_line = class_name + '/' + video_name + ' ' + str(classDict[class_name] + 1) + '\n'
+                        target_test_f.write(target_line)
+
+
+def parse_hmdb51_splits(level):
+    
+    mimic_ucf101('data/hmdb51/rawframes', 'data/hmdb51/annotations')
+
+    class_ind = [x.strip().split()
+                 for x in open('data/hmdb51/annotations/classInd.txt')]
+    class_mapping = {x[1]: int(x[0]) - 1 for x in class_ind}
+
+    def line2rec(line):
+        items = line.strip().split(' ')
+        vid = items[0].split('.')[0]
+        vid = '/'.join(vid.split('/')[-level:])
+        label = class_mapping[items[0].split('/')[0]]
+        return vid, label
+
+    splits = []
+    for i in range(1, 4):
+        train_list = [line2rec(x) for x in open(
+            'data/hmdb51/annotations/trainlist{:02d}.txt'.format(i))]
+        test_list = [line2rec(x) for x in open(
+            'data/hmdb51/annotations/testlist{:02d}.txt'.format(i))]
+        splits.append((train_list, test_list))
+    return splits
+
+
 def parse_ucf101_splits(level):
     class_ind = [x.strip().split()
                  for x in open('data/ucf101/annotations/classInd.txt')]

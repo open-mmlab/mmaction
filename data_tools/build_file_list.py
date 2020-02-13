@@ -2,6 +2,7 @@ import argparse
 import os.path as osp
 import glob
 from mmaction.datasets.utils import (parse_directory,
+                                     parse_hmdb51_splits,
                                      parse_ucf101_splits,
                                      parse_kinetics_splits,
                                      build_split_list)
@@ -10,7 +11,7 @@ from mmaction.datasets.utils import (parse_directory,
 def parse_args():
     parser = argparse.ArgumentParser(description='Build file list')
     parser.add_argument('dataset', type=str, choices=[
-                        'ucf101', 'kinetics400'])
+                        'hmdb51', 'ucf101', 'kinetics400'])
     parser.add_argument('frame_path', type=str,
                         help='root directory for the frames')
     parser.add_argument('--rgb_prefix', type=str, default='img_')
@@ -52,6 +53,8 @@ def main():
         frame_info = {osp.relpath(
             x.split('.')[0], args.frame_path): (x, -1, -1) for x in video_list}
 
+    if args.dataset == 'hmdb51':
+        split_tp = parse_hmdb51_splits(args.level)
     if args.dataset == 'ucf101':
         split_tp = parse_ucf101_splits(args.level)
     elif args.dataset == 'kinetics400':
