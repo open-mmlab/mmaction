@@ -370,7 +370,7 @@ class VideoDataset(Dataset):
         # handle the rest modalities using the same
         for i, (modality, image_tmpl) in enumerate(
                 zip(self.modalities[1:], self.image_tmpls[1:])):
-            img_group = self._get_frames(record, image_tmpl, modality,
+            img_group = self._get_frames(record, video_reader, image_tmpl, modality,
                                          segment_indices, skip_offsets)
 
             # apply transforms
