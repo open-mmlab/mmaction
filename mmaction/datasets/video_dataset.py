@@ -186,7 +186,7 @@ class VideoDataset(Dataset):
 
     def _load_image(self, video_reader, directory, modality, idx):
         if modality in ['RGB', 'RGBDiff']:
-            return [video_reader[idx - 1]]
+            return [video_reader[idx - 1].asnumpy()]
         elif modality == 'Flow':
             raise NotImplementedError
         else:
