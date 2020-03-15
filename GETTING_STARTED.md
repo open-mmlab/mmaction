@@ -64,7 +64,7 @@ python tools/test_${ARCH}.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--out ${RESULT_F
 ```
 Arguments:
 - `${ARCH}` could be
-    - "recognizer" for action recognition (TSN, I3D, ...)
+    - "recognizer" for action recognition (TSN, I3D, SlowFast, R(2+1)D, CSN, ...)
     - "localizer" for temporal action detection/localization (SSN)
     - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
 - `${CONFIG_FILE}` is the config file stored in `$MMACTION/test_configs`.
