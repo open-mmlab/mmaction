@@ -39,7 +39,7 @@ The project is release under the [Apache 2.0 license](https://github.com/open-mm
 v0.1.0 (19/06/2019)
 - MMAction is online!
 
-v0.2.0
+v0.2.0 (15/03/2020)
 
 - We build a diversified modelzoo for action recognition, which include popular algorithms (TSN, I3D, SlowFast, R(2+1)D, CSN). The performance is aligned with or better than the original papers.
 
