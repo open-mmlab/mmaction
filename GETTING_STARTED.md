@@ -18,14 +18,14 @@ wget -c https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf10
 ```
 Then, together with provided configs files, we run the following code to test with multiple GPUs:
 ```shell
-./tools/dist_test_recognizer.sh configs/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth 8
+./tools/dist_test_recognizer.sh test_configs/TSN/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth 8
 ```
 
 
 ### Train a model with multiple GPUs
 To reproduce the model, we provide training scripts as follows:
 ```shell
-./tools/dist_train_recognizer.sh configs/ucf101/tsn_rgb_bninception.py 8 --validate
+./tools/dist_train_recognizer.sh configs/TSN/ucf101/tsn_rgb_bninception.py 8 --validate
 ```
 - `--validate`: performs evaluation every k (default=1) epochs during the training, which help diagnose training process.
 
@@ -67,7 +67,7 @@ Arguments:
     - "recognizer" for action recognition (TSN, I3D, ...)
     - "localizer" for temporal action detection/localization (SSN)
     - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
-- `${CONFIG_FILE}` is the config file stored in `$MMACTION/configs`.
+- `${CONFIG_FILE}` is the config file stored in `$MMACTION/test_configs`.
 - `${CHECKPOINT_FILE}` is the checkpoint file.
     Please refer to [MODEL_ZOO.md](https://github.com/open-mmlab/mmaction/blob/master/MODEL_ZOO.md) for more details.
 
