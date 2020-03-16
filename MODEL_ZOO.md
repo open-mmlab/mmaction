@@ -2,7 +2,7 @@
 
 ## Action Recognition
 
-For action recognition, unless specified, models are trained on Kinetics-400. The version of Kinetics-400 we used contains 240436 training videos and 19796 testing videos. For TSN, we also train it on UCF-101, initialized with ImageNet pretrained weights. We also provide transfer learning results on UCF101 and HMDB51 for some algorithms. If you can not reproduce our testing results due to dataset unalignment, you can send us email to request our data.
+For action recognition, unless specified, models are trained on Kinetics-400. The version of Kinetics-400 we used contains 240436 training videos and 19796 testing videos. For TSN, we also train it on UCF-101, initialized with ImageNet pretrained weights. We also provide transfer learning results on UCF101 and HMDB51 for some algorithms. If you reproduce our testing results due to dataset unalignment, please submit a request at [get validation data](https://forms.gle/jmBiCDJButrLwpgc9).
 
 ### TSN
 
