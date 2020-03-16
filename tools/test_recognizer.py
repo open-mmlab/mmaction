@@ -2,26 +2,24 @@ import argparse
 
 import torch
 import time
-import torch
 import torch.distributed as dist
 import mmcv
-import os
 import os.path as osp
-import sys
 import tempfile
-from mmcv.runner import load_checkpoint, parallel_test, obj_from_dict
+from mmcv.runner import load_checkpoint, obj_from_dict
 from mmcv.runner import get_dist_info
-from mmcv.parallel import scatter, collate, MMDataParallel, MMDistributedDataParallel
+from mmcv.parallel import MMDistributedDataParallel
 
 from mmaction import datasets
 from mmaction.apis import init_dist
 from mmaction.datasets import build_dataloader
-from mmaction.models import build_recognizer, recognizers
+from mmaction.models import build_recognizer
 from mmaction.core.evaluation.accuracy import (softmax, top_k_accuracy,
                                                mean_class_accuracy)
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 args = None
+
 
 def multi_test(model, data_loader, tmpdir='./tmp'):
     global args
@@ -171,7 +169,7 @@ def main():
         else:
             print("Averaging score over {} clips without softmax (ie, raw)".format(outputs[0].shape[0]))
             results = [res.mean(axis=0) for res in outputs]
-        top1, top5 = top_k_accuracy(results, gt_labels, k=(1,5))
+        top1, top5 = top_k_accuracy(results, gt_labels, k=(1, 5))
         mean_acc = mean_class_accuracy(results, gt_labels)
         print("Mean Class Accuracy = {:.02f}".format(mean_acc * 100))
         print("Top-1 Accuracy = {:.02f}".format(top1 * 100))
