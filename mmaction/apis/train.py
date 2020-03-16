@@ -4,7 +4,8 @@ from collections import OrderedDict
 
 import torch
 from mmcv.runner import Runner, DistSamplerSeedHook
-from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
+from mmcv.parallel import MMDataParallel
+from mmcv.parallel import MMDistributedDataParallel
 
 from mmaction.core import (DistOptimizerHook, DistEvalTopKAccuracyHook,
                            AVADistEvalmAPHook)

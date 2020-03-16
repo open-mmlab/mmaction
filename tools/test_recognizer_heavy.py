@@ -1,23 +1,24 @@
 import argparse
-
-import torch
 import time
+import torch
 import torch.distributed as dist
 import mmcv
+import os
 import os.path as osp
-import tempfile
 from mmcv.runner import load_checkpoint, obj_from_dict
 from mmcv.runner import get_dist_info
 from mmcv.parallel import MMDistributedDataParallel
-
+import tempfile
 from mmaction import datasets
 from mmaction.apis import init_dist
 from mmaction.datasets import build_dataloader
 from mmaction.models import build_recognizer
-from mmaction.core.evaluation.accuracy import (softmax, top_k_accuracy,
-                                               mean_class_accuracy)
+from mmaction.core.evaluation.accuracy import softmax, top_k_accuracy
+from mmaction.core.evaluation.accuracy import mean_class_accuracy
 import warnings
+from functools import reduce
 warnings.filterwarnings("ignore", category=UserWarning)
+
 args = None
 
 
@@ -37,8 +38,34 @@ def multi_test(model, data_loader, tmpdir='./tmp'):
         tac = time.time()
         data_time_pool = data_time_pool + tac - tic
 
-        with torch.no_grad():
-            result = model(return_loss=False, **data)
+        img_group = data['img_group_0'].data[0]
+
+        totlen = img_group.size()[1]
+        batch_data = []
+        st = 0
+        scores = []
+
+        assert args.batch_size == -1 or totlen % args.batch_size == 0
+        while st < totlen:
+            if args.batch_size == -1:
+                sz = totlen
+            else:
+                sz = args.batch_size if st + args.batch_size <= totlen else totlen - st
+
+            ed = st + sz
+            batch_data = img_group[:, st: ed].cuda()
+            fake_data = {}
+            fake_data['img_group_0'] = batch_data
+            fake_data['num_modalities'] = data['num_modalities']
+            fake_data['img_meta'] = data['img_meta']
+            with torch.no_grad():
+                score = model(return_loss=False, **fake_data)
+
+            scores.append(score)
+
+            st = ed
+
+        result = reduce(lambda x, y: x+y, scores) / len(scores)
         results.append(result)
 
         toc = time.time()
@@ -47,12 +74,11 @@ def multi_test(model, data_loader, tmpdir='./tmp'):
         tic = toc
     print('rank {}, begin collect results'.format(rank), flush=True)
     results = collect_results(results, len(data_loader.dataset), tmpdir)
+
     return results
 
 
 def collect_results(result_part, size, tmpdir=None):
-    global args
-
     rank, world_size = get_dist_info()
     if tmpdir is None:
         MAX_LEN = 512
@@ -72,21 +98,24 @@ def collect_results(result_part, size, tmpdir=None):
         tmpdir = osp.join(tmpdir, args.out.split('.')[0])
         mmcv.mkdir_or_exist(tmpdir)
     # dump the part result to the dir
-
     print('rank {} begin dump'.format(rank), flush=True)
     mmcv.dump(result_part, osp.join(tmpdir, 'part_{}.pkl'.format(rank)))
     print('rank {} finished dump'.format(rank), flush=True)
     dist.barrier()
+    # collect all parts
     if rank != 0:
         return None
     else:
+        # load results of all parts from tmp dir
         part_list = []
         for i in range(world_size):
             part_file = osp.join(tmpdir, 'part_{}.pkl'.format(i))
             part_list.append(mmcv.load(part_file))
+        # sort the results
         ordered_results = []
         for res in zip(*part_list):
             ordered_results.extend(list(res))
+        # the dataloader may pad some samples
         ordered_results = ordered_results[:size]
         return ordered_results
 
@@ -95,19 +124,20 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Test an action recognizer')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('--testfile', help='checkpoint file', type=str, default='')
     parser.add_argument(
         '--launcher',
-        choices=['none', 'pytorch', 'mpi', 'slurm'],
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
         help='job launcher')
-    parser.add_argument('--out', help='output result file', default='default.pkl')
-    parser.add_argument('--use_softmax', action='store_true',
-                        help='whether to use softmax score')
-    # only for TSN3D
-    parser.add_argument('--fcn_testing', action='store_true',
-                        help='use fcn testing for 3D convnet')
+    parser.add_argument('--out', help='output result file')
+    parser.add_argument('--use_softmax', action='store_true', help='whether to use softmax score')
     parser.add_argument('--local_rank', type=int, default=0)
+    # batch_size should be divided by total crops
+    parser.add_argument('--batch_size', type=int, default=-1)
     args = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
 
@@ -119,27 +149,27 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = mmcv.Config.fromfile(args.config)
+    # must use fcn testing
+    cfg.model.update({'fcn_testing': True})
+    cfg.model['cls_head'].update({'fcn_testing': True})
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
     cfg.data.test.test_mode = True
 
-    # pass arg of fcn testing
-    if args.fcn_testing:
-        cfg.model.update({'fcn_testing': True})
-        cfg.model['cls_head'].update({'fcn_testing': True})
-
-    # for regular testing
-    if cfg.data.test.oversample == 'three_crop':
-        cfg.model.spatial_temporal_module.spatial_size = 8
+    if args.testfile != '':
+        cfg.data.test.ann_file = args.testfile
 
     dataset = obj_from_dict(cfg.data.test, datasets, dict(test_mode=True))
 
     if args.launcher == 'none':
-        raise NotImplementedError("By default, we use distributed testing, so that launcher should be pytorch")
+        distributed = False
     else:
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
+
+    assert distributed, "We only support distributed testing"
 
     model = build_recognizer(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
     data_loader = build_dataloader(
@@ -150,6 +180,7 @@ def main():
         shuffle=False)
 
     load_checkpoint(model, args.checkpoint, map_location='cpu')
+
     model = MMDistributedDataParallel(model.cuda())
     outputs = multi_test(model, data_loader)
 

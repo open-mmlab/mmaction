@@ -10,7 +10,7 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
   - action recognition from trimmed videos
   - temporal action detection (also known as action localization) in untrimmed videos
   - spatial-temporal action detection in untrimmed videos. 
- 
+
 
 - Support for various datasets
 
@@ -19,8 +19,11 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
 
 - Support for multiple action understanding frameworks
 
-  MMAction implements popular frameworks such as TSN, I3D for action recognition and SSN for temporal action detection.
-  For the recently introduced spatial temporal atomic action detection, a Fast-RCNN baseline is provided.
+  MMAction implements popular frameworks for action understanding:
+
+  - For action recognition, various algorithms are implemented, including TSN, I3D, SlowFast, R(2+1)D, CSN.
+  - For temporal action detection, we implement SSN. 
+  - For spatial temporal atomic action detection, a Fast-RCNN baseline is provided.
 
 - Modular design
 
@@ -35,6 +38,10 @@ The project is release under the [Apache 2.0 license](https://github.com/open-mm
 
 v0.1.0 (19/06/2019)
 - MMAction is online!
+
+v0.2.0 (15/03/2020)
+
+- We build a diversified modelzoo for action recognition, which include popular algorithms (TSN, I3D, SlowFast, R(2+1)D, CSN). The performance is aligned with or better than the original papers.
 
 ## Model zoo
 Results and reference models are available in the [model zoo](https://github.com/open-mmlab/mmaction/blob/master/MODEL_ZOO.md).

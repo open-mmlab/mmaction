@@ -18,14 +18,20 @@ wget -c https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf10
 ```
 Then, together with provided configs files, we run the following code to test with multiple GPUs:
 ```shell
-./tools/dist_test_recognizer.sh configs/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth 8
+./tools/dist_test_recognizer.sh test_configs/TSN/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth 8
+```
+
+When testing 3D ConvNets, the oversample we used is 10 clips x 3 crops by default. For some extremely large models, it might be difficult for so many samples to fit on 1 GPU. When it happens, you can use commands for heavy test instead:
+```shell
+./tools/dist_test_recognizer_heavy.sh test_configs/CSN\ircsn_kinetics400_se_rgb_r152_seg1_32x2.py ircsn_kinetics400_se_rgb_r152_f32s2_ig65m_fbai-9d6ed879.pth 8 --batch_size=5
 ```
 
 
 ### Train a model with multiple GPUs
+
 To reproduce the model, we provide training scripts as follows:
 ```shell
-./tools/dist_train_recognizer.sh configs/ucf101/tsn_rgb_bninception.py 8 --validate
+./tools/dist_train_recognizer.sh configs/TSN/ucf101/tsn_rgb_bninception.py 8 --validate
 ```
 - `--validate`: performs evaluation every k (default=1) epochs during the training, which help diagnose training process.
 
@@ -64,10 +70,10 @@ python tools/test_${ARCH}.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--out ${RESULT_F
 ```
 Arguments:
 - `${ARCH}` could be
-    - "recognizer" for action recognition (TSN, I3D, ...)
+    - "recognizer" for action recognition (TSN, I3D, SlowFast, R(2+1)D, CSN, ...)
     - "localizer" for temporal action detection/localization (SSN)
     - "detector" for spatial-temporal action detection (a re-implmented Fast-RCNN baseline)
-- `${CONFIG_FILE}` is the config file stored in `$MMACTION/configs`.
+- `${CONFIG_FILE}` is the config file stored in `$MMACTION/test_configs`.
 - `${CHECKPOINT_FILE}` is the checkpoint file.
     Please refer to [MODEL_ZOO.md](https://github.com/open-mmlab/mmaction/blob/master/MODEL_ZOO.md) for more details.
 
