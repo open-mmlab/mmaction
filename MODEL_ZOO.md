@@ -2,7 +2,7 @@
 
 ## Action Recognition
 
-For action recognition, unless specified, models are trained on Kinetics-400. The version of Kinetics-400 we used contains 240436 training videos and 19796 testing videos. For TSN, we also train it on UCF-101, initialized with ImageNet pretrained weights. We also provide transfer learning results on UCF101 and HMDB51 for some algorithms. If you can not reproduce our testing results due to dataset unalignment, you can send us email to request our data. 
+For action recognition, unless specified, models are trained on Kinetics-400. The version of Kinetics-400 we used contains 240436 training videos and 19796 testing videos. For TSN, we also train it on UCF-101, initialized with ImageNet pretrained weights. We also provide transfer learning results on UCF101 and HMDB51 for some algorithms. If you can not reproduce our testing results due to dataset unalignment, you can send us email to request our data.
 
 ### TSN
 
@@ -10,7 +10,7 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 
 | Modality | Pretrained | Backbone | Input | Top-1 | Top-5 |                                                              Download                                                                    |
 | :------: | :--------: | :---------: | :--------: | :------------------------------------: | :------------------------------------: | -------------------------------------- |
-|    RGB   |  ImageNet  | ResNet50 | 3seg  | 70.6  |  89.4  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth)  |
+|    RGB   |  ImageNet  | ResNet50 | 3seg  | 70.6  |  89.4  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/tsn2d_kinetics400_rgb_r50_seg3_f1s1-b702e12f.pth)  |
 
 
 #### UCF101
@@ -22,12 +22,12 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 
 ### I3D
 
-|  Modality  | Pretrained | Backbone | Input | Top-1 | Top-5 |                           Download                           |
-| :--------: | :--------: | :------: | :---: | :---: | :---: | :----------------------------------------------------------: |
-|    RGB     |  ImageNet  |   I3D    | 64x1  | 71.1  | 89.3  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics400_se_rgb_inception_v1_seg1_f64s1_imagenet_deepmind-9b8e02b3.pth) |
-|    RGB     |  ImageNet  | ResNet50 | 32x2  | 72.9  | 90.8  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics_rgb_r50_c3d_inflated3x1x1_seg1_f32s2_f32s2-b93cc877.pth) |
-|    Flow    |  ImageNet  |   I3D    | 64x1  | 63.4  | 84.9  |                             ???                              |
-| Two-Stream |  ImageNet  |   I3D    | 64x1  | 74.2  | 91.3  |                              /                               |
+|  Modality  | Pretrained |   Backbone   | Input | Top-1 | Top-5 |                           Download                           |
+| :--------: | :--------: | :----------: | :---: | :---: | :---: | :----------------------------------------------------------: |
+|    RGB     |  ImageNet  | Inception-V1 | 64x1  | 71.1  | 89.3  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics400_se_rgb_inception_v1_seg1_f64s1_imagenet_deepmind-9b8e02b3.pth) |
+|    RGB     |  ImageNet  |   ResNet50   | 32x2  | 72.9  | 90.8  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics_rgb_r50_c3d_inflated3x1x1_seg1_f32s2_f32s2-b93cc877.pth) |
+|    Flow    |  ImageNet  | Inception-V1 | 64x1  | 63.4  | 84.9  |                             ???                              |
+| Two-Stream |  ImageNet  | Inception-V1 | 64x1  | 74.2  | 91.3  |                              /                               |
 
 ### SlowOnly
 
@@ -71,18 +71,18 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 
 ## Action Detection
 
-For action detection, we release models trained on THUMOS14. 
+For action detection, we release models trained on THUMOS14.
 
 ### SSN
 
-| Modality | Pretrained | Backbone | mAP@0.10 | mAP@0.20 | mAP@0.30 | mAP@0.40 | mAP@0.50 |                           Download                           |
-| :------: | :--------: | :------: | :------: | :------: | :------: | :------: | :------: | :----------------------------------------------------------: |
-|   RGB    |  ImageNet  |   ???    |  43.09%  |  37.95%  |  32.56%  |  25.71%  |  18.33%  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/thumos14/ssn_thumos14_rgb_bn_inception_tag-dac9ddb0.pth) |
+| Modality | Pretrained |  Backbone   | mAP@0.10 | mAP@0.20 | mAP@0.30 | mAP@0.40 | mAP@0.50 |                           Download                           |
+| :------: | :--------: | :---------: | :------: | :------: | :------: | :------: | :------: | :----------------------------------------------------------: |
+|   RGB    |  ImageNet  | BNInception |  43.09%  |  37.95%  |  32.56%  |  25.71%  |  18.33%  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/thumos14/ssn_thumos14_rgb_bn_inception_tag-dac9ddb0.pth) |
 
 ## Spatial Temporal Action Detection
 
-For spatial temporal action detection, we release models trained on AVA. 
+For spatial temporal action detection, we release models trained on AVA.
 
-| Modality |   Model   | Pretrained | Backbone | mAP@0.5 |                           Download                           |
-| :------: | :-------: | :--------: | :------: | :-----: | :----------------------------------------------------------: |
-|   RGB    | Fast-RCNN |  Kinetics  |   ???    |  21.2   | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ava/fast_rcnn_ava2.1_nl_r50_c4_1x_f32s2_kin-e2495b48.pth) |
+| Modality |   Model   | Pretrained |  Backbone  | mAP@0.5 |                           Download                           |
+| :------: | :-------: | :--------: | :--------: | :-----: | :----------------------------------------------------------: |
+|   RGB    | Fast-RCNN |  Kinetics  | NL-I3D R50 |  21.2   | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ava/fast_rcnn_ava2.1_nl_r50_c4_1x_f32s2_kin-e2495b48.pth) |
