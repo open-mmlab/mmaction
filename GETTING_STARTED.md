@@ -21,8 +21,14 @@ Then, together with provided configs files, we run the following code to test wi
 ./tools/dist_test_recognizer.sh test_configs/TSN/ucf101/tsn_rgb_bninception.py tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth 8
 ```
 
+When testing 3D ConvNets, the oversample we used is 10 clips x 3 crops by default. For some extremely large models, it might be difficult for so many samples to fit on 1 GPU. When it happens, you can use commands for heavy test instead:
+```shell
+./tools/dist_test_recognizer_heavy.sh test_configs/CSN\ircsn_kinetics400_se_rgb_r152_seg1_32x2.py ircsn_kinetics400_se_rgb_r152_f32s2_ig65m_fbai-9d6ed879.pth 8 --batch_size=5
+```
+
 
 ### Train a model with multiple GPUs
+
 To reproduce the model, we provide training scripts as follows:
 ```shell
 ./tools/dist_train_recognizer.sh configs/TSN/ucf101/tsn_rgb_bninception.py 8 --validate
