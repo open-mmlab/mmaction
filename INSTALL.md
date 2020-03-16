@@ -133,7 +133,7 @@ You can skip this argument to speed up the compilation if you do not intend to u
 ```shell
 cd third_party/dense_flow
 # dense_flow dependencies
-sudo apt-get -qq install libzip-dev
+sudo apt-get -qq install libzip-dev libboost-all-dev
 mkdir build && cd build
 # deprecated:
 # OpenCV_DIR=../../opencv-2.4.13/build cmake ..
