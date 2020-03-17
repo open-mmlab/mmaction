@@ -8,7 +8,7 @@ import os.path as osp
 import tempfile
 from mmcv.runner import load_checkpoint, obj_from_dict
 from mmcv.runner import get_dist_info
-from mmcv.parallel import MMDistributedDataParallel
+from mmcv.parallel.distributed_deprecated import MMDistributedDataParallel
 
 from mmaction import datasets
 from mmaction.apis import init_dist
