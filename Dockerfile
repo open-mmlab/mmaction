@@ -134,9 +134,7 @@ RUN cd mmaction/third_party/dense_flow \
     && make -j
 
 # install mmcv
-RUN git clone --recursive https://github.com/open-mmlab/mmcv.git \
-    && cd mmcv \
-    && pip install -e .
+RUN pip install mmcv==0.2.16
 
 # setup mmaction
 RUN cd mmaction \ 
