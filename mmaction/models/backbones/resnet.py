@@ -411,6 +411,18 @@ class ResNet(nn.Module):
 
     def _load_conv_params(self, conv, state_dict_tv, module_name_tv,
                           loaded_param_names):
+        """Load the conv parameters of resnet from torchvision.
+
+        Args:
+            conv (nn.Module): The destination conv module.
+            state_dict_tv (OrderedDict): The state dict of pretrained
+                torchvision model.
+            module_name_tv (str): The name of corresponding conv module in the
+                torchvision model.
+            loaded_param_names (list[str]): List of parameters that have been
+                loaded.
+        """
+
         weight_tv_name = module_name_tv + '.weight'
         conv.weight.data.copy_(state_dict_tv[weight_tv_name])
         loaded_param_names.append(weight_tv_name)
@@ -422,6 +434,18 @@ class ResNet(nn.Module):
 
     def _load_bn_params(self, bn, state_dict_tv, module_name_tv,
                         loaded_param_names):
+        """Load the bn parameters of resnet from torchvision.
+
+        Args:
+            bn (nn.Module): The destination bn module.
+            state_dict_tv (OrderedDict): The state dict of pretrained
+                torchvision model.
+            module_name_tv (str): The name of corresponding bn module in the
+                torchvision model.
+            loaded_param_names (list[str]): List of parameters that have been
+                loaded.
+        """
+
         for param_name, param in bn.named_parameters():
             param_tv_name = f'{module_name_tv}.{param_name}'
             param_tv = state_dict_tv[param_tv_name]
@@ -440,6 +464,7 @@ class ResNet(nn.Module):
                                      pretrained,
                                      strict=False,
                                      logger=None):
+        """Initiate the parameters from torchvision pretrained checkpoint."""
         state_dict_torchvision = _load_checkpoint(self.pretrained)
         if 'state_dict' in state_dict_torchvision:
             state_dict_torchvision = state_dict_torchvision['state_dict']
