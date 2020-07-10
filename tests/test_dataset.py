@@ -1,10 +1,11 @@
+import os
+import tempfile
+from os import path as osp
+
 import mmcv
 import numpy as np
-import os
 import pytest
-import tempfile
 from numpy.testing import assert_array_equal
-from os import path as osp
 
 from mmaction.datasets import (ActivityNetDataset, RawframeDataset,
                                RepeatDataset, VideoDataset)

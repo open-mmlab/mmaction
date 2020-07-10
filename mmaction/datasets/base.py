@@ -1,7 +1,8 @@
 import copy
-import mmcv
 from abc import ABCMeta, abstractmethod
 from os import path as osp
+
+import mmcv
 from torch.utils.data import Dataset
 
 from .pipelines import Compose

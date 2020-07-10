@@ -1,5 +1,6 @@
-import pytest
 import tempfile
+
+import pytest
 import torch
 from mmcv import Config
 from torch import nn as nn

@@ -1,5 +1,6 @@
-import torch
 from abc import ABCMeta, abstractmethod
+
+import torch
 from torch import nn as nn
 
 from ...core import top_k_accuracy

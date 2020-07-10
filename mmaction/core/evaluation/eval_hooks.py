@@ -1,7 +1,8 @@
-import mmcv
 from math import inf
-from mmcv.runner import Hook
 from os import path as osp
+
+import mmcv
+from mmcv.runner import Hook
 from torch.utils.data import DataLoader
 
 from mmaction.utils import get_root_logger

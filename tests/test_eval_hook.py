@@ -1,13 +1,14 @@
+import tempfile
+from os import path as osp
+from unittest import mock as mock
+
 import mmcv
 import pytest
-import tempfile
 import torch
 from mmcv.runner import EpochBasedRunner, build_optimizer
 from mmcv.utils import get_logger
-from os import path as osp
 from torch import nn as nn
 from torch.utils.data import DataLoader, Dataset
-from unittest import mock as mock
 
 from mmaction.core import EvalHook
 

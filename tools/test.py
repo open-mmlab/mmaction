@@ -1,6 +1,7 @@
 import argparse
-import mmcv
 import os
+
+import mmcv
 import torch
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint

@@ -1,4 +1,5 @@
 import copy
+
 import torch
 from mmcv.runner import OptimizerHook
 from mmcv.utils import _BatchNorm

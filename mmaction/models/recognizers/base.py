@@ -1,6 +1,7 @@
-import torch
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
+
+import torch
 from torch import distributed as dist
 from torch import nn as nn
 from torch.nn import functional as F

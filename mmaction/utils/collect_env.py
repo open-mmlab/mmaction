@@ -1,12 +1,13 @@
-import cv2
-import mmcv
 import subprocess
 import sys
+from collections import defaultdict
+from os import path as osp
+
+import cv2
+import mmcv
 import torch
 import torchvision
-from collections import defaultdict
 from mmcv.utils import CUDA_HOME, get_build_config
-from os import path as osp
 
 import mmaction
 

@@ -1,6 +1,7 @@
+import random
+
 import numpy as np
 import pytest
-import random
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from mmaction.core import (average_recall_at_avg_proposals, confusion_matrix,

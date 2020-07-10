@@ -1,8 +1,9 @@
 import argparse
-import mmcv
-import numpy as np
 import os
 from os import path as osp
+
+import mmcv
+import numpy as np
 from torch import multiprocessing as mp
 
 from mmaction.localization import (generate_bsp_feature,

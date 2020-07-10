@@ -1,4 +1,5 @@
 import argparse
+
 from mmcv import load
 from scipy.special import softmax
 

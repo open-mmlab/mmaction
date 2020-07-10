@@ -1,10 +1,11 @@
-import mmcv
 import pickle
 import shutil
 import tempfile
+from os import path as osp
+
+import mmcv
 import torch
 from mmcv.runner import get_dist_info
-from os import path as osp
 from torch import distributed as dist
 
 

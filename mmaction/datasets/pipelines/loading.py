@@ -1,10 +1,11 @@
 import io
-import mmcv
-import numpy as np
 import os
 import shutil
-from mmcv.fileio import FileClient
 from os import path as osp
+
+import mmcv
+import numpy as np
+from mmcv.fileio import FileClient
 
 from ...utils import get_random_string, get_shm_dir, get_thread_id
 from ..registry import PIPELINES
