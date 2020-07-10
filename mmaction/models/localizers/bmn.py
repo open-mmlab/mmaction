@@ -1,8 +1,7 @@
 import math
-
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn as nn
 
 from ...localization import temporal_iop, temporal_iou
 from ..builder import build_loss

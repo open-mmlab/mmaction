@@ -1,10 +1,9 @@
 import argparse
-import os
-import os.path as osp
-
 import mmcv
 import numpy as np
-import torch.multiprocessing as mp
+import os
+from os import path as osp
+from torch import multiprocessing as mp
 
 from mmaction.localization import (generate_bsp_feature,
                                    generate_candidate_proposals)

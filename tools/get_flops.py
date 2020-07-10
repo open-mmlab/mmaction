@@ -1,5 +1,4 @@
 import argparse
-
 from mmcv import Config
 
 from mmaction.models import build_recognizer

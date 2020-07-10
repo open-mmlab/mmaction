@@ -1,9 +1,8 @@
-from operator import itemgetter
-
 import mmcv
 import torch
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
+from operator import itemgetter
 
 from ..datasets.pipelines import Compose
 from ..models import build_recognizer

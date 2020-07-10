@@ -1,9 +1,8 @@
 import copy
-import os
-import os.path as osp
-
 import mmcv
 import numpy as np
+import os
+from os import path as osp
 
 from ..core import average_recall_at_avg_proposals
 from .base import BaseDataset

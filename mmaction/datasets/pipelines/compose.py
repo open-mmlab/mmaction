@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-
 from mmcv.utils import build_from_cfg
 
 from ..registry import PIPELINES

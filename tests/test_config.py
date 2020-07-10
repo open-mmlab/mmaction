@@ -1,9 +1,8 @@
 import glob
-import os
-import os.path as osp
-
 import mmcv
-import torch.nn as nn
+import os
+from os import path as osp
+from torch import nn as nn
 
 from mmaction.models import build_localizer, build_recognizer
 

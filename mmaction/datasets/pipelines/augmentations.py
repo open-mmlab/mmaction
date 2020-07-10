@@ -1,8 +1,7 @@
-import random
-from collections.abc import Sequence
-
 import mmcv
 import numpy as np
+import random
+from collections.abc import Sequence
 from torch.nn.modules.utils import _pair
 
 from ..registry import PIPELINES

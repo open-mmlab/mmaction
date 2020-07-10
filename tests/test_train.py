@@ -1,9 +1,8 @@
-import tempfile
-
 import pytest
+import tempfile
 import torch
-import torch.nn as nn
 from mmcv import Config
+from torch import nn as nn
 from torch.utils.data import Dataset
 
 from mmaction.apis import train_model

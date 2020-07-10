@@ -1,5 +1,5 @@
-import torch.nn as nn
 from mmcv.cnn import CONV_LAYERS, build_norm_layer, constant_init, kaiming_init
+from torch import nn as nn
 from torch.nn.modules.utils import _triple
 
 

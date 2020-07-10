@@ -1,8 +1,7 @@
-import os
-import os.path as osp
-
 import cv2
 import numpy as np
+import os
+from os import path as osp
 
 
 def flow_to_img(raw_flow, bound=20.):

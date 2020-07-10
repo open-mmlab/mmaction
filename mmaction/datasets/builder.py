@@ -1,8 +1,7 @@
+import numpy as np
 import platform
 import random
 from functools import partial
-
-import numpy as np
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
 from mmcv.utils import build_from_cfg

@@ -1,6 +1,5 @@
-import os.path as osp
-
 import numpy as np
+from os import path as osp
 
 from .proposal_utils import temporal_iop, temporal_iou
 

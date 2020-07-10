@@ -1,7 +1,7 @@
 import argparse
 import glob
-import os.path as osp
 import random
+from os import path as osp
 
 from tools.data.parse_file_list import (parse_directory, parse_kinetics_splits,
                                         parse_mit_splits, parse_mmit_splits,

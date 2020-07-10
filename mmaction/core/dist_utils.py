@@ -1,6 +1,5 @@
 from collections import OrderedDict
-
-import torch.distributed as dist
+from torch import distributed as dist
 from torch._utils import (_flatten_dense_tensors, _take_tensors,
                           _unflatten_dense_tensors)
 

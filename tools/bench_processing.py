@@ -9,9 +9,8 @@ To visualize cProfile output program.prof, use Snakeviz and run:
 $ snakeviz program.prof
 """
 import argparse
-import os
-
 import mmcv
+import os
 from mmcv import Config
 
 from mmaction import __version__

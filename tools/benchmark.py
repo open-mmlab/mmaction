@@ -1,14 +1,13 @@
 import argparse
 import time
-
 import torch
 from mmcv import Config
 from mmcv.parallel import MMDataParallel
-from tools.fuse_conv_bn import fuse_module
 
 from mmaction.core import wrap_fp16_model
 from mmaction.datasets import build_dataloader, build_dataset
 from mmaction.models import build_model
+from tools.fuse_conv_bn import fuse_module
 
 
 def parse_args():

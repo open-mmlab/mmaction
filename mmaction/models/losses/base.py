@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
-
-import torch.nn as nn
+from torch import nn as nn
 
 
 class BaseWeightedLoss(nn.Module, metaclass=ABCMeta):

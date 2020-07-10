@@ -1,8 +1,8 @@
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from numpy.testing import assert_array_almost_equal
+from torch import nn as nn
+from torch.nn import functional as F
 
 from mmaction.models import (BCELossWithLogits, BinaryLogisticRegressionLoss,
                              BMNLoss, CrossEntropyLoss, NLLLoss)

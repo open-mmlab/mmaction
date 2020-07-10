@@ -1,6 +1,6 @@
 import torch
-import torch.nn as nn
 from mmcv.runner import build_optimizer_constructor
+from torch import nn as nn
 
 
 class SubModel(nn.Module):

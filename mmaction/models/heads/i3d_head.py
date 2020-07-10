@@ -1,5 +1,5 @@
-import torch.nn as nn
 from mmcv.cnn import normal_init
+from torch import nn as nn
 
 from ..registry import HEADS
 from .base import BaseHead

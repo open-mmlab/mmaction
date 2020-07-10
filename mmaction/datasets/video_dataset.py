@@ -1,7 +1,6 @@
-import os.path as osp
-
 import torch
 from mmcv.utils import print_log
+from os import path as osp
 
 from ..core import mean_class_accuracy, top_k_accuracy
 from .base import BaseDataset

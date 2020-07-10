@@ -1,10 +1,10 @@
-import torch.nn as nn
-import torch.utils.checkpoint as cp
 from mmcv.cnn import (ConvModule, build_activation_layer, constant_init,
                       kaiming_init)
 from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import _BatchNorm
+from torch import nn as nn
 from torch.nn.modules.utils import _ntuple, _triple
+from torch.utils import checkpoint as cp
 
 from ...utils import get_root_logger
 from ..registry import BACKBONES

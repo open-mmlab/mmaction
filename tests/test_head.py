@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from torch import nn as nn
 
 from mmaction.models import BaseHead, I3DHead, SlowFastHead, TSMHead, TSNHead
 

@@ -1,10 +1,9 @@
-import os.path as osp
-
 import mmcv
 import numpy as np
 import pytest
 import torch
-import torch.nn.functional as F
+from os import path as osp
+from torch.nn import functional as F
 
 from mmaction.models import BaseRecognizer, build_recognizer
 

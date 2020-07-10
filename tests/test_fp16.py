@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-import torch.nn as nn
+from torch import nn as nn
 
 from mmaction.core import auto_fp16, cast_tensor_type, force_fp32
 

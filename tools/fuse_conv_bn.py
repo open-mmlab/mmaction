@@ -1,8 +1,7 @@
 import argparse
-
 import torch
-import torch.nn as nn
 from mmcv.runner import save_checkpoint
+from torch import nn as nn
 
 from mmaction.apis import init_recognizer
 

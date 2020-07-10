@@ -1,5 +1,5 @@
-import torch.nn as nn
 from mmcv.utils import build_from_cfg
+from torch import nn as nn
 
 from .registry import BACKBONES, HEADS, LOCALIZERS, LOSSES, RECOGNIZERS
 

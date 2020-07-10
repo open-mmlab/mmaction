@@ -1,7 +1,6 @@
-from abc import ABCMeta, abstractmethod
-
 import torch
-import torch.nn as nn
+from abc import ABCMeta, abstractmethod
+from torch import nn as nn
 
 from ...core import top_k_accuracy
 from ..builder import build_loss

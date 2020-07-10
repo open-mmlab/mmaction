@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn as nn
+from torch.nn import functional as F
 
 from ...localization import temporal_iop
 from ..builder import build_loss

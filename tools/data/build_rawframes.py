@@ -1,9 +1,9 @@
 import argparse
 import glob
 import os
-import os.path as osp
 import sys
 from multiprocessing import Pool
+from os import path as osp
 
 
 def extract_frame(vid_item, dev_id=0):

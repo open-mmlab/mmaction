@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 import torch
-import torch.nn as nn
 from mmcv.utils import _BatchNorm
+from torch import nn as nn
 
 from mmaction.models import (ResNet, ResNet2Plus1d, ResNet3d, ResNet3dSlowFast,
                              ResNet3dSlowOnly, ResNetTSM)
@@ -471,8 +471,8 @@ def test_resnet_tsm_backbone():
         resnet_tsm_50_block = ResNetTSM(50, shift_place='Block')
         resnet_tsm_50_block.init_weights()
 
-    from mmaction.models.backbones.resnet_tsm import TemporalShift
     from mmaction.models.backbones.resnet import Bottleneck
+    from mmaction.models.backbones.resnet_tsm import TemporalShift
 
     # resnet_tsm with depth 50
     resnet_tsm_50 = ResNetTSM(50)

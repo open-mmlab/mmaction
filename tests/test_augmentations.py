@@ -1,5 +1,4 @@
 import copy
-
 import mmcv
 import numpy as np
 import pytest
@@ -99,7 +98,8 @@ class TestAugumentations(object):
         assert_array_almost_equal(origin_imgs, target_imgs, decimal=4)
 
     def test_init_lazy(self):
-        from mmaction.datasets.pipelines.augmentations import _init_lazy_if_proper  # noqa: E501
+        from mmaction.datasets.pipelines.augmentations import \
+            _init_lazy_if_proper  # noqa: E501
         with pytest.raises(AssertionError):
             # use lazy operation but "lazy" not in results
             result = dict(lazy=dict(), img_shape=[64, 64])
