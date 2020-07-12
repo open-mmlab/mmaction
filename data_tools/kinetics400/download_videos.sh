@@ -9,7 +9,7 @@ pip install --upgrade youtube-dl
 
 DATA_DIR="../../../../../data/kinetics400"
 ANNO_DIR="../../../../../data/kinetics400/annotations"
-python download.py ${ANNO_DIR}/kinetics_train.csv ${DATA_DIR}/videos_train
-python download.py ${ANNO_DIR}/kinetics_val.csv ${DATA_DIR}/videos_val
+python download.py ${ANNO_DIR}/kinetics400/train.csv ${DATA_DIR}/videos_train
+python download.py ${ANNO_DIR}/kinetics400/val.csv ${DATA_DIR}/videos_val
 
 cd ../../../../../data_tools/kinetics400
