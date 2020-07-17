@@ -3,7 +3,7 @@ from __future__ import division
 from collections import OrderedDict
 
 import torch
-from mmcv.runner import Runner, DistSamplerSeedHook
+from mmcv.runner import EpochBasedRunner, DistSamplerSeedHook, build_optimizer
 from mmcv.parallel import MMDataParallel
 from mmcv.parallel.distributed_deprecated import MMDistributedDataParallel
 
@@ -72,7 +72,8 @@ def _dist_train(model, dataset, cfg, validate=False):
     # put model on gpus
     model = MMDistributedDataParallel(model.cuda())
     # build runner
-    runner = Runner(model, batch_processor, cfg.optimizer, cfg.work_dir,
+    optimizer = build_optimizer(model, cfg.optimizer)
+    runner = EpochBasedRunner(model, batch_processor, optimizer, cfg.work_dir,
                     cfg.log_level)
     # register hooks
     optimizer_config = DistOptimizerHook(**cfg.optimizer_config)
@@ -86,15 +87,6 @@ def _dist_train(model, dataset, cfg, validate=False):
                 DistEvalTopKAccuracyHook(cfg.data.val, k=(1, 5)))
         if cfg.data.val.type == 'AVADataset':
             runner.register_hook(AVADistEvalmAPHook(cfg.data.val))
-    # if validate:
-    #     if isinstance(model.module, RPN):
-    #         # TODO: implement recall hooks for other datasets
-    #         runner.register_hook(CocoDistEvalRecallHook(cfg.data.val))
-    #     else:
-    #         if cfg.data.val.type == 'CocoDataset':
-    #             runner.register_hook(CocoDistEvalmAPHook(cfg.data.val))
-    #         else:
-    #             runner.register_hook(DistEvalmAPHook(cfg.data.val))
 
     if cfg.resume_from:
         runner.resume(cfg.resume_from)
@@ -116,7 +108,8 @@ def _non_dist_train(model, dataset, cfg, validate=False):
     # put model on gpus
     model = MMDataParallel(model, device_ids=range(cfg.gpus)).cuda()
     # build runner
-    runner = Runner(model, batch_processor, cfg.optimizer, cfg.work_dir,
+    optimizer = build_optimizer(cfg.optimizer)
+    runner = EpochBasedRunner(model, batch_processor, optimizer, cfg.work_dir,
                     cfg.log_level)
     runner.register_training_hooks(cfg.lr_config, cfg.optimizer_config,
                                    cfg.checkpoint_config, cfg.log_config)
