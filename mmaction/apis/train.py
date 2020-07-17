@@ -55,12 +55,12 @@ def train_network(model,
 
     # start training
     if distributed:
-        _dist_train(model, dataset, cfg, validate=validate)
+        _dist_train(model, dataset, cfg, logger, validate=validate)
     else:
-        _non_dist_train(model, dataset, cfg, validate=validate)
+        _non_dist_train(model, dataset, cfg, logger, validate=validate)
 
 
-def _dist_train(model, dataset, cfg, validate=False):
+def _dist_train(model, dataset, cfg, logger, validate=False):
     # prepare data loaders
     data_loaders = [
         build_dataloader(
@@ -74,7 +74,7 @@ def _dist_train(model, dataset, cfg, validate=False):
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
     runner = EpochBasedRunner(model, batch_processor, optimizer, cfg.work_dir,
-                    cfg.log_level)
+                    logger)
     # register hooks
     optimizer_config = DistOptimizerHook(**cfg.optimizer_config)
     runner.register_training_hooks(cfg.lr_config, optimizer_config,
@@ -95,7 +95,7 @@ def _dist_train(model, dataset, cfg, validate=False):
     runner.run(data_loaders, cfg.workflow, cfg.total_epochs)
 
 
-def _non_dist_train(model, dataset, cfg, validate=False):
+def _non_dist_train(model, dataset, cfg, logger, validate=False):
     # prepare data loaders
     data_loaders = [
         build_dataloader(
@@ -110,7 +110,7 @@ def _non_dist_train(model, dataset, cfg, validate=False):
     # build runner
     optimizer = build_optimizer(cfg.optimizer)
     runner = EpochBasedRunner(model, batch_processor, optimizer, cfg.work_dir,
-                    cfg.log_level)
+                    logger)
     runner.register_training_hooks(cfg.lr_config, cfg.optimizer_config,
                                    cfg.checkpoint_config, cfg.log_config)
 
