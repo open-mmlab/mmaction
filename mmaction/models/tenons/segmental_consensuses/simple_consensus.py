@@ -15,7 +15,7 @@ class SimpleConsensus(nn.Module):
 
     def forward(self, input):
         if self.consensus_type == 'avg':
-            output = x.mean(dim=self.dim, keepdim=True)
+            output = input.mean(dim=self.dim, keepdim=True)
         else:
             return None
         return output
