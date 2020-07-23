@@ -7,7 +7,7 @@ import os
 import os.path as osp
 from mmcv.runner import load_checkpoint, obj_from_dict
 from mmcv.runner import get_dist_info
-from mmcv.parallel.distributed_deprecated import MMDistributedDataParallel
+from mmcv.parallel.distributed import MMDistributedDataParallel
 import tempfile
 from mmaction import datasets
 from mmaction.apis import init_dist
@@ -181,7 +181,13 @@ def main():
 
     load_checkpoint(model, args.checkpoint, map_location='cpu')
 
-    model = MMDistributedDataParallel(model.cuda())
+    find_unused_parameters = cfg.get('find_unused_parameters', False)
+    model = MMDistributedDataParallel(
+        model.cuda(),
+        device_ids=[torch.cuda.current_device()],
+        broadcast_buffers=False,
+        find_unused_parameters=find_unused_parameters))
+        
     outputs = multi_test(model, data_loader)
 
     rank, _ = get_dist_info()

@@ -5,7 +5,7 @@ from collections import OrderedDict
 import torch
 from mmcv.runner import EpochBasedRunner, DistSamplerSeedHook, build_optimizer
 from mmcv.parallel import MMDataParallel
-from mmcv.parallel.distributed_deprecated import MMDistributedDataParallel
+from mmcv.parallel.distributed import MMDistributedDataParallel
 
 from mmaction.core import (DistOptimizerHook, DistEvalTopKAccuracyHook,
                            AVADistEvalmAPHook)
@@ -70,7 +70,13 @@ def _dist_train(model, dataset, cfg, logger, validate=False):
             dist=True)
     ]
     # put model on gpus
-    model = MMDistributedDataParallel(model.cuda())
+    find_unused_parameters = cfg.get('find_unused_parameters', False)
+    model = MMDistributedDataParallel(
+        model.cuda(),
+        device_ids=[torch.cuda.current_device()],
+        broadcast_buffers=False,
+        find_unused_parameters=find_unused_parameters))
+        
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
     runner = EpochBasedRunner(model, batch_processor, optimizer, cfg.work_dir,
