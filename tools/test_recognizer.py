@@ -156,8 +156,8 @@ def main():
         model.cuda(),
         device_ids=[torch.cuda.current_device()],
         broadcast_buffers=False,
-        find_unused_parameters=find_unused_parameters))
-        
+        find_unused_parameters=find_unused_parameters)
+
     outputs = multi_test(model, data_loader)
 
     rank, _ = get_dist_info()

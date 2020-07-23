@@ -75,8 +75,8 @@ def _dist_train(model, dataset, cfg, logger, validate=False):
         model.cuda(),
         device_ids=[torch.cuda.current_device()],
         broadcast_buffers=False,
-        find_unused_parameters=find_unused_parameters))
-        
+        find_unused_parameters=find_unused_parameters)
+
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
     runner = EpochBasedRunner(model, batch_processor, optimizer, cfg.work_dir,
