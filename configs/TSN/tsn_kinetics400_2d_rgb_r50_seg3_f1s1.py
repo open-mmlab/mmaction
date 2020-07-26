@@ -106,9 +106,8 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 lr_config = dict(
     policy='step',
     step=[40, 80])
-checkpoint_config = dict(interval=5)
-workflow = [('train', 5), ('val', 1)]
-# workflow = [('train', 1)]
+checkpoint_config = dict(interval=1)
+workflow = [('train', 1))]
 # yapf:disable
 log_config = dict(
     interval=20,

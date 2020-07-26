@@ -119,9 +119,10 @@ lr_config = dict(
     policy='cosine',
     warmup_ratio=0.01,
     warmup='linear',
-    warmup_iters=127840)
+    warmup_by_epoch=True,
+    warmup_iters=34)
 
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=1)
 workflow = [('train', 1)]
 # yapf:disable
 log_config = dict(
