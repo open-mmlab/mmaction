@@ -374,6 +374,7 @@ class GroupImageTransform(object):
     def __init__(self,
                  mean=(0, 0, 0),
                  std=(1, 1, 1),
+                 pre_mean_volume=None,
                  to_rgb=True,
                  size_divisor=None,
                  crop_size=None,
@@ -387,6 +388,7 @@ class GroupImageTransform(object):
                  max_distort=1):
         self.mean = np.array(mean, dtype=np.float32)
         self.std = np.array(std, dtype=np.float32)
+        self.pre_mean_volume = pre_mean_volume
         self.to_rgb = to_rgb
         self.size_divisor = size_divisor
         self.resize_crop = resize_crop
@@ -435,6 +437,10 @@ class GroupImageTransform(object):
                 scale_factor = np.array([w_scales[0], h_scales[0],
                                          w_scales[0], h_scales[0]],
                                         dtype=np.float32)
+            if self.pre_mean_volume is not None:
+                volume_len = self.pre_mean_volume.shape[0]
+                img_group = [img - self.pre_mean_volume[i % volume_len, ...]
+                                 for i, img in enumerate(img_group)]
             # 2. crop (if necessary)
             if crop_history is not None:
                 self.op_crop = GroupCrop(crop_history)

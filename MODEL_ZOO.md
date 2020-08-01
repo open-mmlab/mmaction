@@ -20,6 +20,14 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 |    RGB   |  ImageNet  | BNInception | 3seg |  86.4    | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth)  |
 |   TV-L1  |  ImageNet  | BNInception | 3seg |  87.7    | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/tsn_2d_flow_bninception_seg3_f1s1_b32_g8-151870b7.pth) |
 
+### TSN
+
+#### UCF101
+
+| Modality | Pretrained | Backbone | Input | Top-1 |                                                              Download                                                                    |
+| :------: | :--------: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
+|    RGB   |  Sports-1M |     C3D     | 16x1 |  82.26  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/c3d_caffe_sports1m_ucf101-82f36ebc.pth)  |
+
 ### I3D
 
 |  Modality  | Pretrained |   Backbone   | Input | Top-1 | Top-5 |                           Download                           |
