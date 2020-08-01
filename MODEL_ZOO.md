@@ -20,13 +20,24 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 |    RGB   |  ImageNet  | BNInception | 3seg |  86.4    | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth)  |
 |   TV-L1  |  ImageNet  | BNInception | 3seg |  87.7    | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/tsn_2d_flow_bninception_seg3_f1s1_b32_g8-151870b7.pth) |
 
-### TSN
+### C3D
+
+#### Sports-1M
+
+| Modality | Pretrained | Backbone | Input | Top-1 |                                                              Download                                                                    |
+| :------: | :--------: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
+|    RGB   |  None  |     C3D     | 16x1 |  N/A  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/conv3d_deepnetA_sport1m_iter_1900000-68f5aa04.pth)*  |
+
+&ast; Converted from [C3D-v1.0 in Caffe](https://github.com/facebookarchive/C3D) and [TGAN in Chainer](https://github.com/pfnet-research/tgan).
 
 #### UCF101
 
 | Modality | Pretrained | Backbone | Input | Top-1 |                                                              Download                                                                    |
 | :------: | :--------: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
-|    RGB   |  Sports-1M |     C3D     | 16x1 |  82.26  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/c3d_caffe_sports1m_ucf101-82f36ebc.pth)  |
+|    RGB   |  Sports-1M |     C3D     | 16x1 |  82.26  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/c3d_caffe_sports1m_ucf101-82f36ebc.pth)*  |
+
+&ast; Converted from [C3D-v1.0 in Caffe](https://github.com/facebookarchive/C3D) and [TGAN in Chainer](https://github.com/pfnet-research/tgan).
+
 
 ### I3D
 
@@ -36,6 +47,9 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 |    RGB     |  ImageNet  |   ResNet50   | 32x2  | 72.9  | 90.8  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics_rgb_r50_c3d_inflated3x1x1_seg1_f32s2_f32s2-b93cc877.pth) |
 |    Flow    |  ImageNet  | Inception-V1 | 64x1  | 63.4  | 84.9  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics_flow_inception_v1_seg1_f64s1_imagenet_deepmind-92059771.pth)* |
 | Two-Stream |  ImageNet  | Inception-V1 | 64x1  | 74.2  | 91.3  |                              /                               |
+
+&ast; Converted from [kinetics_i3d in TensorFlow](https://github.com/deepmind/kinetics-i3d).
+
 
 ### SlowOnly
 
@@ -68,6 +82,9 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 | :------: | :--------: | :-------: | :---: | :---: | :---: | :----------------------------------------------------------: |
 |   RGB    |   IG-65M   | irCSN-152 | 32x2  | 82.6  | 95.7  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/ircsn_kinetics400_se_rgb_r152_f32s2_ig65m_fbai-9d6ed879.pth)* |
 |   RGB    |   IG-65M   | ipCSN-152 | 32x2  | 82.7  | 95.6  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/ipcsn_kinetics400_se_rgb_r152_f32s2_ig65m_fbai-ef39b9e3.pth)* |
+
+&ast; Converted from [VMZ in Caffe2](https://github.com/facebookresearch/VMZ).
+
 
 ### Transfer Learning
 
