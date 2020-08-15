@@ -98,9 +98,7 @@ class pathway(nn.Module):
                  lateral_type='conv',
                  lateral_op='concat',
                  conv1_kernel_t=1,
-                 conv1_stride_t=1,
-                 pool1_kernel_t=1,
-                 pool1_stride_t=1,
+                 fusion_kernel_size=5,
                  spatial_strides=(1, 2, 2, 2),
                  dilations=(1, 1, 1, 1),
                  style='pytorch',
@@ -123,22 +121,25 @@ class pathway(nn.Module):
                 lateral_inplanes = self.inplanes * 2 // beta_inv
                 self.conv1_lateral = nn.Conv3d(self.inplanes // beta_inv,
                     self.inplanes * 2 // beta_inv,
-                    kernel_size=(5, 1, 1),
+                    kernel_size=(fusion_kernel_size, 1, 1),
                     stride=(alpha, 1, 1),
-                    padding=(2, 0, 0),
+                    padding=((fusion_kernel_size - 1) // 2, 0, 0),
                     bias=False)
             else:
                 raise NotImplementedError
         else:
             lateral_inplanes = 0
 
-        self.conv1 = nn.Conv3d(
-            3, 64 // channel_mul_inv, kernel_size=(conv1_kernel_t, 7, 7), stride=(conv1_stride_t, 2, 2), padding=((conv1_kernel_t-1)//2, 3, 3), bias=False)
+        self.conv1 = nn.Conv3d(3, 64 // channel_mul_inv,
+                            kernel_size=(conv1_kernel_t, 7, 7),
+                            stride=(1, 2, 2),
+                            padding=((conv1_kernel_t-1)//2, 3, 3),
+                            bias=False)
+
         self.bn1 = nn.BatchNorm3d(64 // channel_mul_inv)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool3d(kernel_size=(pool1_kernel_t, 3, 3), stride=(pool1_stride_t, 2, 2), padding=(pool1_kernel_t//2, 1, 1))
-        # Byebye temporal pooling :)
-        # self.pool2 = nn.MaxPool3d(kernel_size=(2, 1, 1), stride=(2, 1, 1), padding=(0, 0, 0))
+        self.maxpool = nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2),
+                                    padding=(0, 1, 1))
 
         self.res_layers = []
         self.lateral_connections = []
@@ -174,9 +175,9 @@ class pathway(nn.Module):
                     setattr(self, lateral_name,
                             nn.Conv3d(self.inplanes // beta_inv,
                             self.inplanes * 2 // beta_inv,
-                            kernel_size=(5, 1, 1),
+                            kernel_size=(fusion_kernel_size, 1, 1),
                             stride=(alpha, 1, 1),
-                            padding=(2, 0, 0),
+                            padding=((fusion_kernel_size - 1) // 2, 0, 0),
                             bias=False))
                     self.lateral_connections.append(lateral_name)
             else:
@@ -222,32 +223,24 @@ class ResNet_I3D_SlowFast(nn.Module):
 
     def __init__(self,
                  depth,
-                 tau=16,
                  alpha=8,
                  beta_inv=8,
                  pretrained_slow=None,
                  pretrained_fast=None,
                  # pretrained=None,
                  num_stages=4,
-                 slow_only=False,
-                 fast_only=False,
                  lateral_type='conv',
                  lateral_op='concat',
                  spatial_strides=(1, 2, 2, 2),
                  dilations=(1, 1, 1, 1),
                  out_indices=(0, 1, 2, 3),
                  slow_conv1_kernel_t=1,
-                 slow_conv1_stride_t=1,
-                 slow_pool1_kernel_t=1,
-                 slow_pool1_stride_t=1,
                  fast_conv1_kernel_t=5,
-                 fast_conv1_stride_t=1,
-                 fast_pool1_kernel_t=1,
-                 fast_pool1_stride_t=1,
                  style='pytorch',
                  frozen_stages=-1,
                  slow_inflate_freq=(0, 0, 1, 1),
                  fast_inflate_freq=(1, 1, 1, 1),
+                 fusion_kernel_size=5,
                  inflate_stride=(1, 1, 1, 1),
                  inflate_style='3x1x1',
                  nonlocal_stages=(-1, ),
@@ -261,7 +254,6 @@ class ResNet_I3D_SlowFast(nn.Module):
         if depth not in self.arch_settings:
             raise KeyError('invalid depth {} for resnet'.format(depth))
         self.depth = depth
-        self.tau = tau
         self.alpha = alpha
         self.beta_inv = beta_inv
         # self.pretrained = pretrained
@@ -269,9 +261,6 @@ class ResNet_I3D_SlowFast(nn.Module):
         self.pretrained_fast = pretrained_fast
         self.num_stages = num_stages
         assert num_stages >= 1 and num_stages <= 4
-        self.slow_only = slow_only
-        self.fast_only = fast_only
-        assert not (self.slow_only and self.fast_only)
         self.lateral_type = lateral_type
         self.lateral_op = lateral_op
         assert lateral_type in ['conv']   # in ['toC', 'sampling', 'conv']
@@ -297,167 +286,142 @@ class ResNet_I3D_SlowFast(nn.Module):
         self.bn_frozen = bn_frozen
         self.partial_bn = partial_bn
         self.with_cp = with_cp
+        self.fusion_kernel_size = fusion_kernel_size
 
-        if not self.fast_only:
-            self.slow_path = pathway(depth, num_stages=num_stages, channel_mul_inv=1,
-                                     lateral=not self.slow_only,
-                                     alpha=alpha,
-                                     beta_inv=beta_inv,
-                                     lateral_type=lateral_type,
-                                     lateral_op=lateral_op,
-                                     conv1_kernel_t=slow_conv1_kernel_t,
-                                     conv1_stride_t=slow_conv1_stride_t,
-                                     pool1_kernel_t=slow_pool1_kernel_t,
-                                     pool1_stride_t=slow_pool1_stride_t,
-                                     spatial_strides=spatial_strides,
-                                     dilations=dilations,
-                                     style=style,
-                                     inflate_freqs=self.slow_inflate_freq,
-                                     inflate_style=inflate_style,
-                                     nonlocal_stages=nonlocal_stages,
-                                     nonlocal_freqs=nonlocal_freq,
-                                     nonlocal_cfg=nonlocal_cfg,
-                                     with_cp=with_cp)
-        if not self.slow_only:
-            self.fast_path = pathway(depth, num_stages=num_stages, channel_mul_inv=beta_inv,
-                                     lateral=False,
-                                     conv1_kernel_t=fast_conv1_kernel_t,
-                                     conv1_stride_t=fast_conv1_stride_t,
-                                     pool1_kernel_t=fast_pool1_kernel_t,
-                                     pool1_stride_t=fast_pool1_stride_t,
-                                     spatial_strides=spatial_strides,
-                                     dilations=dilations,
-                                     style=style,
-                                     inflate_freqs=self.fast_inflate_freq,
-                                     inflate_style=inflate_style,
-                                     nonlocal_stages=nonlocal_stages,
-                                     nonlocal_freqs=nonlocal_freq,
-                                     nonlocal_cfg=nonlocal_cfg,
-                                     with_cp=with_cp)
+        self.slow_path = pathway(depth, num_stages=num_stages, channel_mul_inv=1,
+                                 lateral=True,
+                                 alpha=alpha,
+                                 beta_inv=beta_inv,
+                                 lateral_type=lateral_type,
+                                 lateral_op=lateral_op,
+                                 conv1_kernel_t=slow_conv1_kernel_t,
+                                 spatial_strides=spatial_strides,
+                                 dilations=dilations,
+                                 style=style,
+                                 inflate_freqs=self.slow_inflate_freq,
+                                 inflate_style=inflate_style,
+                                 nonlocal_stages=nonlocal_stages,
+                                 nonlocal_freqs=nonlocal_freq,
+                                 nonlocal_cfg=nonlocal_cfg,
+                                 with_cp=with_cp)
+        self.fast_path = pathway(depth, num_stages=num_stages, channel_mul_inv=beta_inv,
+                                 lateral=False,
+                                 conv1_kernel_t=fast_conv1_kernel_t,
+                                 spatial_strides=spatial_strides,
+                                 dilations=dilations,
+                                 style=style,
+                                 inflate_freqs=self.fast_inflate_freq,
+                                 inflate_style=inflate_style,
+                                 nonlocal_stages=nonlocal_stages,
+                                 nonlocal_freqs=nonlocal_freq,
+                                 nonlocal_cfg=nonlocal_cfg,
+                                 with_cp=with_cp)
 
     def init_weights(self):
         logger = logging.getLogger()
-        if not self.fast_only:
-            if self.pretrained_slow:
-                resnet2d = ResNet(self.depth)
-                load_checkpoint(resnet2d, self.pretrained_slow, strict=False, logger=logger)
-                for name, module in self.slow_path.named_modules():
-                    if isinstance(module, NonLocalModule):
-                        module.init_weights()
-                    elif isinstance(module, nn.Conv3d) and rhasattr(resnet2d, name):
-                        old_weight = rgetattr(resnet2d, name).weight.data
-                        old_shape = old_weight.shape
-                        new_shape = module.weight.data.shape
-                        if new_shape[1] != old_shape[1]:
-                            new_ch = new_shape[1] - old_shape[1]
-                            pad_shape = old_shape
-                            pad_shape = pad_shape[:1] + (new_ch, ) + pad_shape[2:]
-                            old_weight = torch.cat((old_weight, torch.zeros(pad_shape).type_as(old_weight).to(old_weight.device)), dim=1)
+        if self.pretrained_slow:
+            resnet2d = ResNet(self.depth)
+            load_checkpoint(resnet2d, self.pretrained_slow, strict=False, logger=logger)
+            for name, module in self.slow_path.named_modules():
+                if isinstance(module, NonLocalModule):
+                    module.init_weights()
+                elif isinstance(module, nn.Conv3d) and rhasattr(resnet2d, name):
+                    old_weight = rgetattr(resnet2d, name).weight.data
+                    old_shape = old_weight.shape
+                    new_shape = module.weight.data.shape
+                    if new_shape[1] != old_shape[1]:
+                        new_ch = new_shape[1] - old_shape[1]
+                        pad_shape = old_shape
+                        pad_shape = pad_shape[:1] + (new_ch, ) + pad_shape[2:]
+                        old_weight = torch.cat((old_weight, torch.zeros(pad_shape).type_as(old_weight).to(old_weight.device)), dim=1)
 
 
-                        new_weight = old_weight.unsqueeze(2).expand_as(module.weight.data) / new_shape[2]
-                        module.weight.data.copy_(new_weight)
-                        logging.info("{}.weight loaded from weights file into {}".format(name, new_weight.shape))
-                        if hasattr(module, 'bias') and module.bias is not None:
-                            new_bias = rgetattr(resnet2d, name).bias.data
-                            module.bias.data.copy_(new_bias)
-                            logging.info("{}.bias loaded from weights file into {}".format(name, new_bias.shape))
-                    elif isinstance(module, nn.BatchNorm3d) and rhasattr(resnet2d, name):
-                          for attr in ['weight', 'bias', 'running_mean', 'running_var']:
-                              logging.info("{}.{} loaded from weights file into {}".format(name, attr, getattr(rgetattr(resnet2d, name), attr).shape))
-                              setattr(module, attr, getattr(rgetattr(resnet2d, name), attr))
-                    else:
-                        print(name)
-            else:
-                for m in self.slow_path.modules():
-                    if isinstance(m, nn.Conv3d):
-                        kaiming_init(m)
-                    elif isinstance(m, nn.BatchNorm3d):
-                        constant_init(m, 1)
+                    new_weight = old_weight.unsqueeze(2).expand_as(module.weight.data) / new_shape[2]
+                    module.weight.data.copy_(new_weight)
+                    logging.info("{}.weight loaded from weights file into {}".format(name, new_weight.shape))
+                    if hasattr(module, 'bias') and module.bias is not None:
+                        new_bias = rgetattr(resnet2d, name).bias.data
+                        module.bias.data.copy_(new_bias)
+                        logging.info("{}.bias loaded from weights file into {}".format(name, new_bias.shape))
+                elif isinstance(module, nn.BatchNorm3d) and rhasattr(resnet2d, name):
+                      for attr in ['weight', 'bias', 'running_mean', 'running_var']:
+                          logging.info("{}.{} loaded from weights file into {}".format(name, attr, getattr(rgetattr(resnet2d, name), attr).shape))
+                          setattr(module, attr, getattr(rgetattr(resnet2d, name), attr))
+                else:
+                    print(name)
+        else:
+            for m in self.slow_path.modules():
+                if isinstance(m, nn.Conv3d):
+                    kaiming_init(m)
+                elif isinstance(m, nn.BatchNorm3d):
+                    constant_init(m, 1)
 
-        if not self.slow_only:
-            if self.pretrained_fast:
-                resnet2d = ResNet(self.depth, base_channels=64 // self.beta_inv)
-                load_checkpoint(resnet2d, self.pretrained_fast, strict=False, logger=logger)
-                for name, module in self.fast_path.named_modules():
-                    if isinstance(module, NonLocalModule):
-                        module.init_weights()
-                    elif isinstance(module, nn.Conv3d) and rhasattr(resnet2d, name):
-                        old_weight = rgetattr(resnet2d, name).weight.data
-                        old_shape = old_weight.shape
-                        new_shape = module.weight.data.shape
-                        if new_shape[1] != old_shape[1]:
-                            new_ch = new_shape[1] - old_shape[1]
-                            pad_shape = old_shape
-                            pad_shape = pad_shape[:1] + (new_ch, ) + pad_shape[2:]
-                            old_weight = torch.cat((old_weight, torch.zeros(pad_shape).type_as(old_weight).to(old_weight.device)), dim=1)
+        if self.pretrained_fast:
+            resnet2d = ResNet(self.depth, base_channels=64 // self.beta_inv)
+            load_checkpoint(resnet2d, self.pretrained_fast, strict=False, logger=logger)
+            for name, module in self.fast_path.named_modules():
+                if isinstance(module, NonLocalModule):
+                    module.init_weights()
+                elif isinstance(module, nn.Conv3d) and rhasattr(resnet2d, name):
+                    old_weight = rgetattr(resnet2d, name).weight.data
+                    old_shape = old_weight.shape
+                    new_shape = module.weight.data.shape
+                    if new_shape[1] != old_shape[1]:
+                        new_ch = new_shape[1] - old_shape[1]
+                        pad_shape = old_shape
+                        pad_shape = pad_shape[:1] + (new_ch, ) + pad_shape[2:]
+                        old_weight = torch.cat((old_weight, torch.zeros(pad_shape).type_as(old_weight).to(old_weight.device)), dim=1)
 
 
-                        new_weight = old_weight.unsqueeze(2).expand_as(module.weight.data) / new_shape[2]
-                        module.weight.data.copy_(new_weight)
-                        logging.info("{}.weight loaded from weights file into {}".format(name, new_weight.shape))
-                        if hasattr(module, 'bias') and module.bias is not None:
-                            new_bias = rgetattr(resnet2d, name).bias.data
-                            module.bias.data.copy_(new_bias)
-                            logging.info("{}.bias loaded from weights file into {}".format(name, new_bias.shape))
-                    elif isinstance(module, nn.BatchNorm3d) and rhasattr(resnet2d, name):
-                          for attr in ['weight', 'bias', 'running_mean', 'running_var']:
-                              logging.info("{}.{} loaded from weights file into {}".format(name, attr, getattr(rgetattr(resnet2d, name), attr).shape))
-                              setattr(module, attr, getattr(rgetattr(resnet2d, name), attr))
-                    else:
-                        print(name)
-            else:
-                for m in self.fast_path.modules():
-                    if isinstance(m, nn.Conv3d):
-                        kaiming_init(m)
-                    elif isinstance(m, nn.BatchNorm3d):
-                        constant_init(m, 1)
+                    new_weight = old_weight.unsqueeze(2).expand_as(module.weight.data) / new_shape[2]
+                    module.weight.data.copy_(new_weight)
+                    logging.info("{}.weight loaded from weights file into {}".format(name, new_weight.shape))
+                    if hasattr(module, 'bias') and module.bias is not None:
+                        new_bias = rgetattr(resnet2d, name).bias.data
+                        module.bias.data.copy_(new_bias)
+                        logging.info("{}.bias loaded from weights file into {}".format(name, new_bias.shape))
+                elif isinstance(module, nn.BatchNorm3d) and rhasattr(resnet2d, name):
+                      for attr in ['weight', 'bias', 'running_mean', 'running_var']:
+                          logging.info("{}.{} loaded from weights file into {}".format(name, attr, getattr(rgetattr(resnet2d, name), attr).shape))
+                          setattr(module, attr, getattr(rgetattr(resnet2d, name), attr))
+                else:
+                    print(name)
+        else:
+            for m in self.fast_path.modules():
+                if isinstance(m, nn.Conv3d):
+                    kaiming_init(m)
+                elif isinstance(m, nn.BatchNorm3d):
+                    constant_init(m, 1)
 
     def forward(self, x):
-        if not self.fast_only:
-            x_slow = x[:, :, ::self.tau, :, :]
+        x_slow = self.slow_path.conv1(x[:, :, ::self.alpha])
+        x_slow = self.slow_path.bn1(x_slow)
+        x_slow = self.slow_path.relu(x_slow)
+        x_slow = self.slow_path.maxpool(x_slow)
 
-            x_slow = self.slow_path.conv1(x_slow)
-            x_slow = self.slow_path.bn1(x_slow)
-            x_slow = self.slow_path.relu(x_slow)
-            x_slow = self.slow_path.maxpool(x_slow)
+        x_fast = self.fast_path.conv1(x)
+        x_fast = self.fast_path.bn1(x_fast)
+        x_fast = self.fast_path.relu(x_fast)
+        x_fast = self.fast_path.maxpool(x_fast)
 
-        if not self.slow_only:
-            x_fast = x[:, :, ::self.tau//self.alpha, :, :]
-            x_fast = self.fast_path.conv1(x_fast)
-            x_fast = self.fast_path.bn1(x_fast)
-            x_fast = self.fast_path.relu(x_fast)
-            x_fast = self.fast_path.maxpool(x_fast)
-
-        if not self.fast_only and not self.slow_only:
-            x_fast_lateral = self.slow_path.conv1_lateral(x_fast)
-            x_slow = torch.cat((x_slow, x_fast_lateral), dim=1)
-
+        x_fast_lateral = self.slow_path.conv1_lateral(x_fast)
+        x_slow = torch.cat((x_slow, x_fast_lateral), dim=1)
 
         outs = []
-        if not self.fast_only:
-            for i, layer_name in enumerate(self.slow_path.res_layers):
-                res_layer = getattr(self.slow_path, layer_name)
-                x_slow = res_layer(x_slow)
-                if not self.slow_only:
-                    res_layer_fast = getattr(self.fast_path, layer_name)
-                    x_fast = res_layer_fast(x_fast)
-                    if self.lateral_type == 'conv' and i != 3:
-                        lateral_name = self.slow_path.lateral_connections[i]
-                        conv_lateral = getattr(self.slow_path, lateral_name)
-                        x_fast_lateral = conv_lateral(x_fast)
-                        x_slow = torch.cat((x_slow, x_fast_lateral), dim=1)
-                if i in self.out_indices:
-                    if not self.slow_only:
-                        outs.append((x_slow, x_fast))
-                    else:
-                        outs.append(x_slow)
-        else:
-            for i, layer_name in enumerate(self.fast_path.res_layers):
-                res_layer = getattr(self.fast_path, layer_name)
-                x_fast = res_layer(x_fast)
-                if i in self.out_indices:
-                    outs.append(x_fast)
+        for i, layer_name in enumerate(self.slow_path.res_layers):
+            res_layer = getattr(self.slow_path, layer_name)
+            x_slow = res_layer(x_slow)
+            res_layer_fast = getattr(self.fast_path, layer_name)
+            x_fast = res_layer_fast(x_fast)
+
+            if self.lateral_type == 'conv' and i != 3:
+                lateral_name = self.slow_path.lateral_connections[i]
+                conv_lateral = getattr(self.slow_path, lateral_name)
+                x_fast_lateral = conv_lateral(x_fast)
+                x_slow = torch.cat((x_slow, x_fast_lateral), dim=1)
+
+            if i in self.out_indices:
+                outs.append((x_slow, x_fast))
 
         if len(outs) == 1:
             return outs[0]
