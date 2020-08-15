@@ -6,7 +6,6 @@ model = dict(
         pretrained_slow=None,
         pretrained_fast=None,
         depth=50,
-        tau=8,   # f32s2, tau=8 <=> f64s1, tau=16
         alpha=8,
         beta_inv=8,
         num_stages=4,
