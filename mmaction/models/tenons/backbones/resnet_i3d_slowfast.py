@@ -197,8 +197,17 @@ class ResNet_I3D_SlowFast(nn.Module):
 
     Args:
         depth (int): Depth of resnet, from {18, 34, 50, 101, 152}.
+        alpha (int): The frame ratio between fast and slow pathways.
+            The original parameter tau in pySlowFast is removed. In the original
+            paper, it says: "Our Fast pathway works with a small temporal stride
+            of τ/α, where α > 1 is the frame rate ratio between the Fast and
+            Slow pathways." Here we force τ/α to be 1 and adjust `new_length`
+            and `new_step` in dataset accordingly.
+        beta_inv (int): The channel width ratio between slow and fast pathways.
+        pretrained_slow (str): Path of 2D pretrained weights for slow pathway.
+        pretrained_fast (str): Path of 2D pretrained weights for fast pathway.
         num_stages (int): Resnet stages, normally 4.
-        strides (Sequence[int]): Strides of the first block of each stage.
+        spatial_strides (Sequence[int]): Spatial strides of the first block of each stage.
         dilations (Sequence[int]): Dilation of each stage.
         out_indices (Sequence[int]): Output from which stages.
         style (str): `pytorch` or `caffe`. If set to "pytorch", the stride-two
@@ -227,7 +236,6 @@ class ResNet_I3D_SlowFast(nn.Module):
                  beta_inv=8,
                  pretrained_slow=None,
                  pretrained_fast=None,
-                 # pretrained=None,
                  num_stages=4,
                  lateral_type='conv',
                  lateral_op='concat',
