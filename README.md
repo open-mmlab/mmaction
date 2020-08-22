@@ -9,7 +9,7 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
 
   - action recognition from trimmed videos
   - temporal action detection (also known as action localization) in untrimmed videos
-  - spatial-temporal action detection in untrimmed videos. 
+  - spatial-temporal action detection in untrimmed videos.
 
 
 - Support for various datasets
@@ -22,26 +22,28 @@ It is a part of the [open-mmlab](https://github.com/open-mmlab) project develope
   MMAction implements popular frameworks for action understanding:
 
   - For action recognition, various algorithms are implemented, including TSN, I3D, SlowFast, R(2+1)D, CSN.
-  - For temporal action detection, we implement SSN. 
+  - For temporal action detection, we implement SSN.
   - For spatial temporal atomic action detection, a Fast-RCNN baseline is provided.
 
 - Modular design
 
   The tasks in human action understanding share some common aspects such as backbones, and long-term and short-term sampling schemes.
-  Also, tasks can benefit from each other. For example, a better backbone for action recognition will bring performance gain for action detection. 
+  Also, tasks can benefit from each other. For example, a better backbone for action recognition will bring performance gain for action detection.
   Modular design enables us to view action understanding in a more integrated perspective.
 
 ## License
 The project is release under the [Apache 2.0 license](https://github.com/open-mmlab/mmaction/blob/master/LICENSE).
 
 ## Updates
+[OmniSource](https://arxiv.org/abs/2003.13042) Model Release (22/08/2020)
+- We release several models of our work [OmniSource](https://arxiv.org/abs/2003.13042). These models are jointly trained with
+Kinetics-400 and OmniSourced web dataset. Those models are of good performance (Top1 Accuracy: **75.7%** for 3-segment TSN and **80.4%** for SlowOnly on Kinetics-400 val) and the learned representation transfer well to other tasks.
+
+v0.2.0 (15/03/2020)
+- We build a diversified modelzoo for action recognition, which include popular algorithms (TSN, I3D, SlowFast, R(2+1)D, CSN). The performance is aligned with or better than the original papers.
 
 v0.1.0 (19/06/2019)
 - MMAction is online!
-
-v0.2.0 (15/03/2020)
-
-- We build a diversified modelzoo for action recognition, which include popular algorithms (TSN, I3D, SlowFast, R(2+1)D, CSN). The performance is aligned with or better than the original papers.
 
 ## Model zoo
 Results and reference models are available in the [model zoo](https://github.com/open-mmlab/mmaction/blob/master/MODEL_ZOO.md).
