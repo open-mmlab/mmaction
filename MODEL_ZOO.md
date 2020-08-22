@@ -48,12 +48,12 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 |   RGB    |  ImageNet  | ResNet50 | 4x16  | 75.9  | 92.3  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/slowfast_kinetics400_se_rgb_r50_4x16_finetune-4623cf03.pth) |
 
 ### R(2+1)D
-| Modality | Pretrained | Backbone | Input | Top-1 | Top-5 |                           Download                           |
-| :------: | :--------: | :------: | :---: | :---: | :---: | :----------------------------------------------------------: |
-|   RGB    |    None    | ResNet34 |  8x8  | 63.7  | 85.9  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f8s8_scratch-1f576444.pth) |
-|   RGB    |   IG-65M   | ResNet34 |  8x8  | 74.4  | 91.7  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f8s8_finetune-c3abbbfc.pth) |
-|   RGB    |    None    | ResNet34 | 32x2  | 71.8  | 90.4  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f32s2_scratch-97f56158.pth) |
-|   RGB    |   IG-65M   | ResNet34 | 32x2  | 80.3  | 94.7  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f32s2_finetune-9baa39ea.pth) |
+| Modality | Pretrained | Backbone | Input | Top-1 | Top-5 | Download                                                                                                                                            |
+|:--------:|:----------:|:--------:|:-----:|:-----:|:-----:|:---------------------------------------------------------------------------------------------------------------------------------------------------:|
+| RGB      | None       | ResNet34 | 8x8   | 63.7  | 85.9  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f8s8_scratch-1f576444.pth)   |
+| RGB      | IG-65M     | ResNet34 | 8x8   | 74.4  | 91.7  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f8s8_finetune-c3abbbfc.pth)  |
+| RGB      | None       | ResNet34 | 32x2  | 71.8  | 90.4  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f32s2_scratch-97f56158.pth)  |
+| RGB      | IG-65M     | ResNet34 | 32x2  | 80.3  | 94.7  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/r2plus1d_kinetics400_se_rgb_r34_f32s2_finetune-9baa39ea.pth) |
 
 ### CSN
 | Modality | Pretrained | Backbone  | Input | Top-1 | Top-5 |                           Download                           |
@@ -63,20 +63,20 @@ For action recognition, unless specified, models are trained on Kinetics-400. Th
 
 ### OmniSource
 
-| Modality | Pretrained | Backbone  | Input | Top-1 (w/o. Omni v.s w. Omni) | Top-5 (w/o. Omni v.s w. Omni) |                           Download                           |
-| :------: | :--------: | :-------: | :---: | :---------------------------: | :---------------------------: | :----------------------------------------------------------: |
-|   RGB    |  ImageNet  | ResNet50  | 3seg  |      70.6 / 73.6 (+ 3.0)      |      89.4 / 91.0 (+ 1.6)      | [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/tsn_OmniSource_kinetics400_se_rgb_r50_seg3_f1s1_imagenet-4066cb7e.pth) |
-|   RGB    |   IG-1B    | ResNet50  | 3seg  |      73.1 / 75.7 (+ 2.6)      |      90.4 / 91.9 (+ 1.5)      | [Baseline](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/tsn_kinetics400_se_rgb_r50_seg3_f1s1_IG1B-d4bc58ba.pth) / [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/tsn_OmniSource_kinetics400_se_rgb_r50_seg3_f1s1_IG1B-25fc136b.pth) |
-|   RGB    |  Scratch   | ResNet50  | 4x16  |      72.9 / 76.8 (+ 3.9)      |      90.9 / 92.5 (+ 1.6)      | [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/slowonly_OmniSource_kinetics400_se_rgb_r50_seg1_4x16_scratch-71f7b8ee.pth) |
-|   RGB    |  Scratch   | ResNet101 |  8x8  |      76.3 / 80.4 (+ 4.1)      |      92.6 / 94.4 (+ 1.8)      | [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/slowonly_OmniSource_kinetics400_se_rgb_r101_seg1_8x8_scratch-2f838cb0.pth) |
+| Modality | Pretrained | Backbone  | Input | Top-1 (Baseline / OmniSource ($\Delta$)) | Top-5 (Baseline / OmniSource ($\Delta$)) |                           Download                           |
+| :------: | :--------: | :-------: | :---: | :--------------------------------------: | :--------------------------------------: | :----------------------------------------------------------: |
+|   RGB    |  ImageNet  | ResNet50  | 3seg  |           70.6 / 73.6 (+ 3.0)            |           89.4 / 91.0 (+ 1.6)            | [Baseline](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/tsn2d_kinetics400_rgb_r50_seg3_f1s1-b702e12f.pth) / [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/tsn_OmniSource_kinetics400_se_rgb_r50_seg3_f1s1_imagenet-4066cb7e.pth) |
+|   RGB    |   IG-1B    | ResNet50  | 3seg  |           73.1 / 75.7 (+ 2.6)            |           90.4 / 91.9 (+ 1.5)            | [Baseline](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/tsn_kinetics400_se_rgb_r50_seg3_f1s1_IG1B-d4bc58ba.pth) / [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/tsn_OmniSource_kinetics400_se_rgb_r50_seg3_f1s1_IG1B-25fc136b.pth) |
+|   RGB    |  Scratch   | ResNet50  | 4x16  |           72.9 / 76.8 (+ 3.9)            |           90.9 / 92.5 (+ 1.6)            | [Baseline](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/slowonly_kinetics400_se_rgb_r50_seg1_4x16_scratch_epoch256-594abd88.pth) / [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/slowonly_OmniSource_kinetics400_se_rgb_r50_seg1_4x16_scratch-71f7b8ee.pth) |
+|   RGB    |  Scratch   | ResNet101 |  8x8  |           76.5 / 80.4 (+ 3.9)            |           92.7 / 94.4 (+ 1.7)            | [Baseline](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/slowonly_kinetics400_se_rgb_r101_8x8_scratch-8de47237.pth) / [OmniSource](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/omnisource/slowonly_OmniSource_kinetics400_se_rgb_r101_seg1_8x8_scratch-2f838cb0.pth) |
 
 ### Transfer Learning
 
-| Model | Modality  | Pretrained | Backbone | Input | UCF101 | HMDB51 |                      Download (split1)                       |
-| ----- | :-------: | :--------: | :------: | :---: | :----: | :----: | :----------------------------------------------------------: |
-| I3D   |    RGB    |  Kinetics  |   I3D    | 64x1  |  94.8  |  72.6  | [UCF101](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_ucf101_split1_rgb_f64s1_kinetics400ft-36201298.pth) / [HMDB51](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_hmdb51_split1_rgb_f64s1_kinetics400ft-1ffcf11f.pth) |
-| I3D   |   Flow    |  Kinetics  |   I3D    | 64x1  |  96.6  |  79.2  | [UCF101](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_ucf101_split1_flow_f64s1_kinetics400ft-93ed9ecd.pth) / [HMDB51](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_hmdb51_split1_flow_f64s1_kinetics400ft-2981c797.pth) |
-| I3D   | TwoStream |  Kinetics  |   I3D    | 64x1  |  97.8  |  80.8  |                              /                               |
+| Model | Modality  | Pretrained | Backbone | Input | UCF101 | HMDB51 | Download (split1)                                                                                                                                                                                                                                                                         |
+|-------|:---------:|:----------:|:--------:|:-----:|:------:|:------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| I3D   | RGB       | Kinetics   | I3D      | 64x1  | 94.8   | 72.6   | [UCF101](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_ucf101_split1_rgb_f64s1_kinetics400ft-36201298.pth) / [HMDB51](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_hmdb51_split1_rgb_f64s1_kinetics400ft-1ffcf11f.pth)   |
+| I3D   | Flow      | Kinetics   | I3D      | 64x1  | 96.6   | 79.2   | [UCF101](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_ucf101_split1_flow_f64s1_kinetics400ft-93ed9ecd.pth) / [HMDB51](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/i3d_hmdb51_split1_flow_f64s1_kinetics400ft-2981c797.pth) |
+| I3D   | TwoStream | Kinetics   | I3D      | 64x1  | 97.8   | 80.8   | /                                                                                                                                                                                                                                                                                         |
 
 ## Action Detection
 
