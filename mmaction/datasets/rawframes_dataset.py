@@ -30,6 +30,7 @@ class RawFramesDataset(Dataset):
                  ann_file,
                  img_prefix,
                  img_norm_cfg,
+                 pre_mean_npy=None,
                  num_segments=3,
                  new_length=1,
                  new_step=1,
@@ -64,6 +65,14 @@ class RawFramesDataset(Dataset):
         self.video_infos = self.load_annotations(ann_file)
         # normalization config
         self.img_norm_cfg = img_norm_cfg
+        if pre_mean_npy is not None:
+            if not osp.exists(pre_mean_npy):
+                raise FileNotFoundError
+            else:
+                self.pre_mean_volume = np.load(pre_mean_npy).transpose(1, 2, 3, 0)
+        else:
+            self.pre_mean_volume = None
+        
 
         # parameters for frame fetching
         # number of segments
@@ -133,6 +142,7 @@ class RawFramesDataset(Dataset):
             max_distort=max_distort,
             resize_crop=resize_crop,
             rescale_crop=rescale_crop,
+            pre_mean_volume=self.pre_mean_volume,
             **self.img_norm_cfg)
 
         # input format

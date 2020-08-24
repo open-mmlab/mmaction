@@ -79,7 +79,7 @@ data = dict(
         random_shift=True,
         modality='RGB',
         image_tmpl='img_{:05d}.jpg',
-        img_scale=(340, 256),
+        img_scale=256,
         input_size=224,
         div_255=False,
         size_divisor=32,
@@ -104,7 +104,7 @@ data = dict(
         random_shift=False,
         modality='RGB',
         image_tmpl='img_{:05d}.jpg',
-        img_scale=(340, 256),
+        img_scale=256,
         input_size=224,
         div_255=False,
         size_divisor=32,
@@ -125,7 +125,7 @@ data = dict(
         random_shift=False,
         modality='RGB',
         image_tmpl='img_{:05d}.jpg',
-        img_scale=(340, 256),
+        img_scale=256,
         input_size=224,
         oversample=None,
         div_255=False,
@@ -153,7 +153,7 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 450 
+total_epochs = 450
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/ssn_thumos14_2d_rgb_bn_inception'

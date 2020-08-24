@@ -9,7 +9,7 @@ class SimpleSpatialTemporalModule(nn.Module):
     def __init__(self, spatial_type='avg', spatial_size=7, temporal_size=1):
         super(SimpleSpatialTemporalModule, self).__init__()
 
-        assert spatial_type in ['avg', 'max']
+        assert spatial_type in ['identity', 'avg', 'max']
         self.spatial_type = spatial_type
 
         self.spatial_size = spatial_size
@@ -38,4 +38,7 @@ class SimpleSpatialTemporalModule(nn.Module):
         pass
 
     def forward(self, input):
-        return self.pool_func(input)
+        if self.spatial_type == 'identity':
+            return input
+        else:
+            return self.pool_func(input)

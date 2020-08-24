@@ -24,6 +24,25 @@ If you can not reproduce our testing results due to dataset unalignment, please 
 |    RGB   |  ImageNet  | BNInception | 3seg |  86.4    | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/tsn_2d_rgb_bninception_seg3_f1s1_b32_g8-98160339.pth)  |
 |   TV-L1  |  ImageNet  | BNInception | 3seg |  87.7    | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/tsn_2d_flow_bninception_seg3_f1s1_b32_g8-151870b7.pth) |
 
+### C3D
+
+#### Sports-1M
+
+| Modality | Pretrained | Backbone | Input | Top-1 |                                                              Download                                                                    |
+| :------: | :--------: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
+|    RGB   |  None  |     C3D     | 16x1 |  N/A  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/conv3d_deepnetA_sport1m_iter_1900000-68f5aa04.pth)*  |
+
+&ast; Converted from [C3D-v1.0 in Caffe](https://github.com/facebookarchive/C3D) and [TGAN in Chainer](https://github.com/pfnet-research/tgan).
+
+#### UCF101
+
+| Modality | Pretrained | Backbone | Input | Top-1 |                                                              Download                                                                    |
+| :------: | :--------: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
+|    RGB   |  Sports-1M |     C3D     | 16x1 |  82.26  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/ucf101/c3d_caffe_sports1m_ucf101-82f36ebc.pth)*  |
+
+&ast; Converted from [C3D-v1.0 in Caffe](https://github.com/facebookarchive/C3D) and [TGAN in Chainer](https://github.com/pfnet-research/tgan).
+
+
 ### I3D
 
 |  Modality  | Pretrained |   Backbone   | Input | Top-1 | Top-5 |                           Download                           |
@@ -32,6 +51,9 @@ If you can not reproduce our testing results due to dataset unalignment, please 
 |    RGB     |  ImageNet  |   ResNet50   | 32x2  | 72.9  | 90.8  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics_rgb_r50_c3d_inflated3x1x1_seg1_f32s2_f32s2-b93cc877.pth)$^{340\times256}$ |
 |    Flow    |  ImageNet  | Inception-V1 | 64x1  | 63.4  | 84.9  | [model](https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmaction/models/kinetics400/i3d_kinetics_flow_inception_v1_seg1_f64s1_imagenet_deepmind-92059771.pth)* |
 | Two-Stream |  ImageNet  | Inception-V1 | 64x1  | 74.2  | 91.3  |                              /                               |
+
+&ast; Converted from [kinetics_i3d in TensorFlow](https://github.com/deepmind/kinetics-i3d).
+
 
 ### SlowOnly
 
