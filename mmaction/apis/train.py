@@ -114,7 +114,7 @@ def _non_dist_train(model, dataset, cfg, logger, validate=False):
     # put model on gpus
     model = MMDataParallel(model, device_ids=range(cfg.gpus)).cuda()
     # build runner
-    optimizer = build_optimizer(cfg.optimizer)
+    optimizer = build_optimizer(model, cfg.optimizer)
     runner = EpochBasedRunner(model, batch_processor, optimizer, cfg.work_dir,
                     logger)
     runner.register_training_hooks(cfg.lr_config, cfg.optimizer_config,
