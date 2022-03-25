@@ -1,6 +1,6 @@
 ## Preparing UCF-101
 
-For more details, please refer to the official [website](https://www.crcv.ucf.edu/data/UCF101.php). We provide scripts with documentations. Before we start, please make sure that the directory is located at `$MMACTION/data_tools/ucf101/`.
+For more details, please refer to the official [website](https://www.crcv.ucf.edu/data/UCF101.php). We provide scripts with documentations. Before we start, please make sure that the directory is located at `$MMACTION//tools/data/ucf101/`.
 
 ### Prepare annotations
 First of all, run the following script to prepare annotations.
