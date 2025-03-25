@@ -1,6 +1,6 @@
 ## Preparing Kinetics-400
 
-For more details, please refer to the official [website](https://deepmind.com/research/open-source/open-source-datasets/kinetics/). We provide scripts with documentations. Before we start, please make sure that the directory is located at `$MMACTION/data_tools/kinetics400/`.
+For more details, please refer to the official [website](https://research.google/pubs/the-kinetics-human-action-video-dataset/). We provide scripts with documentations. Before we start, please make sure that the directory is located at `$MMACTION/data_tools/kinetics400/`.
 
 ### Prepare annotations
 First of all, run the following script to prepare annotations.
